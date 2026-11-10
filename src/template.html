@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#09121d">
+<meta name="description" content="Interactive 3D engineering demonstrator for LNG cold energy recovery and hydrogen liquefaction.">
+<title>LNG × Hydrogen | OAPEC 2026</title>
+<style>/* SITE_CSS */</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5 28.5 9.7v12.6L16 29.5 3.5 22.3V9.7Z"/><path d="m3.5 9.7 12.5 7 12.5-7M16 16.7v12.8M9.7 13.2l12.6-7.1"/></svg><div><strong>LNG <span>×</span> Hydrogen</strong><small>CRYOGENIC INTEGRATION ATLAS</small></div></div>
+  <div class="event">OAPEC <b>2026</b><span></span>Kuwait</div>
+  <div class="head-actions"><button id="sources" class="quiet" type="button">Technical basis</button><button id="present" class="outline" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg><span>Present</span></button></div>
+</header>
+<main>
+  <section class="experience" aria-label="Interactive cryogenic process tour">
+    <aside class="narrative">
+      <div class="chapter-id"><span id="chapter-index">01</span><i></i><span id="kicker">THE INTEGRATION CONCEPT</span></div>
+      <div id="story" aria-live="polite">
+        <h1 id="chapter-title">Two streams.<br>One thermal link.</h1>
+        <p id="chapter-body">Follow LNG from the receiving terminal and hydrogen through the liquefier. The two streams exchange heat inside a shared precooler.</p>
+      </div>
+      <div id="detail"></div>
+      <div class="tour-actions">
+        <button id="tour" class="primary" type="button"><span class="play-icon" aria-hidden="true"></span><span>Play guided tour</span></button>
+        <button id="next" class="next" type="button" aria-label="Next chapter" title="Next chapter (right arrow)">→</button>
+      </div>
+      <p id="presenter-cue" class="presenter-cue" hidden></p>
+      <p class="keyboard-help"><kbd>←</kbd><kbd>→</kbd> Chapters <span>·</span> <kbd>F</kbd> Present</p>
+    </aside>
+    <section id="stage" class="stage" aria-label="Three-dimensional plant model">
+      <div id="model"></div>
+      <div id="fallback" hidden></div>
+      <div class="stage-top"><div class="view-tag"><span></span><span id="view-name">ISOMETRIC PLANT VIEW</span></div>
+      <div class="modes" aria-label="Precooling configuration"><button type="button" data-mode="integrated" aria-pressed="true">LNG-assisted</button><button type="button" data-mode="standalone" aria-pressed="false">Standalone H₂</button></div></div>
+      <div id="inspection" class="inspection" hidden>
+        <div class="modes" id="core-modes" role="group" aria-label="Precooler assembly view" hidden>
+          <button type="button" data-core="shell" aria-pressed="false">Shell</button><button type="button" data-core="cutaway" aria-pressed="true">Cutaway</button><button type="button" data-core="exploded" aria-pressed="false">Exploded</button>
+        </div>
+        <div class="modes" id="stream-modes" role="group" aria-label="Precooler passage highlight" hidden>
+          <button type="button" data-stream="both" aria-pressed="true">Both</button><button type="button" data-stream="h2" aria-pressed="false" class="h2-focus">H₂ →</button><button type="button" data-stream="lng" aria-pressed="false" class="lng-focus">← LNG</button>
+        </div>
+        <div class="modes" id="deep-modes" role="group" aria-label="Cold box assembly view" hidden>
+          <button type="button" data-deep="shell" aria-pressed="false">Shell</button><button type="button" data-deep="cutaway" aria-pressed="true">Cutaway</button>
+        </div>
+      </div>
+      <div id="hotspots" class="hotspots"></div>
+      <div id="equipment-card" class="equipment-card" hidden><button type="button" aria-label="Close equipment detail" id="close-card">×</button><small id="equipment-code"></small><strong id="equipment-name"></strong><p id="equipment-detail"></p></div>
+      <div class="stage-bottom">
+        <div class="legend"><span><i class="cyan"></i>Hydrogen</span><span><i class="mint"></i>LNG / gas</span><span><i class="amber"></i><span id="thermal-legend">Heat transfer</span></span></div>
+        <div class="view-tools"><button id="plan" type="button" title="Toggle top-down camera" aria-pressed="false">Plan</button><button id="flow" type="button" title="Toggle flow animation" aria-pressed="true">Flow</button><button id="labels" type="button" title="Toggle equipment labels" aria-pressed="true">Labels</button><button id="reset" type="button" title="Reset the camera" aria-label="Reset camera">↺</button></div>
+      </div>
+    </section>
+  </section>
+  <nav id="chapters" class="chapters" aria-label="Tour chapters"></nav>
+  <footer class="footer"><span>EPROM <span class="footer-divider">/</span> ENGINEERING DEMONSTRATOR</span><span>Conceptual process layout <span class="footer-divider">·</span> Illustrative operating conditions</span><span>17–18 NOV 2026</span></footer>
+</main>
+<dialog id="basis">
+  <form method="dialog"><button class="close-dialog" aria-label="Close technical basis">×</button></form>
+  <p class="eyebrow">OAPEC 2026 / EPROM</p><h2>Technical basis</h2>
+  <p>The plant geometry and normalized operating examples illustrate an integration concept. Site duty and final equipment selection depend on LNG composition, pressure, flow, exchanger pinch, auxiliaries and send-out constraints.</p>
+  <dl><dt>Storage reference</dt><dd>~111 K for LNG near storage pressure. The pumped-stream inlet can differ.</dd><dt>Cold-end approach</dt><dd>For a direct exchanger, T<sub>H₂,out</sub> ≥ T<sub>LNG,in</sub> + ΔT<sub>min</sub>. A tighter pinch can occur inside the exchanger.</dd><dt>3D assembly views</dt><dd>The exchanger stack and cold-box internals show representative functions and flow directions. Plate spacing in the exploded view is exaggerated.</dd><dt>Final liquefaction</dt><dd>~20 K for liquid hydrogen near atmospheric pressure. Mechanical deep refrigeration and staged ortho–para conversion remain part of the train.</dd><dt>Dispatch example</dt><dd>Recovered duty is the lesser of available usable LNG cold and the precooling demand. Trim duty covers the remainder. These controls use percentages of an illustrative duty basis.</dd></dl>
+  <ul><li>EPROM OAPEC 2026 conference presentation, slides 5–9 and 13–16.</li><li><a href="https://www.eia.gov/energyexplained/natural-gas/liquefied-natural-gas.php" target="_blank" rel="noopener">U.S. EIA · Liquefied natural gas</a></li><li><a href="https://doi.org/10.1039/D2EE00099G" target="_blank" rel="noopener">Al Ghafri et al. · Hydrogen liquefaction review</a></li><li><a href="https://doi.org/10.1016/j.energy.2018.12.170" target="_blank" rel="noopener">He et al. · LNG cold energy utilization</a></li></ul>
+</dialog>
+<noscript><p class="noscript">Enable JavaScript to explore the 3D model and presentation controls.</p></noscript>
+<script>/* SITE_JS */</script>
+</body>
+</html>

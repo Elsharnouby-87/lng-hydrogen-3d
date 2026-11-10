@@ -1,0 +1,54 @@
+export const chapters = [
+  {
+    id: 'overview', label: 'Plant overview', kicker: 'THE INTEGRATION CONCEPT',
+    title: 'Two streams.\nOne thermal link.',
+    body: 'Follow LNG from the receiving terminal and hydrogen through the liquefier. The two streams exchange heat inside a shared precooler.',
+    metrics: [['~111 K', 'LNG at storage'], ['~20 K', 'Liquid hydrogen']],
+    cue: 'Use this view to orient the audience. LNG needs heat as hydrogen needs cooling.',
+    focus: 'overview',
+  },
+  {
+    id: 'lng', label: 'LNG receiving', kicker: 'THE COLD SOURCE',
+    title: 'Cold starts at the terminal.',
+    body: 'LNG leaves storage at about 111 K. After pumping, it can absorb heat in the precooler before the terminal vaporizer or trim heater prepares it for send-out.',
+    metrics: [['~111 K', 'Storage reference'], ['Gas grid', 'Send-out priority']],
+    cue: 'Point out storage, the LNG pump and the independent terminal bypass.',
+    focus: 'lng',
+  },
+  {
+    id: 'exchange', label: 'Heat exchange', kicker: 'THE THERMAL HANDOFF',
+    title: 'Inside the precooler.',
+    body: 'Hydrogen and LNG flow in opposite directions through separate passages. Heat crosses the metal barrier from hydrogen to LNG.',
+    cue: 'Switch to Exploded and isolate each stream. Then use the approach slider to explain the cold-end limit.',
+    focus: 'exchange',
+  },
+  {
+    id: 'deep', label: 'Deep refrigeration', kicker: 'THE FINAL COOLING STAGES',
+    title: 'The final descent to 20 K.',
+    body: 'A dedicated refrigeration train removes the remaining heat. Staged ortho–para conversion releases heat that the cold train must also remove.',
+    metrics: [['~20 K', 'LH₂ near atmospheric pressure'], ['~−253 °C', 'Product temperature']],
+    cue: 'Open the cold box. Follow the representative cooling and catalyst modules, then the phase separator and LH₂ vessel.',
+    focus: 'deep',
+  },
+  {
+    id: 'match', label: 'Operating match', kicker: 'THE HOURLY OPERATING QUESTION',
+    title: 'How much cold is available now?',
+    body: 'Terminal send-out varies. Match available LNG cold duty to hydrogen precooling demand and use mechanical cooling for any shortfall.',
+    cue: 'Reduce LNG cold availability and watch the backup duty rise. The example uses normalized, illustrative duties.',
+    focus: 'overview',
+  },
+];
+
+export const equipment = {
+  feed: { code: 'H₂', label: 'Hydrogen feed', detail: 'Feed conditioning and any required compression come before precooling.', chapter: 'overview' },
+  lng: { code: 'TK-201', label: 'LNG storage', detail: 'LNG storage is shown near 111 K. Pumping and actual terminal conditions define the exchanger inlet.', chapter: 'lng' },
+  pump: { code: 'P-201', label: 'High-pressure pump', detail: 'Pressurizes the LNG before the recovery tie-in and the terminal vaporizer.', chapter: 'lng' },
+  exchange: { code: 'E-101', label: 'Countercurrent precooler', detail: 'Heat moves from hydrogen to LNG across a wall. A finite minimum approach limits the handoff temperature.', chapter: 'exchange' },
+  trim: { code: 'E-202', label: 'Vaporizer / trim', detail: 'The terminal heater completes warming to the gas send-out specification. An independent bypass maintains terminal operation if the precooler is isolated.', chapter: 'lng' },
+  deep: { code: 'R-101', label: 'Deep refrigeration', detail: 'Dedicated cryogenic refrigeration and staged ortho–para conversion continue after precooling.', chapter: 'deep' },
+  cryo: { code: 'HX', label: 'Cryogenic exchanger', detail: 'Representative cooling module within the cold box. The exact refrigeration cycle and heat-exchange arrangement depend on the liquefier design.', chapter: 'deep' },
+  catalyst: { code: 'CAT', label: 'Ortho–para conversion', detail: 'Catalyst beds accelerate conversion to para-hydrogen. The cold train removes the heat released during conversion.', chapter: 'deep' },
+  separator: { code: 'SEP', label: 'Phase separator', detail: 'After the final pressure reduction, the separator directs liquid hydrogen to storage and separates the remaining vapor.', chapter: 'deep' },
+  liquid: { code: 'LH₂', label: 'Liquid hydrogen', detail: 'Final expansion and phase separation deliver liquid hydrogen near 20 K on the near-atmospheric reference basis.', chapter: 'deep' },
+  grid: { code: 'NG', label: 'Gas send-out', detail: 'Natural gas proceeds to metered send-out after meeting the terminal delivery specification.', chapter: 'lng' },
+};
