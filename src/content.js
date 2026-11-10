@@ -1,10 +1,10 @@
 export const chapters = [
   {
     id: 'overview', label: 'Plant overview', kicker: 'THE INTEGRATION CONCEPT',
-    title: 'Two streams.\nOne thermal link.',
+    title: 'LNG cold energy for hydrogen liquefaction',
     body: 'Follow LNG from the receiving terminal and hydrogen through the liquefier. The two streams exchange heat inside a shared precooler.',
     metrics: [['~111 K', 'LNG at storage'], ['~20 K', 'Liquid hydrogen']],
-    cue: 'Use this view to orient the audience. LNG needs heat as hydrogen needs cooling.',
+    cue: 'Trace either circuit to show how the terminal supplies part of the hydrogen precooling duty.',
     focus: 'overview',
   },
   {
@@ -34,13 +34,14 @@ export const chapters = [
     id: 'match', label: 'Operating match', kicker: 'THE HOURLY OPERATING QUESTION',
     title: 'How much cold is available now?',
     body: 'Terminal send-out varies. Match available LNG cold duty to hydrogen precooling demand and use mechanical cooling for any shortfall.',
-    cue: 'Reduce LNG cold availability and watch the backup duty rise. The example uses normalized, illustrative duties.',
-    focus: 'overview',
+    cue: 'Select Interruption and move the hour to 12:00 to see the illustrative backup duty rise.',
+    focus: 'dispatch',
   },
 ];
 
 export const equipment = {
   feed: { code: 'H₂', label: 'Hydrogen feed', detail: 'Feed conditioning and any required compression come before precooling.', chapter: 'overview' },
+  dock: { code: 'JETTY', label: 'Marine unloading', detail: 'The articulated marine unloading arm transfers LNG to shore during a cargo unloading operation.', chapter: 'lng' },
   lng: { code: 'TK-201', label: 'LNG storage', detail: 'LNG storage is shown near 111 K. Pumping and actual terminal conditions define the exchanger inlet.', chapter: 'lng' },
   pump: { code: 'P-201', label: 'High-pressure pump', detail: 'Pressurizes the LNG before the recovery tie-in and the terminal vaporizer.', chapter: 'lng' },
   exchange: { code: 'E-101', label: 'Countercurrent precooler', detail: 'Heat moves from hydrogen to LNG across a wall. A finite minimum approach limits the handoff temperature.', chapter: 'exchange' },

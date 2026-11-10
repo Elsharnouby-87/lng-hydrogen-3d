@@ -12,7 +12,7 @@ const seaWall=material(0x5f6c74,.04,.87), road=material(0x2f4150,.05,.9);
 const slab=material(0x81909c,.05,.94), white=material(0xf3e7d1,.1,.65);
 const blue=material(BLUE,.43,.31), mint=material(MINT,.40,.34), gold=material(GOLD,.55,.36);
 const pipeBlue=material(0x236794,.7,.37),pipeMint=material(0x267e70,.65,.39);
-const gray=material(0x446173,.42,.55);
+const gray=material(0x446173,.42,.55), mutedPipe=material(0x465463,.49,.59);
 const pickers=[];
 const unitBox=new T.BoxGeometry(1,1,1);
 const ball=new T.SphereGeometry(1,26,14);
@@ -162,12 +162,27 @@ function ship(g){
   h.rotation.x=-Math.PI/2;h.renderOrder=1;
   const deck=mesh(k,new T.ShapeGeometry(hull),material(0x3e706b,.18,.66),0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
   box(k,-7.12,1.42,0,2.35,1.24,2.38,ice);box(k,-7.15,2.17,0,2.45,.30,2.52,ice);box(k,-6.03,2.16,0,.055,.16,2.23,trim);
+  for(const z of [-1.204,1.204]){
+    box(k,-7.16,1.83,z,1.74,.19,.045,trim);
+    for(const x of [-7.68,-7.27,-6.86,-6.45])box(k,x,1.83,z,.045,.16,.050,steel);
+  }
+  box(k,-7.93,2.43,0,.36,.36,.44,trim);
+  box(k,-7.92,2.62,0,.40,.065,.49,steel);
   cyl(k,-7.3,2.77,0,.057,1,steel);box(k,-7.28,3.21,0,.74,.06,.09,ice);
   for(const x of [-4.5,-1.2,2.1,5.4]){
     cyl(k,x,.92,0,1.22,.3,trim);sphere(k,x,1.04,0,1.13,1.00,1.13,ice);
     cyl(k,x,1.11,0,1.146,.06,mint);cyl(k,x,2.07,0,.1,.19,trim);
   }
-  for(const z of [-1.26,1.26])rail(k,-8,z,6.9,z,.82);
+  for(const z of [-1.26,1.26]){
+    rail(k,-8,z,6.9,z,.82);
+    box(k,-.38,.81,z*.83,14.92,.065,.26,slab).renderOrder=1;
+  }
+  for(const x of [-8.32,7.13]){
+    cyl(k,x,.94,0,.24,.22,steel,'y',true);
+    box(k,x,.94,.41,.35,.25,.16,trim);
+  }
+  box(k,3.09,.99,-1.04,1.18,.31,.31,steel);
+  for(const x of [2.75,3.18,3.54])cyl(k,x,1.19,-1.04,.083,.14,mint,'y',true);
   for(const x of [-8.5,7.2])cyl(k,x,.92,0,.13,.3,trim);
 }
 function lights(g){
@@ -191,6 +206,14 @@ function ground(scene){
     box(g,x,-.92,10.94,.38,.80,.31,trim);
   }
   box(g,10.4,-.13,11.83,16.8,.41,1.88,slab).renderOrder=2;
+  for(const x of [3.3,6.8,11.2,15.5,18.1]){
+    box(g,x,-.38,12.83,.46,.68,.19,dark);
+    cyl(g,x,.14,12.47,.10,.19,gold,'y',true);
+  }
+  for(const x of [5.0,9.4,13.7,17.8]){
+    box(g,x,.085,11.87,1.24,.032,.15,white);
+    box(g,x,.124,12.22,.26,.13,.23,trim);
+  }
   for(const x of [3.2,7,11,15,18])cyl(g,x,-.89,12.35,.14,1.1,trim,'y',true);
   rail(g,-21.2,-10.1,21.2,-10.1,-.02);
   rail(g,-21.5,10,-5.8,10,-.02);
@@ -206,10 +229,12 @@ function makeWater(scene){
       void main(){
         float a=sin(p.x*2.85+p.y*2.15+uTime*.70);
         float b=sin(p.x*.82-p.y*3.21-uTime*.45);
-        float rip=pow(max(0.,a*.58+b*.42),7.);
+        float c=sin(p.x*.68+p.y*1.16+sin(p.y*.68)*.7-uTime*.65);
+        float rip=pow(max(0.,a*.40+b*.32+c*.28),7.);
         float sw=sin(p.x*.24+p.y*.1)*.5+.5;
-        vec3 color=mix(vec3(.045,.12,.19),vec3(.13,.29,.39),sw*.68);
-        gl_FragColor=vec4(color+vec3(.10,.19,.23)*rip*.55,1.0);
+        vec3 color=mix(vec3(.037,.085,.145),vec3(.102,.224,.322),sw*.68);
+        float harbor=exp(-length((p-vec2(10.,-12.))*vec2(.054,.12)));
+        gl_FragColor=vec4(color+vec3(.10,.19,.23)*rip*.68+vec3(.05,.08,.085)*harbor,1.0);
       }`,
   });
   const m=mesh(scene,new T.PlaneGeometry(390,390),wave,0,-1.03,0);m.rotation.x=-Math.PI/2;
@@ -259,9 +284,21 @@ function terminal(scene){
   const armPoints=[v(0,.32,0),v(0,3.25,0),v(0,4.23,.84),v(0,3.15,2.26),v(0,1.76,2.78)];
   for(let j=1;j<armPoints.length;j++)segment(arm,armPoints[j-1],armPoints[j],.115,gold);
   for(const p of armPoints.slice(1,-1))sphere(arm,p.x,p.y,p.z,.155,.155,.155,steel);
-  const dockPipe=[v(14.4,.68,10.88),v(14.4,.68,8.65),v(17.35,.68,8.65),v(17.35,.68,7.92)];
-  for(let i=1;i<dockPipe.length;i++)segment(g,dockPipe[i-1],dockPipe[i],.109,pipeMint);
-  return {g,refrigeration};
+  const dockPipe=[[14.4,.86,13.6],[14.4,1.76,13.60],[14.4,3.15,13.08],[14.4,4.23,11.66],[14.4,3.25,10.82],[14.4,.68,10.82],[14.4,.68,8.65],[17.35,.68,8.65],[17.35,.68,7.92]];
+  const dockFlow=route(g,dockPipe,pipeMint,MINT,22,.055,.81);
+  for(const x of [8.2,11.7,16.3]){
+    const z=11.16;
+    box(g,x,.36,z,.55,.67,.45,trim);
+    box(g,x,.66,z+.235,.36,.16,.034,gold);
+  }
+  const utility=group(g,-18,0,-.92);
+  pad(utility,0,0,3.8,2.2);
+  box(utility,0,.71,0,2.97,1.17,1.65,trim);
+  box(utility,0,1.31,0,3.09,.11,1.76,steel);
+  for(const x of [-.93,-.39,.21])box(utility,x,1.01,.834,.40,.29,.03,slab);
+  box(utility,1.03,.61,.835,.49,.85,.035,steel);
+  for(const x of [-1.1,1.02])cyl(utility,x,1.5,-.35,.115,.28,steel,'y',true);
+  return {g,refrigeration,dockFlow};
 }
 function exchanger(g){
   const k=group(g);
@@ -302,19 +339,19 @@ function exchanger(g){
   return {casing,core,stack};
 }
 function route(g,pts,mat,color,count=34,radius=.103,markerScale=1){
-  const p=pts.map(x=>v(...x));const curve=new T.CurvePath();
+  const p=pts.map(x=>v(...x));const curve=new T.CurvePath(), pipes=[];
   for(let i=1;i<p.length;i++){
     curve.add(new T.LineCurve3(p[i-1],p[i]));
     if(radius){
-      segment(g,p[i-1],p[i],radius,mat);
-      if(i<p.length-1)sphere(g,p[i].x,p[i].y,p[i].z,radius,radius,radius,mat);
+      pipes.push(segment(g,p[i-1],p[i],radius,mat));
+      if(i<p.length-1)pipes.push(sphere(g,p[i].x,p[i].y,p[i].z,radius,radius,radius,mat));
     }
   }
   const glow=new T.InstancedMesh(new T.SphereGeometry(.134*markerScale,9,6),new T.MeshBasicMaterial({color}),count);
   glow.frustumCulled=false;g.add(glow);
   const arrows=new T.InstancedMesh(new T.ConeGeometry(.18*markerScale,.38*markerScale,8),new T.MeshBasicMaterial({color}),Math.max(1,Math.floor(count/7)));
   arrows.frustumCulled=false;g.add(arrows);
-  return {curve,glow,arrows,count};
+  return {curve,glow,arrows,count,pipes,mat,fluid:color===BLUE?'h2':'lng'};
 }
 function stageRoutes(scene){
   const assisted=group(scene), standalone=group(scene), common=group(scene);
@@ -340,7 +377,11 @@ function stageRoutes(scene){
 }
 const views={
   overview:{look:[0,0,1.9],offset:[21,25,36],scale:1},
+  dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
   lng:{look:[10.8,1.0,8.25],offset:[15,15,25],scale:1.88},
+  dock:{look:[12.2,1.22,12.55],offset:[17.8,9.8,24.2],scale:2.28},
+  mechanical:{look:[-.2,.82,-7.08],offset:[9.6,14,25],scale:2.44},
+  bypass:{look:[-2.6,.82,6.55],offset:[14,15,25],scale:1.54},
   exchange:{look:[0,1.24,0],offset:[10.2,9.7,17.3],scale:3.35},
   deep:{look:[12.25,1.12,-4.55],offset:[8,12,24],scale:3.12},
   feed:{look:[-14.7,1,-4.95],offset:[-8,11,20],scale:2.8},
@@ -352,12 +393,14 @@ const anchor={
   feed:v(-15.1,2.24,-4.95),lng:v(17.35,5.0,5.76),pump:v(10.5,2.23,5.76),
   exchange:v(0,3.2,0),trim:v(-11.55,3.33,5.78),deep:v(8.8,3.95,-4.95),
   liquid:v(17.3,2.75,-4.95),grid:v(-18.35,2.01,5.78),
-  cryo:v(7.28,2.62,-4.72),catalyst:v(9.22,1.77,-4.34),separator:v(12.5,1.66,-3.10),
+  dock:v(14.4,4.45,11.66),cryo:v(7.28,2.62,-4.72),catalyst:v(9.22,1.77,-4.34),separator:v(12.5,1.66,-3.10),
 };
 const visibleLabels={
   overview:['feed','lng','exchange','trim','deep','liquid'],
+  dispatch:['feed','lng','exchange','trim','deep','liquid'],
   lng:['lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
   feed:['feed'],trim:['trim','grid'],pump:['pump','lng'],liquid:['liquid'],
+  dock:['dock','lng'],mechanical:['feed','deep'],bypass:['trim','pump'],
 };
 
 export function createPlant(target, labelLayer, choose, reduced){
@@ -379,9 +422,10 @@ export function createPlant(target, labelLayer, choose, reduced){
   const key=new T.DirectionalLight(0xffe2bd,2.55);key.position.set(-16,31,9);scene.add(key);
   const fill=new T.DirectionalLight(0x8bd7ff,1.55);fill.position.set(10,13,-26);scene.add(fill);
   const water=context?makeWater(scene):null;
-  const {g,refrigeration}=terminal(scene);
+  const {g,refrigeration,dockFlow}=terminal(scene);
   const {casing,core,stack}=exchanger(g);
   const routes=stageRoutes(scene);
+  const mainRoutes=[...routes.c,...routes.a,...routes.s,dockFlow];
   const mechanical=group(g);
   horizontalVessel(mechanical,-1.24,1.38,-7.08,.48,3.06,blue);
   mechanical.visible=false;
@@ -400,6 +444,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     arrow.rotation.z=Math.PI;
   }
   thermal.visible=false;
+  pick(g,'dock',14.4,1.9,12.2,2.2,4.2,3.4);
   pick(g,'feed',-13.55,1.15,-4.95,10,2.35,3.5);
   pick(g,'lng',17.8,1.98,5.3,7.3,4.75,5.8);
   pick(g,'pump',10.7,.9,5.78,4.3,1.9,2.5);
@@ -414,7 +459,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   controls.enableDamping=!reduced;controls.dampingFactor=.12;controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.47;
   controls.minZoom=.49;controls.maxZoom=6.5;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=.78;
-  let coreView='cutaway', stream='both', deepView='cutaway', cameraView='iso', spread=0;
+  let coreView='cutaway', stream='both', trace='both', deepView='cutaway', cameraView='iso', projection=false, spread=0;
   let last=performance.now(), travel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), up=v(0,1,0), point=v(0,0,0), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
@@ -422,20 +467,27 @@ export function createPlant(target, labelLayer, choose, reduced){
   function updateVisibility(){
     const opened=active==='exchange'&&coreView!=='shell';
     const live=mode==='integrated'&&available>0;
+    const passageFocus=trace==='both'?stream:trace;
     casing.visible=!opened;core.visible=opened;
-    thermal.visible=opened&&live&&stream==='both';
+    thermal.visible=opened&&live&&passageFocus==='both';
     refrigeration.inside.visible=active==='deep'&&deepView==='cutaway';
     refrigeration.shell.visible=!refrigeration.inside.visible;
     for(const {channel,fluid,passage} of stack){
-      channel.visible=stream==='both'||stream===fluid;
+      channel.visible=passageFocus==='both'||passageFocus===fluid;
       passage.glow.visible=flow&&live;passage.arrows.visible=flow&&live;
     }
-    refrigeration.flow.glow.visible=flow;refrigeration.flow.arrows.visible=flow;
-    for(const route of routes.a.slice(2)){
-      route.glow.visible=flow&&available>0;route.arrows.visible=flow&&available>0;
+    const coldFlow=flow&&trace!=='lng';
+    refrigeration.flow.glow.visible=coldFlow;refrigeration.flow.arrows.visible=coldFlow;
+    for(const circuit of mainRoutes){
+      const highlighted=trace==='both'||trace===circuit.fluid;
+      const unloading=circuit!==dockFlow||active==='dock';
+      const starved=available<=0&&circuit.fluid==='lng'&&routes.a.includes(circuit);
+      circuit.glow.visible=flow&&highlighted&&unloading&&!starved;
+      circuit.arrows.visible=circuit.glow.visible;
+      for(const pipe of circuit.pipes)pipe.material=highlighted?circuit.mat:mutedPipe;
     }
   }
-  function focus(key, immediate=false){
+  function focus(key, immediate=false, duration=900){
     active=views[key]?key:'overview';
     const view=views[active];
     const exploded=active==='exchange'&&coreView==='exploded';
@@ -444,17 +496,24 @@ export function createPlant(target, labelLayer, choose, reduced){
     const offset=cameraView==='plan'?v(.02,40,.21):v(...view.offset);
     const position=look.clone().add(offset);
     const fit=dimensions.width/dimensions.height;
-    const zoom=(exploded?2.86:view.scale)*Math.min(1,fit/(active==='overview'?1.54:1.10));
+    const zoom=(exploded?2.86:view.scale)*Math.min(1,fit/(['overview','dispatch'].includes(active)?1.54:1.10));
     updateVisibility();
     if(immediate || reduced){camera.position.copy(position);controls.target.copy(look);camera.zoom=zoom;camera.updateProjectionMatrix();controls.update();tween=null;}
-    else{tween={position,look,zoom,start:performance.now(),from:camera.position.clone(),target:controls.target.clone(),fromZoom:camera.zoom};}
+    else{tween={position,look,zoom,duration,start:performance.now(),from:camera.position.clone(),target:controls.target.clone(),fromZoom:camera.zoom};}
+  }
+  function frameViewport(){
+    const aspect=dimensions.width/dimensions.height;
+    const shift=projection&&dimensions.width>800?.18:0;
+    camera.left=-19*aspect*(1+shift);camera.right=19*aspect*(1-shift);
+    camera.updateProjectionMatrix();
   }
   function resize(){
     const {width,height}=target.getBoundingClientRect();
     if(!width || !height)return;
+    const first=dimensions.width===1;
     dimensions={width,height};compact=width<620;
-    const aspect=width/height;camera.left=-19*aspect;camera.right=19*aspect;
-    camera.updateProjectionMatrix();renderer.setSize(width,height,false);focus(active,true);
+    frameViewport();renderer.setSize(width,height,false);
+    if(first||!tween)focus(active,true);
   }
   function pointer(e){const r=renderer.domElement.getBoundingClientRect();mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);}
   renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
@@ -468,7 +527,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   function drawFlow(f,phase){
     for(let i=0;i<f.count;i++){
       const t=(i/f.count+phase)%1;f.curve.getPoint(t,point);tmp.position.copy(point);
-      tmp.quaternion.identity();tmp.scale.setScalar(.80+.2*Math.sin(i*1.47+phase*16));tmp.updateMatrix();f.glow.setMatrixAt(i,tmp.matrix);
+      tmp.quaternion.identity();tmp.scale.setScalar((trace===f.fluid?1.27:.80)+.18*Math.sin(i*1.47+phase*16));tmp.updateMatrix();f.glow.setMatrixAt(i,tmp.matrix);
     }
     f.glow.instanceMatrix.needsUpdate=true;
     for(let i=0;i<f.arrows.count;i++){
@@ -506,7 +565,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     heatBetween.position.y=stack.at(-1).layer.position.y-.09;
     const delta=Math.min((now-last)/1000,.05);last=now;
     if(tween){
-      const t=Math.min(1,(now-tween.start)/900),f=1-(1-t)**3;
+      const t=Math.min(1,(now-tween.start)/tween.duration),f=1-(1-t)**3;
       camera.position.lerpVectors(tween.from,tween.position,f);controls.target.lerpVectors(tween.target,tween.look,f);
       camera.zoom=T.MathUtils.lerp(tween.fromZoom,tween.zoom,f);camera.updateProjectionMatrix();
       if(t===1)tween=null;
@@ -517,20 +576,19 @@ export function createPlant(target, labelLayer, choose, reduced){
       if(core.visible&&mode==='integrated'&&available>0){
         for(const {channel,passage} of stack)if(channel.visible)drawFlow(passage,travel);
       }
-      if(refrigeration.inside.visible)drawFlow(refrigeration.flow,travel);
-      for(const f of routes.c)drawFlow(f,travel);
-      for(const f of mode==='integrated'?routes.a:routes.s)drawFlow(f,travel);
+      if(refrigeration.inside.visible&&refrigeration.flow.glow.visible)drawFlow(refrigeration.flow,travel);
+      if(dockFlow.glow.visible)drawFlow(dockFlow,travel);
+      for(const f of routes.c)if(f.glow.visible)drawFlow(f,travel);
+      for(const f of mode==='integrated'?routes.a:routes.s)if(f.glow.visible)drawFlow(f,travel);
     }
     placeLabels();renderer.render(scene,camera);
   }
   renderer.setAnimationLoop(animate);
   return {
     focus,kind:context?'webgl':'canvas',
-    setFlow(value){
-      flow=value;
-      for(const f of [...routes.c,...routes.a,...routes.s]){f.glow.visible=value;f.arrows.visible=value;}
-      updateVisibility();
-    },
+    setFlow(value){flow=value;updateVisibility();},
+    setTrace(value){trace=value;updateVisibility();},
+    setProjection(value){if(projection!==value){projection=value;frameViewport();}},
     setLabels(value){labels=value;},
     setMode(value){mode=value;routes.assisted.visible=value==='integrated';routes.standalone.visible=value==='standalone';mechanical.visible=value==='standalone';updateVisibility();},
     setAvailable(value){available=value;updateVisibility();},

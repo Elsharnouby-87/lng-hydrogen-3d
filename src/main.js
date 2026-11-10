@@ -1,14 +1,19 @@
 import {chapters,equipment} from './content.js';
 import {createPlant} from './plant.js';
+import {bypass,coldAtHour,dutyProfiles,opening,traces} from './storyboard.js';
 
 const el=id=>document.getElementById(id);
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let chapter=0, mode='integrated', approach=8, available=78;
 let flow=true, labels=true, selection=null, tourTimer=null, plant=null, presenting=false;
-let coreView='cutaway', deepView='cutaway', plan=false;
+let coreView='cutaway', deepView='cutaway', plan=false, hud=true;
+let trace=null, traceIndex=0, openingFrame=-1, openingTimer=null;
+let dutyProfile='variable', hour=10, manualDuty=false;
 
 const chaptersNav=el('chapters');
 chaptersNav.innerHTML=chapters.map((c,i)=>`<button type="button" data-chapter="${i}"><b>0${i+1}</b><span>${c.label}</span></button>`).join('');
+el('profiles').innerHTML=Object.entries(dutyProfiles).map(([id,{label}])=>
+  `<button type="button" data-profile="${id}" aria-pressed="${id===dutyProfile}">${label}</button>`).join('');
 const hotspots=el('hotspots');
 hotspots.innerHTML=Object.entries(equipment).map(([id,item])=>`<button type="button" class="hotspot ${item.chapter==='lng'?'lng':''}" data-equipment="${id}" aria-label="Inspect ${item.label}" hidden><span><em>${item.code}</em>${item.label}</span></button>`).join('');
 
@@ -47,13 +52,14 @@ function schedule(){
 }
 function toggleTour(){
   if(tourTimer!==null){stopTour();return;}
+  stopOpening(false);clearTrace(false);
   if(chapter===chapters.length-1)setChapter(0);
   el('tour').classList.add('is-playing');
   el('tour').children[1].textContent='Pause guided tour';
   schedule();
 }
 function step(n){
-  stopTour();
+  stopTour();stopOpening(false);clearTrace(false);
   setChapter(Math.max(0,Math.min(chapters.length-1,n)));
 }
 function closeCard(){
@@ -62,9 +68,9 @@ function closeCard(){
 }
 function inspect(id){
   const item=equipment[id];if(!item)return;
-  stopTour();closeCard();
+  stopTour();stopOpening(false);clearTrace(false);closeCard();
   const nextChapter=chapters.findIndex(c=>c.id===item.chapter);
-  if(nextChapter!==chapter)setChapter(nextChapter);
+  setChapter(nextChapter,false);
   const focus=id==='grid'?'trim':['cryo','catalyst','separator'].includes(id)?'deep':id;
   plant?.focus(focus);
   selection=id;
@@ -76,6 +82,34 @@ function inspect(id){
   if(focus==='exchange'||focus==='deep')renderStageControls();
   else el('view-name').textContent='EQUIPMENT FOCUS';
 }
+function renderDutyChart(){
+  const series=dutyProfiles[dutyProfile].values;
+  const x=h=>28+h*17.25,y=p=>101-p*.59;
+  const demand=y(100);
+  const path=series.map((p,i)=>`${i?'L':'M'}${x(i*2)},${y(p)}`).join(' ');
+  const points=series.flatMap((p,i)=>{
+    if(!i||(p-100)*(series[i-1]-100)>=0)return [[i*2,p]];
+    const prior=series[i-1],cross=(i-1)*2+(100-prior)*2/(p-prior);
+    return [[cross,100],[i*2,p]];
+  });
+  const deficit=points.map(([h,p],i)=>{
+    if(!i||p>100||points[i-1][1]>100)return '';
+    const [left,previous]=points[i-1];
+    return `M${x(left)},${demand}L${x(left)},${y(previous)}L${x(h)},${y(p)}L${x(h)},${demand}Z`;
+  }).join(' ');
+  const scale=[0,6,12,18,24].map(h=>`<text x="${x(h)}" y="120">${h.toString().padStart(2,'0')}:00</text>`).join('');
+  const marker=manualDuty?'':`<path class="chart-cursor" d="M${x(hour)},14V101"/><circle cx="${x(hour)}" cy="${y(available)}" r="4" fill="#6eefd0"/>`;
+  el('duty-chart').innerHTML=`<path class="chart-axis" d="M28,16V101H442"/><path class="chart-deficit" d="${deficit}"/><path class="chart-demand" d="M28,${demand}H442"/><path class="chart-supply" d="${path}"/>${marker}<g class="chart-ticks">${scale}</g><text class="chart-demand-label" x="437" y="${demand-6}">100% H₂ demand</text>`;
+  el('hour-value').textContent=manualDuty?'Manual':hour.toString().padStart(2,'0')+':00';
+  el('hour').value=hour;
+  for(const button of el('profiles').children)button.setAttribute('aria-pressed',String(button.dataset.profile===dutyProfile));
+}
+function useDutyProfile(){
+  manualDuty=false;
+  available=coldAtHour(dutyProfiles[dutyProfile].values,hour);
+  el('availability').value=available;
+  updateDispatch();
+}
 function updateDispatch(){
   const recovered=mode==='integrated'?Math.min(100,available):0;
   const backup=100-recovered;
@@ -84,6 +118,7 @@ function updateDispatch(){
   el('recovered').textContent=recovered+'%';el('backup').textContent=backup+'%';
   el('dispatch-note').textContent=mode==='standalone'?'Mechanical precooling covers the full normalized duty.':'Illustrative duty balance. Deep refrigeration remains in service.';
   plant?.setAvailable(available/100);
+  renderDutyChart();
 }
 function updateApproach(){
   el('approach-value').textContent=approach+' K';
@@ -104,7 +139,7 @@ function renderDetail(c){
     <div class="stack" aria-hidden="true"><span id="cold-bar"></span><span id="backup-bar"></span></div>
     <div class="dispatch-labels"><span><strong id="recovered"></strong> recovered</span><span><strong id="backup"></strong> mechanical</span></div>
     <p id="dispatch-note" class="control-note"></p></div>`;
-    el('availability').addEventListener('input',e=>{available=Number(e.target.value);updateDispatch();});
+    el('availability').addEventListener('input',e=>{available=Number(e.target.value);manualDuty=true;updateDispatch();});
     updateDispatch();
   }else{
     detail.innerHTML=`<div class="metrics">${c.metrics.map(([value,label])=>`<div><strong>${value}</strong><small>${label}</small></div>`).join('')}</div>`;
@@ -115,12 +150,13 @@ function renderStageControls(){
   const exchange=chapter===2, deep=chapter===3;
   el('inspection').hidden=!plant||(!exchange&&!deep);
   el('core-modes').hidden=!exchange;
-  el('stream-modes').hidden=!exchange||coreView==='shell';
+  el('stream-modes').hidden=!exchange||coreView==='shell'||Boolean(trace);
   el('deep-modes').hidden=!deep;
+  el('profile-panel').hidden=chapter!==4||Boolean(trace);
   const title=exchange?'E-101 '+coreView.toUpperCase():deep?'R-101 '+deepView.toUpperCase():names[chapter];
   el('view-name').textContent=plan?'PLAN · '+title:title;
 }
-function setChapter(i){
+function setChapter(i,moveCamera=true){
   chapter=i;
   const c=chapters[i];
   closeCard();
@@ -137,7 +173,7 @@ function setChapter(i){
     else b.removeAttribute('aria-current');
   }
   renderDetail(c);
-  plant?.focus(c.focus);
+  if(moveCamera)plant?.focus(c.focus);
 }
 function setMode(value){
   mode=value;
@@ -148,6 +184,7 @@ function setMode(value){
   plant?.setAvailable(available/100);
   if(el('availability'))updateDispatch();
   if(el('approach'))updateApproach();
+  if(trace){renderTraceRail();showTraceStop(traceIndex);}
   const h=el('schematic-h2'),l=el('schematic-lng'),heat=el('schematic-heat');
   if(h&&l&&heat){
     h.setAttribute('d',value==='integrated'?'M35 151H720':'M35 151H220V30H540V151H720');
@@ -155,41 +192,141 @@ function setMode(value){
     heat.style.display=value==='integrated'?'':'none';
   }
 }
+function traceSteps(){
+  const steps=traces[trace].steps;
+  return mode==='integrated'?steps:steps.map(item=>item.view==='exchange'?bypass[trace]:item);
+}
+function renderTraceRail(){
+  el('trace-title').textContent=traces[trace].title;
+  el('trace-stops').innerHTML=traceSteps().map((item,i)=>
+    `<button type="button" data-stop="${i}"><b>0${i+1}</b><span>${item.name}</span></button>`).join('');
+}
+function showTraceStop(i){
+  if(!trace)return;
+  const steps=traceSteps();
+  traceIndex=Math.max(0,Math.min(i,steps.length-1));
+  const stop=steps[traceIndex];
+  setChapter(stop.chapter,false);
+  el('chapter-index').textContent='0'+(traceIndex+1);
+  el('kicker').textContent=traces[trace].title.toUpperCase();
+  el('chapter-title').textContent=stop.name;
+  el('chapter-body').textContent=stop.text;
+  el('presenter-cue').textContent='Use ← and → to move between stops in this circuit.';
+  el('next').disabled=traceIndex===steps.length-1;
+  for(const [index,button] of [...el('trace-stops').children].entries()){
+    if(index===traceIndex)button.setAttribute('aria-current','step');
+    else button.removeAttribute('aria-current');
+  }
+  el('view-name').textContent=(plan?'PLAN · ':'')+stop.tag;
+  plant?.focus(stop.view);
+}
+function clearTrace(restore=true){
+  if(!trace)return;
+  trace=null;
+  el('trace-panel').hidden=true;
+  for(const button of document.querySelectorAll('[data-trace]'))button.setAttribute('aria-pressed','false');
+  plant?.setTrace('both');
+  if(restore)setChapter(chapter);
+}
+function startTrace(fluid){
+  if(trace===fluid){clearTrace();return;}
+  stopTour();stopOpening(false);clearTrace(false);
+  trace=fluid;
+  el('trace-panel').hidden=false;
+  for(const button of document.querySelectorAll('[data-trace]'))button.setAttribute('aria-pressed',String(button.dataset.trace===fluid));
+  plant?.setTrace(fluid);
+  renderTraceRail();showTraceStop(0);
+}
+function applyHud(value){
+  hud=value;
+  document.body.classList.toggle('hud-hidden',!hud);
+  el('hud').setAttribute('aria-pressed',String(hud));
+  el('hud').textContent=hud?'Hide HUD':'Show HUD';
+  plant?.setProjection(presenting&&hud&&openingFrame<0);
+}
 function applyPresent(value){
   presenting=value;document.body.classList.toggle('is-presenting',value);
   el('present').setAttribute('aria-pressed',String(value));
   el('present').lastElementChild.textContent=value?'Exit present':'Present';
   el('presenter-cue').hidden=!value;
+  el('hud').hidden=!value;
+  if(!value){stopOpening();applyHud(true);}
+  else plant?.setProjection(hud&&openingFrame<0);
 }
-async function togglePresent(){
-  if(presenting){
-    if(document.fullscreenElement)await document.exitFullscreen();
-    applyPresent(false);return;
-  }
+async function enterPresent(){
+  if(presenting)return;
   applyPresent(true);
   if(document.documentElement.requestFullscreen){
-    try{await document.documentElement.requestFullscreen();}catch{/* The in-page presenter layout is still available. */}
+    try{await document.documentElement.requestFullscreen();}catch{/* The in-page presentation layout remains available. */}
   }
 }
+async function togglePresent(){
+  if(!presenting){await enterPresent();return;}
+  if(document.fullscreenElement)await document.exitFullscreen();
+  else applyPresent(false);
+}
+function stopOpening(restore=true){
+  if(openingFrame<0)return;
+  clearTimeout(openingTimer);openingTimer=null;openingFrame=-1;
+  el('opener').hidden=true;document.body.classList.remove('is-opening');
+  plant?.setProjection(presenting&&hud);
+  if(restore)setChapter(0);
+}
+function showOpeningFrame(i){
+  if(i===opening.length){stopOpening();return;}
+  openingFrame=i;
+  const shot=opening[i];
+  el('opener-tag').textContent=shot.tag;
+  el('opener-title').textContent=shot.title;
+  el('opener-text').textContent=shot.text;
+  for(const [index,mark] of [...el('opener-progress').children].entries())mark.classList.toggle('current',i>=index);
+  plant?.focus(shot.view,false,i===0?1800:2100);
+  openingTimer=setTimeout(()=>showOpeningFrame(i+1),shot.time);
+}
+async function startOpening(){
+  if(openingFrame>=0)return;
+  stopTour();clearTrace(false);setMode('integrated');setChapter(0);
+  openingFrame=0;
+  document.body.classList.add('is-opening');
+  el('opener').hidden=false;
+  applyHud(true);
+  if(plan){plan=false;el('plan').setAttribute('aria-pressed','false');plant?.setCamera('iso');}
+  showOpeningFrame(0);
+  await enterPresent();
+  if(openingFrame>=0)el('skip-opening').focus({preventScroll:true});
+}
 document.addEventListener('fullscreenchange',()=>applyPresent(Boolean(document.fullscreenElement)));
+el('open-show').addEventListener('click',startOpening);
+el('skip-opening').addEventListener('click',()=>{stopOpening();el('open-show').focus({preventScroll:true});});
+el('hud').addEventListener('click',()=>applyHud(!hud));
+el('close-trace').addEventListener('click',()=>clearTrace());
+el('profiles').addEventListener('click',e=>{
+  const b=e.target.closest('[data-profile]');
+  if(b&&el('availability')){dutyProfile=b.dataset.profile;useDutyProfile();}
+});
+el('hour').addEventListener('input',e=>{if(el('availability')){hour=Number(e.target.value);useDutyProfile();}});
+el('trace-stops').addEventListener('click',e=>{
+  const button=e.target.closest('[data-stop]');if(button)showTraceStop(Number(button.dataset.stop));
+});
+document.querySelectorAll('[data-trace]').forEach(button=>button.addEventListener('click',()=>startTrace(button.dataset.trace)));
 chaptersNav.addEventListener('click',e=>{const b=e.target.closest('[data-chapter]');if(b)step(Number(b.dataset.chapter));});
 hotspots.addEventListener('click',e=>{const b=e.target.closest('[data-equipment]');if(b)inspect(b.dataset.equipment);});
 el('close-card').addEventListener('click',closeCard);
-el('next').addEventListener('click',()=>step(chapter+1));
+el('next').addEventListener('click',()=>trace?showTraceStop(traceIndex+1):step(chapter+1));
 el('tour').addEventListener('click',toggleTour);
 el('present').addEventListener('click',togglePresent);
 el('sources').addEventListener('click',()=>el('basis').showModal());
 el('flow').addEventListener('click',e=>{
-  flow=!flow;e.currentTarget.setAttribute('aria-pressed',String(flow));plant?.setFlow(flow);plant?.setAvailable(available/100);
+  flow=!flow;e.currentTarget.setAttribute('aria-pressed',String(flow));plant?.setFlow(flow);
 });
 el('labels').addEventListener('click',e=>{
   labels=!labels;e.currentTarget.setAttribute('aria-pressed',String(labels));plant?.setLabels(labels);
 });
-el('reset').addEventListener('click',()=>{closeCard();renderStageControls();plant?.focus(chapters[chapter].focus);});
+el('reset').addEventListener('click',()=>{closeCard();if(trace)showTraceStop(traceIndex);else{renderStageControls();plant?.focus(chapters[chapter].focus);}});
 el('plan').addEventListener('click',e=>{
   plan=!plan;e.currentTarget.setAttribute('aria-pressed',String(plan));
   plant?.setCamera(plan?'plan':'iso');
-  renderStageControls();
+  if(trace)showTraceStop(traceIndex);else renderStageControls();
 });
 for(const [key,apply] of [
   ['core',value=>{coreView=value;plant?.setCore(value);renderStageControls();}],
@@ -206,12 +343,15 @@ for(const [key,apply] of [
 el('plan').disabled=!plant;
 document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.addEventListener('keydown',e=>{
-  if(e.altKey||e.ctrlKey||e.metaKey||el('basis').open||e.target.closest('input,textarea,select'))return;
-  if(e.key==='ArrowRight'){e.preventDefault();step(chapter+1);}
-  if(e.key==='ArrowLeft'){e.preventDefault();step(chapter-1);}
-  if(/^[1-5]$/.test(e.key))step(Number(e.key)-1);
+  if(e.altKey||e.ctrlKey||e.metaKey||el('basis').open||e.target.closest('input:not([type=range]),textarea,select,[contenteditable]'))return;
+  if(!e.target.closest('input[type=range]')){
+    if(e.key==='ArrowRight'){e.preventDefault();trace?showTraceStop(traceIndex+1):step(chapter+1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();trace?showTraceStop(traceIndex-1):step(chapter-1);}
+    if(/^[1-5]$/.test(e.key))step(Number(e.key)-1);
+  }
   if(e.key.toLowerCase()==='f'&&!e.repeat)togglePresent();
-  if(e.key==='Escape'){closeCard();if(presenting&&!document.fullscreenElement)applyPresent(false);}
+  if(e.key.toLowerCase()==='h'&&presenting&&!e.repeat)applyHud(!hud);
+  if(e.key==='Escape'){if(openingFrame>=0)stopOpening();else if(trace)clearTrace();else{closeCard();if(presenting&&!document.fullscreenElement)applyPresent(false);}}
 });
 setChapter(0);
 setMode('integrated');
