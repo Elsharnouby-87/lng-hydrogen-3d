@@ -18,6 +18,7 @@ let flow = true,
 let coreView = 'cutaway',
   deepView = 'cutaway',
   deepStream = 'both',
+  lh2View = 'shell',
   plan = false,
   hud = true;
 let trace = null,
@@ -50,6 +51,7 @@ const coreModes = document.querySelectorAll('[data-core]');
 const streamModes = document.querySelectorAll('[data-stream]');
 const deepModes = document.querySelectorAll('[data-deep]');
 const deepStreamModes = document.querySelectorAll('[data-deep-stream]');
+const lh2Modes = document.querySelectorAll('[data-lh2]');
 const traceModes = document.querySelectorAll('[data-trace]');
 
 // The R-101 explanation is useful on desktop, but hides the model on phones.
@@ -220,6 +222,7 @@ function renderStageControls() {
   el('stream-modes').hidden = !exchange || coreView === 'shell' || Boolean(trace);
   el('deep-modes').hidden = !deep || storageFocus;
   el('deep-stream-modes').hidden = !deep || storageFocus || deepView === 'shell' || Boolean(trace);
+  el('lh2-modes').hidden = !storageFocus || Boolean(trace);
   el('coldbox-note').hidden = !deep || storageFocus;
   el('coldbox-caption').textContent = deepView === 'shell'
     ? 'Insulated housing with distinct hydrogen and helium connection ports.'
@@ -230,7 +233,7 @@ function renderStageControls() {
   const title = exchange
     ? 'E-101 ' + coreView.toUpperCase()
     : deep
-      ? (storageFocus ? 'TK-301 · LH₂ STORAGE' : 'R-101 ' + deepView.toUpperCase())
+      ? (storageFocus ? 'TK-301 · LH₂ ' + lh2View.toUpperCase() : 'R-101 ' + deepView.toUpperCase())
       : names[chapter];
   el('view-name').textContent = plan ? 'PLAN · ' + title : title;
 }
@@ -350,6 +353,12 @@ function setDeepStream(value) {
   deepStream = value;
   markPressed(deepStreamModes, 'deepStream', value);
   plant?.setDeepStream(value);
+  renderStageControls();
+}
+function setLH2View(value) {
+  lh2View = value === 'cutaway' ? 'cutaway' : 'shell';
+  markPressed(lh2Modes, 'lh2', lh2View);
+  plant?.setLH2View(lh2View);
   renderStageControls();
 }
 
@@ -564,6 +573,7 @@ for (const [buttons, key, apply] of [
   [streamModes, 'stream', setStream],
   [deepModes, 'deep', setDeepView],
   [deepStreamModes, 'deepStream', setDeepStream],
+  [lh2Modes, 'lh2', setLH2View],
 ]) {
   for (const button of buttons) {
     button.addEventListener('click', () => {
