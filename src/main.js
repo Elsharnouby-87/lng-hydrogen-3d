@@ -670,6 +670,8 @@ window.__siteFilm = {
   trace(value) { plant?.setTrace(value); },
   labels(value) { labels = Boolean(value); plant?.setLabels(labels); },
   flow(value) { flow = Boolean(value); plant?.setFlow(flow); },
+  speed(value) { plant?.setFilmFlowSpeed(value); },
+  zoom(value) { plant?.zoomBy(value); },
   present() { if (!presenting) applyPresent(true); },
   ready() { return plant?.kind === 'webgl'; }
 };
