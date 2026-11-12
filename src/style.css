@@ -101,3 +101,22 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
  .stage:has(#profile-panel:not([hidden])){height:clamp(455px,102vw,590px)}
  .stage:has(#profile-panel:not([hidden])) #model{bottom:154px}
 }
+
+.inspection{flex-wrap:wrap}
+.section-depth{display:flex;align-items:center;gap:9px;min-height:32px;padding:5px 9px;border:1px solid #3b5268;border-radius:5px;background:#0c1725ed;color:#e0e9ef;font-size:11px;pointer-events:auto}
+.section-depth input{width:110px;accent-color:var(--mint)}
+.section-depth output{min-width:125px;color:var(--mint)}
+.inspection-walk{position:absolute;z-index:4;right:17px;bottom:68px;display:flex;align-items:center;gap:12px;max-width:calc(100% - 34px);padding:9px 11px;border:1px solid #516d83;border-left:2px solid var(--mint);border-radius:5px;background:#0b1927f2}
+.walk-copy{display:grid;gap:4px;font-size:12px;line-height:1.35}
+.walk-copy span{color:#bccddd}
+.walk-controls{display:flex;gap:5px;align-items:center;white-space:nowrap;font-size:11px}
+.walk-controls button{background:#1c3448;border:1px solid #496781;border-radius:4px;min-width:30px;min-height:30px;color:#e8f5ff;font-weight:700}
+.hud-hidden .inspection-walk,.is-opening .inspection-walk{visibility:hidden}
+@media(max-width:800px){
+  .stage:has(.inspection-walk:not([hidden])),.stage:has(.section-depth:not([hidden])){height:clamp(400px,70vw,510px)}
+  .inspection-walk{left:8px;right:8px;bottom:78px;max-width:none;gap:8px}
+  .section-depth{flex-basis:100%;gap:6px;padding-inline:7px;font-size:10px}
+  .section-depth input{flex:1;min-width:40px}
+  .section-depth output{min-width:110px}
+  .walk-copy{font-size:11px}
+}

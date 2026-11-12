@@ -294,16 +294,17 @@ export function exchanger(g, route) {
     const passage = route(channel, points, passageFinish, color, 7, 0, .56);
     stack.push({ layer, channel, base, fluid, passage });
   }
+  const headers = group(k);
   for (const side of [-1, 1]) {
     const x = side * 3.44;
-    bevelBox(k, x, 1.93, 0, .25, 2.00, 3.58, .035, cladding);
+    bevelBox(headers, x, 1.93, 0, .25, 2.00, 3.58, .035, cladding);
     for (const z of [-1.02, 1.02]) {
-      sphere(k, x + side * .025, 1.58, z, .36, .52, .51, steel);
-      cyl(k, x + side * .255, 1.38, z, .28, .36, steel, 'x');
-      flange(k, side * 3.86, 1.38, z, .41, 'x', steel, 10);
+      sphere(headers, x + side * .025, 1.58, z, .36, .52, .51, steel);
+      cyl(headers, x + side * .255, 1.38, z, .28, .36, steel, 'x');
+      flange(headers, side * 3.86, 1.38, z, .41, 'x', steel, 10);
     }
   }
-  return { casing, core, stack };
+  return { casing, core, stack, headers };
 }
 
 export function loadingArm(g, points) {

@@ -24,6 +24,12 @@ let trace = null,
   openingFrame = -1,
   openingTimer = null;
 let screeningOpen = false;
+let inspectionShot = null;
+const inspectionShots = [
+  { chapter: 0, camera: 'overview', title: 'Plant overview', note: 'Find E-101 between the LNG and hydrogen systems.' },
+  { chapter: 2, camera: 'flange', title: 'E-101 flange close-up', note: 'Inspect the machined flange, gasket joint and insulated casing.' },
+  { chapter: 2, camera: 'section', title: 'Inside the plate-fin core', note: 'Move the section plane. The colored overlays trace the two streams through separate passages.' },
+];
 
 const chaptersNav = el('chapters');
 chaptersNav.innerHTML = chapters
@@ -104,6 +110,7 @@ function schedule() {
   }, 14000);
 }
 function toggleTour() {
+  closeInspectionTour(true);
   if (tourTimer !== null) {
     stopTour();
     return;
@@ -116,6 +123,7 @@ function toggleTour() {
   schedule();
 }
 function step(n) {
+  closeInspectionTour();
   stopTour();
   stopOpening(false);
   clearTrace(false);
@@ -127,6 +135,7 @@ function closeCard() {
   el('equipment-card').hidden = true;
 }
 function inspect(id) {
+  closeInspectionTour();
   const item = equipment[id];
   if (!item) return;
   stopTour();
@@ -136,7 +145,7 @@ function inspect(id) {
   const nextChapter = chapters.findIndex((c) => c.id === item.chapter);
   setChapter(nextChapter, false);
   const focus = id === 'grid' ? 'trim' : ['cryo', 'catalyst', 'separator'].includes(id) ? 'deep' : id;
-  plant?.focus(focus);
+  plant?.focus(exchangeFocus(focus));
   selection = id;
   hotspots.querySelector(`[data-equipment="${id}"]`)?.classList.add('selected');
   el('equipment-code').textContent = item.code;
@@ -184,6 +193,9 @@ function renderStageControls() {
   const deep = id === 'deep';
   el('inspection').hidden = !plant || (!exchange && !deep);
   el('core-modes').hidden = !exchange;
+  el('e101-tour').hidden = plant?.kind !== 'webgl';
+  el('section-controls').hidden = !exchange || coreView !== 'section' || plant?.kind !== 'webgl';
+  document.querySelector('[data-core=section]').hidden = plant?.kind !== 'webgl';
   el('stream-modes').hidden = !exchange || coreView === 'shell' || Boolean(trace);
   el('deep-modes').hidden = !deep;
   el('profile-panel').hidden = id !== 'match' || Boolean(trace);
@@ -209,7 +221,7 @@ function setChapter(i, moveCamera = true) {
   el('next').disabled = i === chapters.length - 1;
   markCurrent(chaptersNav.children, i);
   renderDetail(c);
-  if (moveCamera) plant?.focus(c.focus);
+  if (moveCamera) plant?.focus(exchangeFocus(c.focus));
 }
 function setMode(value) {
   clearScreeningDuty();
@@ -242,9 +254,57 @@ function setPlan(value) {
   else renderStageControls();
 }
 
+function exchangeFocus(view) {
+  return view === 'exchange' && coreView === 'section' ? 'section' : view;
+}
+
+function updateSectionDepth(value) {
+  const feature = value < 6 ? 'Inlet header' : value < 17 ? 'Flow distributor' :
+    value < 84 ? 'Corrugated fin passages' : value < 96 ? 'Outlet distributor' : 'Outlet header';
+  el('section-depth').value = value;
+  el('section-depth').setAttribute('aria-valuetext', feature);
+  el('section-feature').textContent = feature;
+  plant?.setSectionDepth(value);
+}
+
+function showInspectionShot(index) {
+  const shot = inspectionShots[index];
+  if (!shot || plant?.kind !== 'webgl') return;
+  inspectionShot = index;
+  setChapter(shot.chapter, false);
+  if (plan) setPlan(false);
+  setCoreView(shot.camera === 'section' ? 'section' : shot.camera === 'flange' ? 'shell' : 'cutaway');
+  if (shot.camera === 'section') {
+    setStream('both');
+    updateSectionDepth(14);
+  }
+  plant.focus(shot.camera);
+  if (shot.camera === 'flange') el('view-name').textContent = 'E-101 FLANGE CLOSE-UP';
+  el('walk-title').textContent = shot.title;
+  el('walk-note').textContent = shot.note;
+  el('walk-count').textContent = `${index + 1} / ${inspectionShots.length}`;
+  el('walk-prev').disabled = index === 0;
+  el('walk-next').disabled = index === inspectionShots.length - 1;
+  el('inspection-walk').hidden = false;
+  el('e101-tour').setAttribute('aria-pressed', 'true');
+}
+
+function closeInspectionTour(restore = false) {
+  if (inspectionShot === null) return;
+  inspectionShot = null;
+  el('inspection-walk').hidden = true;
+  el('e101-tour').setAttribute('aria-pressed', 'false');
+  if (restore) {
+    if (chapter === 2) setCoreView('cutaway');
+    plant?.focus(chapters[chapter].focus);
+    el('e101-tour').focus({ preventScroll: true });
+  }
+}
+
 function setCoreView(value) {
   coreView = value;
   markPressed(coreModes, 'core', value);
+  if (value === 'section') updateSectionDepth(Number(el('section-depth').value));
   plant?.setCore(value);
   renderStageControls();
 }
@@ -263,7 +323,8 @@ function setDeepView(value) {
 }
 
 function advance(offset) {
-  if (trace) showTraceStop(traceIndex + offset);
+  if (inspectionShot !== null) showInspectionShot(inspectionShot + offset);
+  else if (trace) showTraceStop(traceIndex + offset);
   else step(chapter + offset);
 }
 
@@ -307,6 +368,8 @@ function clearTrace(restore = true) {
   if (restore) setChapter(chapter);
 }
 function startTrace(fluid) {
+  closeInspectionTour();
+  if (coreView === 'section') setCoreView('cutaway');
   if (trace === fluid) {
     clearTrace();
     return;
@@ -393,6 +456,7 @@ function showOpeningFrame(i) {
   openingTimer = setTimeout(() => showOpeningFrame(i + 1), shot.time);
 }
 async function startOpening() {
+  closeInspectionTour();
   if (openingFrame >= 0) return;
   stopTour();
   clearTrace(false);
@@ -448,9 +512,21 @@ el('reset').addEventListener('click', () => {
   if (trace) showTraceStop(traceIndex);
   else {
     renderStageControls();
-    plant?.focus(chapters[chapter].focus);
+    plant?.focus(inspectionShot === null ? exchangeFocus(chapters[chapter].focus) : inspectionShots[inspectionShot].camera);
   }
 });
+el('section-depth').addEventListener('input', event => updateSectionDepth(Number(event.target.value)));
+el('e101-tour').addEventListener('click', () => {
+  if (inspectionShot !== null) return closeInspectionTour(true);
+  stopTour();
+  stopOpening(false);
+  clearTrace(false);
+  showInspectionShot(0);
+  el('walk-next').focus({ preventScroll: true });
+});
+el('walk-prev').addEventListener('click', () => showInspectionShot(inspectionShot - 1));
+el('walk-next').addEventListener('click', () => showInspectionShot(inspectionShot + 1));
+el('walk-close').addEventListener('click', () => closeInspectionTour(true));
 el('plan').addEventListener('click', () => setPlan(!plan));
 for (const [buttons, key, apply] of [
   [coreModes, 'core', setCoreView],
@@ -460,6 +536,7 @@ for (const [buttons, key, apply] of [
   for (const button of buttons) {
     button.addEventListener('click', () => {
       stopTour();
+      if (key === 'core') closeInspectionTour();
       apply(button.dataset[key]);
     });
   }
@@ -493,6 +570,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'h' && presenting && !e.repeat) applyHud(!hud);
   if (e.key === 'Escape') {
     if (openingFrame >= 0) stopOpening();
+    else if (inspectionShot !== null) closeInspectionTour(true);
     else if (trace) clearTrace();
     else {
       closeCard();
@@ -515,6 +593,7 @@ initScreening({
     if (value) {
       stopTour();
       stopOpening(false);
+      closeInspectionTour(true);
       clearScreeningDuty();
     }
     document.body.classList.toggle('is-screening', value);

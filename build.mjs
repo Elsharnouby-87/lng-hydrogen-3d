@@ -5,6 +5,8 @@ import { build, transform } from 'esbuild';
 const path = (relative) => new URL(relative, import.meta.url);
 const read = (relative) => readFile(path(relative), 'utf8');
 
+const inspectionAsset = await readFile(path('src/assets/e101-inspection.glb.gz'));
+
 const [template, style, screeningStyle, screeningView, license, signatureFont, signatureLicense, bundle] = await Promise.all([
   read('src/template.html'),
   read('src/style.css'),
@@ -22,6 +24,7 @@ const [template, style, screeningStyle, screeningView, license, signatureFont, s
     minify: true,
     write: false,
     legalComments: 'none',
+    define: { E101_ASSET: JSON.stringify(inspectionAsset.toString('base64')) },
   }),
 ]);
 const { code: css } = await transform(`${style}\n${screeningStyle}`, { loader: 'css', minify: true });
