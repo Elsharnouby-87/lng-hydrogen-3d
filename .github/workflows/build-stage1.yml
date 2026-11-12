@@ -17,15 +17,17 @@ jobs:
       - run: npm ci
       - run: node tools/test-coldbox.mjs
       - run: npm run build
+      - name: Headless Chromium R-101 visual and interaction smoke tests
+        run: node tools/qa-coldbox-browser.mjs
       - name: Verify self-contained conference artifact
         run: |
           node -e "const fs=require('fs');const p=fs.readFileSync('docs/index.html','utf8');if(!p.includes('Helium only')||!p.includes('Exploded')||!p.includes('R-101'))process.exit(1)"
       - name: Commit compiled single-file site to feature branch
         run: |
-          if ! git diff --quiet docs/index.html; then
+          if ! git diff --quiet docs/index.html || ls docs/r101-stage1-*.png >/dev/null 2>&1; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docs/index.html
+            git add docs/index.html docs/r101-stage1-*.png
             git commit -m "Build Stage 1 self-contained site [skip ci]"
             git push
           fi
