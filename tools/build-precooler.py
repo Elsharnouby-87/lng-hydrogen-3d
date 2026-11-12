@@ -1,4 +1,5 @@
 """Build the illustrative E-101 inspection asset with Blender's glTF exporter."""
+import json
 import math
 import sys
 from pathlib import Path
@@ -7,6 +8,7 @@ import bpy
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 parts = {}
+layout = json.loads((Path(__file__).resolve().parents[1] / "src/precooler-layout.json").read_text())
 
 def material(name, color, metal, roughness):
     mat = bpy.data.materials.new(name)
@@ -84,26 +86,35 @@ for side in [-1, 1]:
             cylinder("Headers", frame, side*3.899, by, bz, .032, .036, 6)
             cylinder("Headers", steel, side*3.691, by, bz, .032, .036, 6)
 
+# Each circuit has separate end risers and rectangular distribution chambers.
+for side in [-1, 1]:
+    for parity, port_z in [(0, -layout["nozzleZ"]), (1, layout["nozzleZ"])]:
+        low = layout["firstLayerY"] + parity * layout["layerPitch"] + layout["flowY"]
+        last = max(i for i in range(layout["layers"]) if i % 2 == parity)
+        high = layout["firstLayerY"] + last * layout["layerPitch"] + layout["flowY"]
+        box("Headers", steel, side * layout["riserX"], (low+high)/2, port_z,
+            .20, high-low+.14, .27, .018)
+
 # Representative alternating passages. The pitch is enlarged for inspection.
-for i in range(7):
-    y = 1.00 + i*.306
+for i in range(layout["layers"]):
+    y = layout["firstLayerY"] + i * layout["layerPitch"]
     fluid = blue if i % 2 == 0 else green
     group = "Hydrogen" if i % 2 == 0 else "LNG"
+    port_z = -layout["nozzleZ"] if i % 2 == 0 else layout["nozzleZ"]
     box("Core", aluminium, 0, y+.014, 0, 6.45, .066, 3.03, .011)
     for side in [-1, 1]:
         box("Core", aluminium, 0, y+.112, side*1.465, 6.43, .147, .085, .007)
-    for j in range(27):
-        z = (j-13)*.102
-        box(group, fluid, 0, y+.072, z, 4.70, .020, .067)
-        box("Core", aluminium, 0, y+.139, z+.045, 4.70, .118, .018)
+    for j in range(layout["lanes"]):
+        z = (j - (layout["lanes"] - 1)/2) * layout["lanePitch"]
+        box(group, fluid, 0, y+.072, z, 4.93, .020, .064)
+        box("Core", aluminium, 0, y+.139, z+.049, 4.93, .118, .026)
     for side in [-1, 1]:
-        box(group, fluid, side*2.76, y+.069, 0, .83, .025, 2.74)
-        for j in range(11):
-            z = (j-5)*.227
-            x1, z1, x2, z2 = side*3.18, z*.39, side*2.36, z
-            box("Core", aluminium, (x1+x2)/2, y+.135, (z1+z2)/2,
-                math.hypot(x2-x1, z2-z1), .091, .023)
-            bpy.context.object.rotation_euler.z = math.atan2(-(z2-z1), x2-x1)
+        header = side * layout["headerX"]
+        box("Core", aluminium, header, y+.077, 0, .44, .054, 2.79)
+        box(group, fluid, header, y+.109, 0, .36, .023, 2.70)
+        box("Core", aluminium, header+side*.22, y+.143, 0, .046, .150, 2.79)
+        box("Core", steel, side*(layout["headerX"]+layout["riserX"])/2,
+            y+layout["flowY"], port_z, layout["riserX"]-layout["headerX"], .098, .19)
 
 for (group, _), objects in parts.items():
     bpy.ops.object.select_all(action="DESELECT")
@@ -116,4 +127,4 @@ for (group, _), objects in parts.items():
     obj["assembly"] = group
 
 out = Path(sys.argv[sys.argv.index("--")+1]).resolve()
-bpy.ops.export_scene.gltf(filepath=str(out), export_format="GLB", export_extras=True)
+bpy.ops.export_scene.gltf(filepath=str(out), export_format="GLB", export_extras=True, export_texcoords=False)

@@ -28,7 +28,7 @@ let inspectionShot = null;
 const inspectionShots = [
   { chapter: 0, camera: 'overview', title: 'Plant overview', note: 'Find E-101 between the LNG and hydrogen systems.' },
   { chapter: 2, camera: 'flange', title: 'E-101 flange close-up', note: 'Inspect the machined flange, gasket joint and insulated casing.' },
-  { chapter: 2, camera: 'section', title: 'Inside the plate-fin core', note: 'Move the section plane. The colored overlays trace the two streams through separate passages.' },
+  { chapter: 2, camera: 'section', title: 'Inside the plate-fin core', note: 'Move the section plane. Trace each stream from its header through parallel passages.' },
 ];
 
 const chaptersNav = el('chapters');
@@ -73,7 +73,6 @@ function fallback() {
   <g fill="#6eefd0" font-size="18" font-family="Arial"><text x="37" y="255">Trim · Gas grid</text><text x="514" y="255">LNG tank · Pump</text></g>
   <path id="schematic-h2" d="M35 151H720" fill="none" stroke="#67cfff" stroke-width="4" marker-end="url(#aB)"/>
   <path id="schematic-lng" d="M720 216H35" fill="none" stroke="#6eefd0" stroke-width="4" marker-end="url(#aG)"/>
-  <text id="schematic-heat" x="377" y="190" fill="#f7bb78" font-size="17" text-anchor="middle">↓ Heat from H₂ to LNG</text>
   <text x="377" y="327" fill="#bdcfdf" font-size="15" text-anchor="middle">2D backup · WebGL unavailable</text>
   </svg>`;
 }
@@ -227,8 +226,7 @@ function setMode(value) {
   clearScreeningDuty();
   mode = value;
   markPressed(modes, 'mode', value);
-  el('stage').classList.toggle('thermal-off', value === 'standalone');
-  el('thermal-legend').textContent = value === 'standalone' ? 'Precooler bypassed' : 'Heat transfer';
+  el('bypass-legend').hidden = value !== 'standalone';
   plant?.setMode(value);
   operatingMatch.setMode(value);
   if (el('approach')) updateApproach();
@@ -237,12 +235,10 @@ function setMode(value) {
     showTraceStop(traceIndex);
   }
   const h = el('schematic-h2'),
-    l = el('schematic-lng'),
-    heat = el('schematic-heat');
-  if (h && l && heat) {
+    l = el('schematic-lng');
+  if (h && l) {
     h.setAttribute('d', value === 'integrated' ? 'M35 151H720' : 'M35 151H220V30H540V151H720');
     l.setAttribute('d', value === 'integrated' ? 'M720 216H35' : 'M720 216H540V305H220V216H35');
-    heat.style.display = value === 'integrated' ? '' : 'none';
   }
 }
 

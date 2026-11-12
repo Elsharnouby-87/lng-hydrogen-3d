@@ -1,0 +1,13 @@
+{
+  "layers": 7,
+  "lanes": 25,
+  "lanePitch": 0.109,
+  "firstLayerY": 1,
+  "layerPitch": 0.306,
+  "flowY": 0.134,
+  "headerX": 2.68,
+  "riserX": 3.15,
+  "nozzleX": 3.89,
+  "nozzleY": 1.38,
+  "nozzleZ": 1.02
+}

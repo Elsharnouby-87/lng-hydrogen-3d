@@ -1,11 +1,8 @@
 import * as T from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { BLUE, MINT, GOLD, group, mesh, steel } from './plant-geometry.js';
-
-const paths = {
-  h2: [[-3.89,1.38,-1.02],[-3.27,1.38,-1.02],[-3.02,2.40,-.86],[-2.42,2.40,-.38],[2.42,2.40,-.38],[3.02,2.40,-.86],[3.27,1.38,-1.02],[3.89,1.38,-1.02]],
-  lng: [[3.89,1.38,1.02],[3.27,1.38,1.02],[3.02,2.09,.86],[2.42,2.09,-.38],[-2.42,2.09,-.38],[-3.02,2.09,.86],[-3.27,1.38,1.02],[-3.89,1.38,1.02]],
-};
+import { group, steel } from './plant-geometry.js';
+import layout from './precooler-layout.json';
+import { addPrecoolerPassages, addPrecoolerRisers, fluidAt, layerY } from './precooler-flow.js';
 
 async function readAsset() {
   const bytes = Uint8Array.from(atob(E101_ASSET), letter => letter.charCodeAt(0));
@@ -13,7 +10,7 @@ async function readAsset() {
   return new GLTFLoader().parseAsync(await new Response(stream).arrayBuffer(), '');
 }
 
-export function createPrecoolerInspection(parent, route, fallback, invalidate) {
+export function createPrecoolerInspection(parent, fallback, invalidate) {
   const assembly = group(parent);
   const plane = new T.Plane(new T.Vector3(1, 0, 0), 3.55);
   function clip(material) {
@@ -35,26 +32,15 @@ export function createPrecoolerInspection(parent, route, fallback, invalidate) {
     }
   }
 
-  const streams = Object.entries(paths).map(([fluid, points]) => {
-    const color = fluid === 'h2' ? BLUE : MINT;
+  const streams = ['h2', 'lng'].map(fluid => {
     const root = group(assembly);
-    const circuit = route(root, points, clip(new T.MeshBasicMaterial({ color })), color, 16, .028, .51);
-    // Diagram overlays remain readable through the aluminium stack.
-    for (const overlay of [...circuit.pipes, circuit.glow, circuit.arrows]) {
-      clip(overlay.material);
-      overlay.material.depthTest = false;
-      overlay.material.depthWrite = false;
-      overlay.renderOrder = 5;
+    const lanes = [];
+    for (let index = 0; index < layout.layers; index++) {
+      if (fluidAt(index) === fluid) lanes.push(addPrecoolerPassages(root, fluid, layerY(index), plane));
     }
-    return { fluid, circuit, root };
+    addPrecoolerRisers(root, fluid, plane);
+    return { fluid, root, lanes };
   });
-  const heat = group(assembly);
-  const heatMaterial = clip(new T.MeshBasicMaterial({ color: GOLD, depthTest: false, depthWrite: false }));
-  for (const x of [-1.70,-.55,.60,1.75]) {
-    const arrow = mesh(heat, new T.ConeGeometry(.047, .13, 10), heatMaterial, x, 2.22, -.25);
-    arrow.rotation.z = Math.PI;
-    arrow.renderOrder = 6;
-  }
 
   let model, requested = false;
   function update({ shot, focus, running, enabled }) {
@@ -73,11 +59,9 @@ export function createPrecoolerInspection(parent, route, fallback, invalidate) {
       });
     }
     clipFallback(section && !model);
-    for (const { fluid, root, circuit } of streams) {
-      root.visible = section && enabled && (focus === 'both' || focus === fluid);
-      circuit.glow.visible = circuit.arrows.visible = running;
+    for (const { fluid, root } of streams) {
+      root.visible = section && enabled && running && (focus === 'both' || focus === fluid);
     }
-    heat.visible = section && running && focus === 'both';
     if (shot && !requested) {
       requested = true;
       readAsset().then(asset => {
@@ -98,9 +82,9 @@ export function createPrecoolerInspection(parent, route, fallback, invalidate) {
     update,
     get loaded() { return Boolean(model); },
     setDepth(percent) { plane.constant = 3.55 - percent * .0705; },
-    animate(drawFlow, phase) {
+    animate(phase) {
       if (!assembly.visible) return;
-      for (const { root, circuit } of streams) if (root.visible && circuit.glow.visible) drawFlow(circuit, phase);
+      for (const { root, lanes } of streams) if (root.visible) for (const animate of lanes) animate(phase);
     },
   };
 }

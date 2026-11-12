@@ -5,7 +5,7 @@ import { softwareRenderer } from './software.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
 import {
-  BLUE, GOLD, MINT, applySurfaceFinishes, batchStaticMeshes, blue, box, boxes, cyl, dark, flange, gold,
+  BLUE, MINT, applySurfaceFinishes, batchStaticMeshes, blue, box, boxes, cyl, dark, flange, gold,
   group, ice, material, mesh, mint, mutedPipe, pad, pipeBlue, pipeMint, pipePath,
   pipeTube, rail, road, seaWall, segment, slab, sphere, steel, trim, v, white,
 } from './plant-geometry.js';
@@ -324,29 +324,15 @@ export function createPlant(target, labelLayer, choose, reduced){
   }
   const water=kind==='webgl'?makeWater(scene):null;
   const {g,refrigeration,dockFlow,storage}=terminal(scene);
-  const equipment=exchanger(g,route);
+  const equipment=exchanger(g);
   const {casing,core,stack,headers}=equipment;
-  const inspection=shadows?createPrecoolerInspection(g,route,equipment,updateVisibility):null;
+  const inspection=shadows?createPrecoolerInspection(g,equipment,updateVisibility):null;
   const routes=stageRoutes(scene,storage);
   const mainRoutes=[...routes.c,...routes.a,...routes.s,dockFlow];
   const mechanical=group(g);
   horizontalVessel(mechanical,-1.24,1.38,-7.08,.48,3.06,blue);
   mechanical.visible=false;
   routes.standalone.visible=false;
-  const thermal=group(scene), heatAcross=group(thermal), heatBetween=group(thermal);
-  const amberArrow=new T.MeshBasicMaterial({color:GOLD});
-  for(let i=0;i<5;i++){
-    const x=-2.4+1.2*i;
-    segment(heatAcross,v(x,0,-.81),v(x,0,.82),.046,gold);
-    const m=mesh(heatAcross,new T.ConeGeometry(.12,.28,10),amberArrow,x,0,.87);
-    m.rotation.x=Math.PI/2;
-  }
-  for(const x of [-1.7,.2,2.1]){
-    segment(heatBetween,v(x,0,1.57),v(x,-.53,1.57),.043,gold);
-    const arrow=mesh(heatBetween,new T.ConeGeometry(.105,.23,10),amberArrow,x,-.59,1.57);
-    arrow.rotation.z=Math.PI;
-  }
-  thermal.visible=false;
   const pickers = [
     pick(g,'dock',14.4,1.9,12.2,2.2,4.2,3.4),
     pick(g,'feed',-13.55,1.15,-4.95,10,2.35,3.5),
@@ -383,7 +369,6 @@ export function createPlant(target, labelLayer, choose, reduced){
     headers.visible=!(shot&&inspection.loaded);
     inspection?.update({shot,focus:passageFocus,running:flow&&live,enabled:live});
     if(inspection?.loaded)target.dataset.inspectionModel='glb';
-    thermal.visible=opened&&live&&passageFocus==='both';
     refrigeration.inside.visible=active==='deep'&&deepView==='cutaway';
     refrigeration.shell.visible=!refrigeration.inside.visible;
     const nextShadowState = `${opened}/${refrigeration.inside.visible}/${mode}/${shot}/${inspection?.loaded}`;
@@ -391,9 +376,9 @@ export function createPlant(target, labelLayer, choose, reduced){
       shadows.needsUpdate = true;
       shadowState = nextShadowState;
     }
-    for(const {channel,fluid,passage} of stack){
+    for(const {channel,fluid,flow: indicators} of stack){
       channel.visible=passageFocus==='both'||passageFocus===fluid;
-      passage.glow.visible=!shot&&flow&&live;passage.arrows.visible=!shot&&flow&&live;
+      indicators.visible=!shot&&flow&&live;
     }
     const coldFlow=flow&&trace!=='lng';
     refrigeration.flow.glow.visible=coldFlow;refrigeration.flow.arrows.visible=coldFlow;
@@ -491,9 +476,6 @@ export function createPlant(target, labelLayer, choose, reduced){
         layer.position.x=spread*(index-3)*.14;
       }
     }
-    heatAcross.visible=spread<.54;heatBetween.visible=spread>=.54;
-    heatAcross.position.y=3.37;
-    heatBetween.position.y=stack.at(-1).layer.position.y-.09;
     const delta=Math.min((now-last)/1000,.05);last=now;
     const pace=screeningDuty===null?1:.4+.6*screeningDuty;
     if(tween){
@@ -507,9 +489,9 @@ export function createPlant(target, labelLayer, choose, reduced){
     if (!redraw && (!flow || reduced)) return;
     if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;if(water)water.uniforms.uTime.value+=delta;}
     if(flow){
-      inspection?.animate(drawFlow,passageTravel);
+      inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
-        for(const {channel,passage} of stack)if(channel.visible)drawFlow(passage,passageTravel);
+        for(const entry of stack)if(entry.channel.visible)entry.animate(passageTravel);
       }
       if(refrigeration.inside.visible&&refrigeration.flow.glow.visible)drawFlow(refrigeration.flow,travel);
       if(dockFlow.glow.visible)drawFlow(dockFlow,travel);

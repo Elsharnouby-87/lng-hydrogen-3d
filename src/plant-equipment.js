@@ -1,9 +1,12 @@
 import * as T from 'three';
 import {
-  BLUE, MINT, bevelBox, blue, box, boxes, cyl, dark, flange, gold, group,
+  BLUE, bevelBox, blue, box, boxes, cyl, dark, flange, gold, group,
   ice, material, mesh, mint, nameplate, pad, pipeBlue, pipePath, pipeTube, rail, segment, slab,
   sphere, steel, trim, v,
 } from './plant-geometry.js';
+
+import layout from './precooler-layout.json';
+import { addPrecoolerPassages, fluidAt, lanePositions, layerY, riserSpan } from './precooler-flow.js';
 
 const paintedSteel = material(0xb9c3c6, .25, .58);
 const cladding = material(0x9cacb3, .62, .44);
@@ -241,7 +244,7 @@ export function coldBox(g, x, z, route) {
   };
 }
 
-export function exchanger(g, route) {
+export function exchanger(g) {
   const k = group(g);
   skid(k, 0, 0, 7.80, 4.56);
   for (const x of [-2.80, 2.80]) for (const z of [-1.36, 1.36]) {
@@ -263,40 +266,34 @@ export function exchanger(g, route) {
   for (const y of [1.30, 1.92]) box(casing, -.47, y, 1.851, .087, .133, .057, trim);
   nameplate(casing, 'E-101 / CRYOGENIC PRECOOLER', .94, 2.37, 1.804, 2.26, .27, '#a1e4db');
 
-  for (let index = 0; index < 7; index++) {
-    const base = 1.00 + index * .306;
-    const layer = group(core, 0, base, 0), channel = group(layer);
-    const forward = index % 2 === 0;
-    const fluid = forward ? 'h2' : 'lng';
-    const color = forward ? BLUE : MINT;
-    const passageFinish = forward ? finBlue : finMint;
+  for (let index = 0; index < layout.layers; index++) {
+    const base = layerY(index);
+    const layer = group(core, 0, base, 0), channel = group(layer), flow = group(channel);
+    const fluid = fluidAt(index);
+    const passageFinish = fluid === 'h2' ? finBlue : finMint;
+    const { portZ } = riserSpan(fluid);
     bevelBox(layer, 0, .014, 0, 6.47, .087, 3.03, .021, steel);
     for (const edge of [-1, 1]) box(layer, 0, .14, edge * 1.46, 6.41, .193, .106, cladding);
-    const corrugations = [], passages = [];
-    for (let i = 0; i < 25; i++) {
-      const z = (i - 12) * .109;
-      corrugations.push([0, .131, z, 4.93, .135, .031]);
-      passages.push([0, .075, z + .053, 4.93, .027, .063]);
+    boxes(layer, fins, lanePositions.map(z => [0,.131,z+.049,4.93,.135,.027]));
+    boxes(channel, passageFinish, lanePositions.map(z => [0,.075,z,4.93,.027,.064]));
+    for (const side of [-1, 1]) {
+      const x = side * layout.headerX;
+      box(layer, x, .079, 0, .44, .056, 2.79, cladding);
+      box(layer, x + side * .22, .144, 0, .046, .16, 2.79, steel);
+      box(channel, x, .112, 0, .36, .023, 2.70, passageFinish);
+      box(layer, side * (layout.headerX + layout.riserX) / 2, layout.flowY, portZ,
+        layout.riserX - layout.headerX, .098, .19, steel);
     }
-    boxes(layer, fins, corrugations);
-    boxes(channel, passageFinish, passages);
-    box(channel, 0, .218, 1.51, 4.91, .035, .021, passageFinish);
-    for (const sign of [-1, 1]) {
-      const center = sign * 2.81;
-      box(layer, center, .093, 0, .69, .059, 2.70, cladding);
-      for (let i = 0; i < 9; i++) {
-        const z = (i - 4) * .264;
-        segment(channel, v(sign * 3.17, .131, z * .44), v(sign * 2.46, .131, z), .023, passageFinish);
-      }
-      box(channel, sign * 3.18, .135, 0, .079, .129, 1.39, passageFinish);
-    }
-    const points = forward ? [[-2.95,.222,.06],[2.95,.222,.06]] : [[2.95,.222,.06],[-2.95,.222,.06]];
-    const passage = route(channel, points, passageFinish, color, 7, 0, .56);
-    stack.push({ layer, channel, base, fluid, passage });
+    stack.push({ layer, channel, base, fluid, flow, animate: addPrecoolerPassages(flow, fluid) });
   }
   const headers = group(k);
   for (const side of [-1, 1]) {
     const x = side * 3.44;
+    for (const fluid of ['h2', 'lng']) {
+      const { portZ, top, bottom } = riserSpan(fluid);
+      bevelBox(headers, side * layout.riserX, (top + bottom) / 2, portZ,
+        .20, top - bottom + .14, .27, .018, steel);
+    }
     bevelBox(headers, x, 1.93, 0, .25, 2.00, 3.58, .035, cladding);
     for (const z of [-1.02, 1.02]) {
       sphere(headers, x + side * .025, 1.58, z, .36, .52, .51, steel);
