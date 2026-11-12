@@ -50,3 +50,16 @@ Select **Deep refrigeration** in the 3D presentation. R-101 now provides **Shell
 **Engineering boundary:** This is a conceptual helium reverse-Brayton-type cold-end arrangement and is not a supplier design, a detailed flow simulation, a thermal-duty validation, or a full hydrogen liquefaction process. External helium compression, heat rejection, and downstream LH₂ handling are outside R-101. Performance values in the Egypt/Kuwait calculators are unchanged.
 
 **QA:** `node tools/test-coldbox.mjs` runs equipment, stream, view and flow checks. `npm run build` regenerates the self-contained offline site. E-101's previously approved geometry and the Egypt/Kuwait models are unchanged.
+
+## Stage 3 — Industrial Equipment Detailing (conceptual)
+
+The mechanical equipment is rebuilt as inspectable Three.js assemblies with preserved plant service nozzles:
+
+- **K-101 hydrogen compressor:** split barrel centrifugal-style compressor on anchored skid; axial hydrogen suction and upper discharge spool; bolted casing, coupling guard, finned motor, seal-gas / lubricant panel, local pressure instrumentation, automated block valve and pipe shoes.
+- **P-201 LNG pump:** vertical cryogenic-barrel pump with enclosed drive, motor cooling fins, inlet/outlet service flanges, actuated discharge isolation, pressure indications, vibration / service panel and bolted base.
+- **E-202 vaporizer:** finned vertical-tube ambient-air-style representative array, connected bottom LNG distribution and upper gas collection manifolds, valves, supports and measurement connections. The external auxiliary/trim heating duty is **not** simulated.
+- **TK-301 LH₂ storage:** horizontal vacuum-jacketed vessel with domed ends, saddle anchors, insulated liquid inlet, vacuum-service indication, level/pressure instrumentation and capped relief **interfaces**. No vent header sizing or pressure-relief design is represented.
+
+All four use **representative geometry**, *not mechanical detail engineering or vendor designs*. Ratings, dimensions, support loads, metallurgy, insulation performance, valve type and pressure-class selection need equipment-vendor confirmation. Added K-101 selection and equipment-specific close-up camera presets. The original E-101 pre-cooler, R-101 cooling module and Egypt/Kuwait screening mathematics are intentionally unchanged.
+
+Quality gate: `node tools/test-industrial.mjs` validates key equipment, connection coordinates and instruments; `node tools/qa-coldbox-browser.mjs` captures WebGL close-ups for each equipment and continues the mobile/desktop R-101 regressions. The Stage-3 workflow rebuilds `docs/index.html`, generating four screenshots named `stage3-*-closeup.png`.

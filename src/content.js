@@ -40,16 +40,17 @@ export const chapters = [
 ];
 
 export const equipment = {
-  feed: { code: 'H₂', label: 'Hydrogen feed', detail: 'Feed conditioning and any required compression come before precooling.', chapter: 'overview' },
+  feed: { code: 'H₂', label: 'Hydrogen feed', detail: 'Hydrogen enters the conditioning section upstream of K-101. No actual feed composition or operating pressure is implied.', chapter: 'overview' },
+  compressor: { code: 'K-101', label: 'Hydrogen compressor', detail: 'Representative centrifugal H₂ compressor on a skid with axial suction, connected discharge spool, protected motor coupling, seal-gas panel and local pressure instrumentation. Not a vendor-rated compressor configuration.', chapter: 'overview' },
   dock: { code: 'JETTY', label: 'Marine unloading', detail: 'The articulated marine unloading arm transfers LNG to shore during a cargo unloading operation.', chapter: 'lng' },
   lng: { code: 'TK-201', label: 'LNG storage', detail: 'LNG storage is shown near 111 K. Pumping and actual terminal conditions define the exchanger inlet.', chapter: 'lng' },
-  pump: { code: 'P-201', label: 'High-pressure pump', detail: 'Pressurizes the LNG before the recovery tie-in and the terminal vaporizer.', chapter: 'lng' },
+  pump: { code: 'P-201', label: 'Cryogenic LNG pump', detail: 'Representative vertical cryogenic LNG pump with insulated barrel, upper drive, suction and discharge nozzles, isolation actuator, supports and instrumentation. Pump hydraulic rating is not specified.', chapter: 'lng' },
   exchange: { code: 'E-101', label: 'Countercurrent precooler', detail: 'Heat moves from hydrogen to LNG across a wall. A finite minimum approach limits the handoff temperature.', chapter: 'exchange' },
-  trim: { code: 'E-202', label: 'Vaporizer / trim', detail: 'The terminal heater completes warming to the gas send-out specification. An independent bypass maintains terminal operation if the precooler is isolated.', chapter: 'lng' },
+  trim: { code: 'E-202', label: 'Finned-tube vaporizer', detail: 'Schematic ambient-air-style finned-bank vaporizer with bottom LNG distribution and top gas collection headers. Auxiliary trim heating, outlet temperature control and final gas send-out specification are not simulated.', chapter: 'lng' },
   deep: { code: 'R-101', label: 'Deep refrigeration', detail: 'R-101 illustrates a helium reverse-Brayton cold end with three plate-fin stages, two parallel expander branches and an ortho–para catalyst vessel; external compression is outside the housing.', chapter: 'deep' },
   cryo: { code: 'HX', label: 'Cryogenic exchanger', detail: 'HX-201/202/203 are representative, separately tagged plate-fin cores with isolated H₂ and helium passages. Their sizing and temperatures are illustrative.', chapter: 'deep' },
   catalyst: { code: 'CAT', label: 'Ortho–para conversion', detail: 'Catalyst beds accelerate conversion to para-hydrogen. The cold train removes the heat released during conversion.', chapter: 'deep' },
   separator: { code: 'SEP', label: 'Phase separator', detail: 'After the final pressure reduction, the separator directs liquid hydrogen to storage and separates the remaining vapor.', chapter: 'deep' },
-  liquid: { code: 'LH₂', label: 'Liquid hydrogen', detail: 'Final expansion and phase separation deliver liquid hydrogen near 20 K on the near-atmospheric reference basis.', chapter: 'deep' },
+  liquid: { code: 'TK-301', label: 'Vacuum-insulated LH₂ storage', detail: 'Representative horizontal vacuum-jacketed LH₂ vessel with insulated inlet, anchored saddle supports, jacket-service indication, local level instrument and capped safety connection interfaces. Relief/vent header design is outside this model.', chapter: 'deep' },
   grid: { code: 'NG', label: 'Gas send-out', detail: 'Natural gas proceeds to metered send-out after meeting the terminal delivery specification.', chapter: 'lng' },
 };

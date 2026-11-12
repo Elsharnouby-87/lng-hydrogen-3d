@@ -9,7 +9,7 @@ import {
   group, ice, material, mesh, mint, mutedPipe, pad, pipeBlue, pipeMint, pipePath,
   pipeTube, rail, road, seaWall, segment, slab, sphere, steel, trim, v, white,
 } from './plant-geometry.js';
-import { coldBox, compressor, exchanger, horizontalVessel, lngPump, loadingArm, tank, vaporizer } from './plant-equipment.js';
+import { coldBox, compressor, exchanger, horizontalVessel, lngPump, lh2Tank, loadingArm, tank, vaporizer } from './plant-equipment.js';
 
 function pick(g,id,x,y,z,w,h,d){
   const o=box(g,x,y,z,w,h,d,new T.MeshBasicMaterial({visible:false}));
@@ -144,8 +144,7 @@ function terminal(scene){
   horizontalVessel(g,-18.12,.98,-4.95,.60,2.23,blue,'H₂ FEED VESSEL');
   const refrigeration=coldBox(g,9.25,-4.95,route);
   pad(g,17.6,-4.95,6,4.46);
-  horizontalVessel(g,17.3,1.40,-4.95,1.02,3.45,blue,'LH₂ STORAGE');
-  tank(g,20,-5.16,.72,1.96,blue);
+  lh2Tank(g,17.3,1.40,-4.95);
   pad(g,-18.35,5.78,4.6,2.9);
   for(let i=0;i<3;i++){
     const z=5.1+i*.64;
@@ -248,13 +247,14 @@ const views={
   section:{look:[.15,1.88,.07],offset:[-13.3,10.8,15.8],scale:4.65},
   exchange:{look:[0,1.38,0],offset:[9.4,8.1,17.3],scale:3.71},
   deep:{look:[9.25,1.79,-4.60],offset:[6.9,10.0,18.5],scale:5.45},
-  feed:{look:[-14.7,1,-4.95],offset:[-8,11,20],scale:2.8},
-  trim:{look:[-13.25,1,5.75],offset:[-10,11,19],scale:2.7},
-  pump:{look:[11.1,1.17,5.78],offset:[10,7.9,19],scale:3.45},
-  liquid:{look:[17,1,-4.8],offset:[10,9,20],scale:3.05},
+  feed:{look:[-17.3,1.19,-4.95],offset:[-8,11,20],scale:3.05},
+  compressor:{look:[-11.70,1.40,-4.95],offset:[-7.0,8.3,16.2],scale:4.35},
+  trim:{look:[-11.55,1.57,5.78],offset:[-7.7,9.2,17.9],scale:3.72},
+  pump:{look:[10.70,1.57,5.78],offset:[8.2,8.4,17.5],scale:4.04},
+  liquid:{look:[17.3,1.38,-4.95],offset:[8.0,8.8,18.1],scale:3.68},
 };
 const anchor={
-  feed:v(-15.1,2.24,-4.95),lng:v(17.35,5.0,5.76),pump:v(10.7,3.19,5.76),
+  feed:v(-17.9,2.24,-4.95),compressor:v(-11.7,2.91,-4.95),lng:v(17.35,5.0,5.76),pump:v(10.7,3.24,5.76),
   exchange:v(0,3.2,0),trim:v(-11.55,3.33,5.78),deep:v(8.8,3.95,-4.95),
   liquid:v(17.3,2.75,-4.95),grid:v(-18.35,2.01,5.78),
   dock:v(14.4,4.45,11.66),cryo:v(7.28,2.62,-4.72),catalyst:v(9.22,1.77,-4.34),separator:v(12.5,1.66,-3.10),
@@ -263,7 +263,7 @@ const visibleLabels={
   overview:['feed','lng','exchange','trim','deep','liquid'],
   dispatch:['feed','lng','exchange','trim','deep','liquid'],
   lng:['lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
-  feed:['feed'],trim:['trim','grid'],pump:['pump','lng'],liquid:['liquid'],
+  feed:['feed'],compressor:['compressor'],trim:['trim','grid'],pump:['pump'],liquid:['liquid'],
   flange:[],section:[],dock:['dock','lng'],mechanical:['feed','deep'],bypass:['trim','pump'],
 };
 
@@ -335,7 +335,8 @@ export function createPlant(target, labelLayer, choose, reduced){
   routes.standalone.visible=false;
   const pickers = [
     pick(g,'dock',14.4,1.9,12.2,2.2,4.2,3.4),
-    pick(g,'feed',-13.55,1.15,-4.95,10,2.35,3.5),
+    pick(g,'feed',-17.92,1.15,-4.95,3.4,2.35,3.5),
+    pick(g,'compressor',-11.70,1.48,-4.95,4.8,3.25,3.0),
     pick(g,'lng',17.8,1.98,5.3,7.3,4.75,5.8),
     pick(g,'pump',10.7,1.55,5.78,4.3,3.11,2.5),
     pick(g,'exchange',0,1.55,0,7.5,2.98,3.92),

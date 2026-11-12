@@ -109,7 +109,32 @@ try {
     await writeFile(new URL('../docs/'+name,import.meta.url),Buffer.from(image.data,'base64'));
     fileNames.push(name);
   }
-  // Mobile regression: by default the information panel must not cover the
+  // Stage 3 engineering equipment close-up visual smoke tests.
+  // These clicks exercise the actual navigation + original plant camera.
+  for(const [id,tag,file] of [
+    ['compressor','K-101','k101'],
+    ['pump','P-201','p201'],
+    ['trim','E-202','e202'],
+    ['liquid','TK-301','tk301'],
+  ]){
+    const clicked=await evalJS("(() => { const b=document.querySelector('[data-equipment="+id+"]'); if(!b)return false; b.click(); return true; })()");
+    assert.equal(clicked,true,'Missing Stage 3 equipment hotspot '+id);
+    await sleep(1600);
+    const displayed=await evalJS("({code:document.querySelector('#equipment-code').textContent, visible:!document.querySelector('#equipment-card').hidden, renderer:document.querySelector('#model').dataset.renderer})");
+    assert.equal(displayed.code,tag,'Incorrect equipment nameplate selection '+id);
+    assert.equal(displayed.visible,true,'Equipment inspection card hidden '+id);
+    assert.ok(displayed.renderer==='webgl'||displayed.renderer==='canvas','Failed render '+id);
+    if(id==='liquid'){
+      const tankUI=await evalJS("({noteHidden:document.querySelector('#coldbox-note').hidden, modesHidden:document.querySelector('#deep-modes').hidden, title:document.querySelector('#view-name').textContent})");
+      assert.equal(tankUI.noteHidden,true,'R-101 info obscures the LH2 vessel');
+      assert.equal(tankUI.modesHidden,true,'R-101 controls shown during LH2 vessel inspection');
+      assert.ok(tankUI.title.includes('TK-301'),'Wrong tank camera view label');
+    }
+    const snap=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    await writeFile(new URL('../docs/stage3-'+file+'-closeup.png',import.meta.url),Buffer.from(snap.data,'base64'));
+  }
+  console.log('PASS: Stage 3 K-101 / P-201 / E-202 / TK-301 closeups and equipment labels');
+    // Mobile regression: by default the information panel must not cover the
   // cryogenic equipment. It can still be opened and closed with a 40px target.
   for (const width of [390, 320]) {
     await send('Emulation.setDeviceMetricsOverride',{
