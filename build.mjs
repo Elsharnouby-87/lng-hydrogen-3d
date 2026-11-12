@@ -7,9 +7,11 @@ const read = (relative) => readFile(path(relative), 'utf8');
 
 const inspectionAsset = await readFile(path('src/assets/e101-inspection.glb.gz'));
 
-const [template, style, screeningStyle, screeningView, license, signatureFont, signatureLicense, bundle] = await Promise.all([
+const [template, sceneStyle, mobileStyle, creditStyle, screeningStyle, screeningView, license, signatureFont, signatureLicense, bundle] = await Promise.all([
   read('src/template.html'),
-  read('src/style.css'),
+  read('src/styles/scene.css'),
+  read('src/styles/mobile.css'),
+  read('src/styles/credits.css'),
   read('src/screening.css'),
   read('src/screening.html'),
   read('node_modules/three/LICENSE'),
@@ -27,7 +29,7 @@ const [template, style, screeningStyle, screeningView, license, signatureFont, s
     define: { E101_ASSET: JSON.stringify(inspectionAsset.toString('base64')) },
   }),
 ]);
-const { code: css } = await transform(`${style}\n${screeningStyle}`, { loader: 'css', minify: true });
+const { code: css } = await transform(`${sceneStyle}\n${mobileStyle}\n${creditStyle}\n${screeningStyle}`, { loader: 'css', minify: true });
 const signatureCss = `/* Explora\n${signatureLicense}\n*/\n` +
   `@font-face{font-family:Explora;src:url(data:font/woff2;base64,${signatureFont.toString('base64')}) format('woff2');font-weight:400;font-display:swap}`;
 const script = bundle.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
