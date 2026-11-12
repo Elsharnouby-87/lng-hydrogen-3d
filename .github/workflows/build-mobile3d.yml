@@ -30,7 +30,7 @@ jobs:
           node -e "let s=require('fs').readFileSync('docs/index.html','utf8');for(let k of ['mobile-dock','mobile-bottom-sheet','mobile-menu-toggle','mobile-zoom-in','mobile-clean'])if(!s.includes(k))process.exit(1)"
       - name: Commit deployable docs and QA visual references
         run: |
-          git add docs/index.html docs/mobile3d-*.png docs/r101-stage1-*.png docs/r101-mobile-*.png docs/stage3-*.png docs/stage5-*.png
+          git add docs/index.html docs/mobile3d-*.png docs/mobile3d-*.jpg docs/r101-stage1-*.png docs/r101-mobile-*.png docs/stage3-*.png docs/stage5-*.png
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
