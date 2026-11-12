@@ -230,7 +230,7 @@ function renderStageControls() {
   const title = exchange
     ? 'E-101 ' + coreView.toUpperCase()
     : deep
-      ? 'R-101 ' + deepView.toUpperCase()
+      ? (storageFocus ? 'TK-301 · LH₂ STORAGE' : 'R-101 ' + deepView.toUpperCase())
       : names[chapter];
   el('view-name').textContent = plan ? 'PLAN · ' + title : title;
 }
