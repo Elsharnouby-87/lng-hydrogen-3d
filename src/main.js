@@ -643,6 +643,37 @@ function clearScreeningDuty() {
   plant?.setAvailable(operatingMatch.fraction);
 }
 
+
+// Private filming controls for the isolated LinkedIn render branch.
+// These invoke only the site's own 3D camera, flow and chapter UI.
+window.__siteFilm = {
+  chapter(index, view, duration = 1350) {
+    const i = Math.max(0, Math.min(chapters.length - 1, Number(index) || 0));
+    stopTour();
+    stopOpening(false);
+    clearTrace(false);
+    closeInspectionTour(false);
+    setChapter(i, false);
+    plant?.focus(view || chapters[i].focus, false, duration);
+  },
+  focus(view, duration = 1350) { plant?.focus(view, false, duration); },
+  core(value, view = 'exchange', duration = 950) {
+    setCoreView(value);
+    plant?.focus(view, false, duration);
+  },
+  stream(value) { setStream(value); },
+  deep(value, duration = 1050) {
+    setDeepView(value);
+    plant?.focus('deep', false, duration);
+  },
+  deepStream(value) { setDeepStream(value); },
+  trace(value) { plant?.setTrace(value); },
+  labels(value) { labels = Boolean(value); plant?.setLabels(labels); },
+  flow(value) { flow = Boolean(value); plant?.setFlow(flow); },
+  present() { if (!presenting) applyPresent(true); },
+  ready() { return plant?.kind === 'webgl'; }
+};
+
 setChapter(0);
 setMode('integrated');
 initScreening({
