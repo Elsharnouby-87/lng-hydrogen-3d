@@ -747,18 +747,23 @@ document.querySelectorAll('[data-mobile-panel]').forEach(button=>{
   button.addEventListener('click',()=>setMobilePanel(mobilePanel===button.dataset.mobilePanel?null:button.dataset.mobilePanel));
 });
 el('mobile-sheet-close').addEventListener('click',()=>setMobilePanel(null));
-el('mobile-sheet-handle').addEventListener('click',()=>setMobileSheetExpanded(!mobileSheetExpanded));
-let mobileSheetDrag=null;
+let mobileSheetDrag=null,mobileSheetDragged=false;
+el('mobile-sheet-handle').addEventListener('click',()=>{
+  if(mobileSheetDragged){mobileSheetDragged=false;return;}
+  setMobileSheetExpanded(!mobileSheetExpanded);
+});
 el('mobile-sheet-handle').addEventListener('pointerdown',event=>{
   if(!event.isPrimary)return;
-  mobileSheetDrag={y:event.clientY};
+  mobileSheetDragged=false;mobileSheetDrag={y:event.clientY};
+  event.currentTarget.setPointerCapture?.(event.pointerId);
 });
 el('mobile-sheet-handle').addEventListener('pointerup',event=>{
   if(!mobileSheetDrag)return;
   const delta=event.clientY-mobileSheetDrag.y;mobileSheetDrag=null;
-  if(delta < -42)setMobileSheetExpanded(true);
-  if(delta > 42) {
-    if(mobileSheetExpanded)setMobileSheetExpanded(false);
+  if(Math.abs(delta)>42){
+    mobileSheetDragged=true;
+    if(delta<0)setMobileSheetExpanded(true);
+    else if(mobileSheetExpanded)setMobileSheetExpanded(false);
     else setMobilePanel(null);
   }
 });
