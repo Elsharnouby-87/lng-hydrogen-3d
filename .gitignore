@@ -1,2 +1,9 @@
 node_modules/
-.openai/
+.DS_Store
+# Quality-assurance screenshots must not be published with the website.
+/docs/desktop-header-*.jpg
+/docs/mobile-credit-*.jpg
+/docs/mobile3d-*
+/docs/r101-*.png
+/docs/stage3-*.png
+/docs/stage5-*.png
