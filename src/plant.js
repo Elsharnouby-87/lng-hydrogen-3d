@@ -353,7 +353,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   controls.minZoom=.49;controls.maxZoom=8;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
-  let suspended=false, screeningDuty=null, redraw=true;
+  let suspended=false, screeningDuty=null, redraw=true, filmFlowSpeed=1;
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
@@ -493,7 +493,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     }
     controls.update();
     if (!redraw && (!flow || reduced)) return;
-    if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;if(water)water.uniforms.uTime.value+=delta;}
+    if(flow&&!reduced){travel=(travel+delta*.143*filmFlowSpeed)%1;passageTravel=(passageTravel+delta*.143*pace*filmFlowSpeed)%1;if(water)water.uniforms.uTime.value+=delta;}
     if(flow){
       inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
@@ -525,6 +525,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     },
     setScreeningDuty(value){screeningDuty=value;},
     setFlow(value){flow=value;updateVisibility();},
+    setFilmFlowSpeed(value){ filmFlowSpeed=Math.max(1,Math.min(5,Number(value)||1));redraw=true; },
     setTrace(value){trace=value;updateVisibility();},
     setProjection(value){if(projection!==value){projection=value;frameViewport();}},
     setLabels(value){labels=value;redraw=true;},
