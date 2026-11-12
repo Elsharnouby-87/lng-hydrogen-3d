@@ -1,0 +1,39 @@
+name: Mobile Immersive 3D — browser and regression QA
+on:
+  push:
+    branches: [mobile-immersive-3d-first]
+  workflow_dispatch:
+concurrency:
+  group: mobile-immersive-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  browser-and-model-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node tools/test-coldbox.mjs
+      - run: node tools/test-industrial.mjs
+      - run: node tools/test-detailing.mjs
+      - name: Build self-contained site
+        run: npm run build
+      - name: Real desktop WebGL and 390/320 mobile immersion screenshots
+        run: node tools/qa-coldbox-browser.mjs
+      - name: Validate mobile controls bundled in site
+        run: |
+          node -e "let s=require('fs').readFileSync('docs/index.html','utf8');for(let k of ['mobile-dock','mobile-bottom-sheet','mobile-menu-toggle','mobile-zoom-in','mobile-clean'])if(!s.includes(k))process.exit(1)"
+      - name: Commit deployable docs and QA visual references
+        run: |
+          git add docs/index.html docs/mobile3d-*.png docs/r101-stage1-*.png docs/r101-mobile-*.png docs/stage3-*.png docs/stage5-*.png
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Build immersive mobile 3D bundle and QA screenshots [skip ci]"
+            git push
+          fi
