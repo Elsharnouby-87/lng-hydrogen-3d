@@ -67,7 +67,7 @@ export function softwareRenderer() {
   }
   function render(scene, camera) {
     const now = performance.now();
-    if (now - prior < 32) return;
+    if (prior >= 0 && now - prior < 32) return false;
     prior = now;
     const dark = ctx.createLinearGradient(0, 0, width * 0.78, height);
     dark.addColorStop(0, '#2d4e62');
@@ -139,7 +139,8 @@ export function softwareRenderer() {
         Array.isArray(o.material) ||
         !o.material.visible ||
         !o.material.color ||
-        o.material.transparent
+        o.material.transparent ||
+        (o.material.isMeshBasicMaterial && o.material.map)
       )
         return;
       if (o.isInstancedMesh) {
@@ -166,6 +167,7 @@ export function softwareRenderer() {
     }
     frame++;
     canvas.dataset.frame = String(frame);
+    return true;
   }
   function tick(now) {
     frameRequest = requestAnimationFrame(tick);

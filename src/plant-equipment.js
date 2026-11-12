@@ -1,0 +1,325 @@
+import * as T from 'three';
+import {
+  BLUE, MINT, bevelBox, blue, box, boxes, cyl, dark, flange, gold, group,
+  ice, material, mesh, mint, nameplate, pad, pipeBlue, pipePath, pipeTube, rail, segment, slab,
+  sphere, steel, trim, v,
+} from './plant-geometry.js';
+
+const paintedSteel = material(0xb9c3c6, .25, .58);
+const cladding = material(0x9cacb3, .62, .44);
+const fins = material(0x647682, .72, .42);
+const motorPaint = material(0x334c65, .34, .48);
+const finBlue = material(0x4f829d, .63, .38);
+const finMint = material(0x438f78, .56, .41);
+const serviceYellow = material(0xd3a249, .21, .56);
+
+function instrument(g, x, y, z, scale = 1) {
+  cyl(g, x, y - .17 * scale, z, .032 * scale, .24 * scale, steel, 'y', true);
+  cyl(g, x, y, z, .112 * scale, .077 * scale, trim, 'z');
+  cyl(g, x, y, z + .046 * scale, .088 * scale, .018 * scale, ice, 'z', true);
+  segment(g, v(x, y, z + .057 * scale), v(x + .048 * scale, y + .039 * scale, z + .057 * scale), .009 * scale, dark);
+}
+
+function nozzle(g, x, y, z, radius, length, axis, accent = steel) {
+  cyl(g, x, y, z, radius * .65, length, accent, axis);
+  flange(g, x, y, z, radius, axis, steel, radius < .28 ? 6 : 8);
+}
+
+function skid(g, x, z, width, depth) {
+  pad(g, x, z, width + .8, depth + .68);
+  for (const side of [-1, 1]) {
+    box(g, x, .27, z + side * (depth / 2 - .17), width, .25, .24, trim);
+    box(g, x, .388, z + side * (depth / 2 - .17), width, .067, .31, steel);
+    for (const end of [-1, 1]) {
+      box(g, x + end * (width / 2 - .33), .158, z + side * (depth / 2 - .17), .49, .068, .45, cladding);
+      for (const dx of [-.14, .14]) cyl(g, x + end * (width / 2 - .33) + dx, .219, z + side * (depth / 2 - .17), .039, .061, dark, 'y', true);
+    }
+  }
+  box(g, x, .437, z, width, .085, depth, trim);
+}
+
+export function tank(parent, x, z, radius, height, accent, tag) {
+  const g = group(parent, x, 0, z);
+  const wallBase = .25;
+  const rimY = wallBase + height;
+  const roofRise = radius * .23;
+  cyl(g, 0, .18, 0, radius + .19, .23, slab);
+  cyl(g, 0, wallBase + height / 2, 0, radius, height, paintedSteel);
+  sphere(g, 0, rimY - .025, 0, radius, roofRise, radius, cladding);
+  cyl(g, 0, rimY, 0, radius + .031, .068, steel);
+  cyl(g, 0, .37, 0, radius + .013, .078, trim);
+  cyl(g, 0, .67, 0, radius + .019, .12, accent);
+  for (const share of [.32, .63, .85]) cyl(g, 0, wallBase + height * share, 0, radius + .009, .023, cladding);
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6;
+    const seam = box(g, Math.cos(a) * (radius + .007), wallBase + height * .53, Math.sin(a) * (radius + .007), .027, height * .71, .013, cladding);
+    seam.rotation.y = Math.PI / 2 - a;
+    const foot = box(g, Math.cos(a) * radius, .30, Math.sin(a) * radius, .24, .22, .15, trim);
+    foot.rotation.y = Math.PI / 2 - a;
+  }
+  if (tag) nameplate(g, tag, 0, height * .62 + wallBase, radius + .032, radius * .71, .24, '#92ddc8');
+  const deckY = rimY + roofRise + .04;
+  box(g, -.18, deckY, .07, radius * .97, .08, radius * .75, steel);
+  rail(g, -radius * .60, radius * .43, radius * .31, radius * .43, deckY);
+  for (const xx of [-radius * .50, radius * .30]) rail(g, xx, -radius * .32, xx, radius * .43, deckY);
+  for (const xx of [-radius * .36, radius * .12]) {
+    cyl(g, xx, deckY + .16, -.14, .12, .33, steel);
+    flange(g, xx, deckY + .31, -.14, .16, 'y', steel, 6);
+  }
+  const ladderZ = radius + .085;
+  const ladderX = -radius * .44;
+  for (const side of [-1, 1]) segment(g, v(ladderX + side * .18, .34, ladderZ), v(ladderX + side * .18, deckY + .65, ladderZ), .024, steel);
+  const rungs = [];
+  for (let y = .48; y < deckY + .09; y += .224) rungs.push([ladderX, y, ladderZ, .36, .036, .044]);
+  boxes(g, gold, rungs);
+  if (radius > 2) {
+    for (let y = 1.19; y < rimY; y += .61) {
+      const hoop = mesh(g, new T.TorusGeometry(.34, .019, 5, 12, Math.PI), gold, ladderX, y, ladderZ + .035);
+      hoop.rotation.x = Math.PI / 2;
+    }
+    for (const dx of [-.31, 0, .31]) segment(g, v(ladderX + dx, 1.14, ladderZ + (dx ? .17 : .38)), v(ladderX + dx, rimY, ladderZ + (dx ? .17 : .38)), .016, gold);
+    box(g, ladderX, deckY, (ladderZ + radius * .42) / 2, .61, .071, ladderZ - radius * .42, trim);
+  }
+  return { deckY };
+}
+
+export function horizontalVessel(g, x, y, z, radius, length, accent, tag) {
+  cyl(g, x, y, z, radius, length, ice, 'x');
+  for (const side of [-1, 1]) {
+    sphere(g, x + side * length / 2, y, z, radius * .49, radius, radius, ice);
+    cyl(g, x + side * (length / 2 - .038), y, z, radius + .013, .055, steel, 'x');
+    const saddleX = x + side * length * .31;
+    cyl(g, saddleX, y, z, radius + .029, .13, cladding, 'x');
+    const clearance = Math.max(.18, y - radius - .12);
+    box(g, saddleX, .16 + clearance / 2, z, .33, clearance, radius * 1.63, trim);
+    box(g, saddleX, .17, z, .57, .079, radius * 1.81, steel);
+    for (const dz of [-.63, .63]) cyl(g, saddleX, .237, z + dz * radius, .038, .064, trim, 'y', true);
+  }
+  cyl(g, x - length * .18, y, z, radius + .02, .11, accent, 'x');
+  const neck = x + length / 2 + radius * .43;
+  nozzle(g, neck, y, z, radius * .28, radius * .25, 'x');
+  if (tag) {
+    nameplate(g, tag, x + length * .09, y + radius * .18, z + radius + .008, Math.min(1.39, length * .62), .205, '#a5d9f6');
+    nozzle(g, x + length * .21, y + radius + .12, z, radius * .16, .25, 'y');
+    instrument(g, x + length * .21, y + radius + .40, z, 1.03);
+  }
+}
+
+export function compressor(g, x, z) {
+  skid(g, x, z, 4.20, 2.15);
+  const y = 1.38;
+  for (const side of [-1, 1]) box(g, x + side * 1.04, .69, z, .58, .47, 1.31, trim);
+  cyl(g, x - .71, y, z, .73, 1.37, steel, 'x');
+  sphere(g, x - 1.38, y, z, .25, .72, .72, steel);
+  flange(g, x - 1.30, y, z, .76, 'x');
+  nozzle(g, x - 1.94, y, z, .31, .62, 'x');
+  cyl(g, x + .10, y, z, .34, .36, serviceYellow, 'x');
+  cyl(g, x + .91, y, z, .57, 1.29, motorPaint, 'x');
+  for (let i = 0; i < 9; i++) cyl(g, x + .36 + i * .13, y, z, .613, .044, trim, 'x', true);
+  flange(g, x + 1.61, y, z, .57, 'x', steel, 8);
+  nozzle(g, x - .54, 2.12, z - .20, .21, .32, 'y');
+  const outlet = [v(x-.54,2.12,z-.20), v(x-.54,2.42,z-.20), v(x-.54,2.42,z-.83), v(x+1.67,2.42,z-.83), v(x+1.67,y,z-.83), v(x+1.67,y,z), v(x+1.96,y,z)];
+  pipeTube(g, pipePath(outlet, .20), .112, steel);
+  flange(g, x + 1.94, y, z, .16, 'x', steel, 6);
+  bevelBox(g, x + .90, y + .50, z + .26, .54, .38, .48, .035, motorPaint);
+  cyl(g, x - .62, 2.23, z, .135, .46, steel, 'y', true);
+  instrument(g, x - .62, 2.56, z, 1.14);
+  nameplate(g, 'K-101 / H₂ COMPRESSOR', x - .60, 1.31, z + .734, 1.23, .19, '#9bd7fa');
+}
+
+export function lngPump(g, x, z) {
+  skid(g, x - .15, z, 4.04, 2.39);
+  const radius = .48;
+  cyl(g, x, .62, z, .63, .30, trim);
+  cyl(g, x, 1.52, z, radius, 1.79, ice);
+  for (const y of [.82, 1.49, 2.12]) cyl(g, x, y, z, radius + .018, .068, steel);
+  flange(g, x, 2.43, z, .62, 'y', steel, 12);
+  sphere(g, x, 2.49, z, .42, .24, .42, cladding);
+  cyl(g, x + .04, 2.83, z, .086, .33, steel);
+  bevelBox(g, x + .04, 2.98, z + .03, .34, .22, .27, .028, motorPaint);
+  nozzle(g, x, .94, z - .53, .25, .36, 'z', mint);
+  nozzle(g, x - .59, 2.24, z, .23, .50, 'x', steel);
+  const discharge = [v(x-.59,2.24,z),v(x-1.33,2.24,z),v(x-1.33,1.38,z),v(x-2.00,1.38,z)];
+  pipeTube(g, pipePath(discharge, .20), .113, steel);
+  flange(g, x - 1.96, 1.38, z, .17, 'x', steel, 6);
+  instrument(g, x - .93, 2.55, z, .93);
+  box(g, x + .72, .81, z + .61, .31, .68, .39, trim);
+  box(g, x + .72, 1.19, z + .61, .32, .14, .39, cladding);
+  nameplate(g, 'P-201 / LNG SEND-OUT PUMP', x, 1.71, z + .484, .85, .18, '#a1e4cb');
+}
+
+export function vaporizer(g, x, z) {
+  pad(g, x, z, 6.15, 4.24);
+  for (const side of [-1, 1]) {
+    const center = x + side * 1.41;
+    box(g, center, .29, z, 2.5, .25, 3.33, trim);
+    const finStrips = [];
+    for (const dz of [-1, 0, 1]) {
+      const row = z + dz * .83;
+      cyl(g, center, .53, row, .116, 2.47, steel, 'x');
+      cyl(g, center, 2.91, row, .103, 2.45, steel, 'x');
+      for (let i = 0; i < 8; i++) {
+        const xx = center + (i - 3.5) * .28;
+        for (const offset of [-.056, .056]) {
+          finStrips.push([xx, 1.73, row + offset, .218, 2.27, .027], [xx + offset, 1.73, row, .025, 2.27, .216]);
+        }
+      }
+    }
+    boxes(g, cladding, finStrips);
+    for (const xx of [-1.19, 1.19]) for (const zz of [-1.29, 1.29]) box(g, center + xx, 1.60, z + zz, .095, 2.75, .097, trim);
+    for (const zz of [-1.29, 1.29]) box(g, center, 3.01, z + zz, 2.49, .105, .12, trim);
+    nozzle(g, center, .57, z + 1.49, .17, .62, 'z', mint);
+  }
+  segment(g, v(x - 2.82, .66, z + 1.49), v(x + 2.82, .66, z + 1.49), .102, steel);
+  for (const side of [-1, 1]) nozzle(g, x + side * 2.92, 1.38, z, .19, .43, 'x');
+  nameplate(g, 'E-202 / VAPORIZER', x + 1.39, .92, z + 1.49, 1.42, .22, '#a1e4cb');
+}
+
+function brazedCore(g, x, y, z, width, height, depth) {
+  bevelBox(g, x, y, z, width, height, depth, .045, fins);
+  const partingSheets = [];
+  for (let h = -height / 2 + .085; h < height / 2; h += .112) {
+    partingSheets.push([x, y + h, z + depth / 2 + .014, width + .022, .034, .032]);
+  }
+  boxes(g, steel, partingSheets);
+  for (const sign of [-1, 1]) {
+    box(g, x, y + sign * height / 2, z, width + .09, .075, depth + .086, cladding);
+    box(g, x + sign * width / 2, y, z + depth / 2 + .015, .064, height, .064, cladding);
+  }
+  cyl(g, x, y + height / 2 + .10, z, .14, depth * .81, steel, 'z');
+}
+
+export function coldBox(g, x, z, route) {
+  skid(g, x, z, 6.94, 4.78);
+  const shell = group(g), inside = group(g);
+  const width = 5.9, depth = 3.44, bottom = .51, top = 3.21;
+  const y = (bottom + top) / 2;
+  bevelBox(shell, x, y, z, width, top - bottom, depth, .067, paintedSteel);
+  box(shell, x, top, z, width + .14, .13, depth + .15, trim);
+  for (const side of [-1, 1]) {
+    for (const end of [-1, 1]) box(shell, x + side * 2.925, y, z + end * 1.706, .14, top - bottom, .14, steel);
+    box(shell, x, .57, z + side * 1.74, width, .15, .14, trim);
+  }
+  const panelRibs = [];
+  for (let i = 0; i < 21; i++) panelRibs.push([x + (i - 10) * .274, 1.94, z + 1.734, .047, 2.33, .067]);
+  boxes(shell, cladding, panelRibs);
+  bevelBox(shell, x - 1.67, 1.46, z + 1.785, .80, 1.68, .112, .037, ice);
+  box(shell, x - 1.39, 1.46, z + 1.857, .040, .24, .037, trim);
+  nameplate(shell, 'R-101 / REFRIGERATION COLD BOX', x + .61, 2.35, z + 1.796, 2.64, .30, '#9ddaff');
+  for (const xx of [-1.54, 1.53]) {
+    nozzle(shell, x + xx, top + .23, z, .29, .44, 'y');
+    cyl(shell, x + xx, top + .51, z, .14, .25, steel, 'y', true);
+  }
+  box(inside, x, .535, z, width, .15, depth, trim);
+  box(inside, x, 1.85, z - 1.66, width, 2.49, .12, cladding);
+  box(inside, x, 3.08, z - 1.61, width, .13, .19, trim);
+  for (const cx of [x - 1.84, x + 1.72]) {
+    box(inside, cx, .68, z - .20, 1.29, .19, 1.62, trim);
+    brazedCore(inside, cx, 1.52, z - .19, 1.10, 1.55, 1.47);
+  }
+  horizontalVessel(inside, x, 1.19, z + .91, .35, 1.58, gold, 'ORTHO–PARA CATALYST');
+  for (const end of [-1, 1]) {
+    flange(inside, x + end * .66, 1.19, z + .91, .398, 'x');
+    segment(inside, v(x + end * 1.66, 2.40, z - .19), v(x + end * 1.66, 2.69, z - .19), .115, steel);
+  }
+  segment(inside, v(x - 2.49, 2.69, z - .19), v(x + 2.55, 2.69, z - .19), .103, steel);
+  for (const xx of [-1.68, 1.65]) flange(inside, x + xx, 2.69, z - .19, .16, 'x', steel, 6);
+  inside.visible = false;
+  const sepX = x + 3.25, sepZ = z + 1.85;
+  cyl(g, sepX, .99, sepZ, .46, 1.18, ice);
+  sphere(g, sepX, 1.58, sepZ, .46, .235, .46, ice);
+  sphere(g, sepX, .41, sepZ, .46, .23, .46, ice);
+  cyl(g, sepX, 1.57, sepZ, .471, .044, steel);
+  cyl(g, sepX, .44, sepZ, .471, .052, blue);
+  for (const dx of [-.26, .26]) box(g, sepX + dx, .27, sepZ, .14, .42, .32, trim);
+  nozzle(g, sepX, 1.94, sepZ, .15, .29, 'y');
+  instrument(g, sepX + .19, 1.90, sepZ + .18, .81);
+  nameplate(g, 'PHASE SEPARATOR', sepX, 1.14, sepZ + .467, .75, .164, '#9ddaff');
+  return {
+    shell, inside,
+    flow: route(inside, [[x-2.94,1.38,z],[x-1.84,1.38,z],[x-1.84,1.38,z+.91],[x+1.72,1.38,z+.91],[x+1.72,1.38,z],[x+2.94,1.38,z]], pipeBlue, BLUE, 12, .068, .63),
+  };
+}
+
+export function exchanger(g, route) {
+  const k = group(g);
+  skid(k, 0, 0, 7.80, 4.56);
+  for (const x of [-2.80, 2.80]) for (const z of [-1.36, 1.36]) {
+    box(k, x, .62, z, .62, .32, .61, trim);
+    box(k, x, .77, z, .76, .075, .72, steel);
+  }
+  box(k, 0, .86, 0, 7.04, .20, 3.92, trim);
+  const casing = group(k), core = group(k), stack = [];
+  bevelBox(casing, 0, 1.96, 0, 6.85, 2.04, 3.51, .077, paintedSteel);
+  box(casing, 0, 3.014, 0, 6.99, .123, 3.63, cladding);
+  const roofRibs = [];
+  for (let i = 0; i < 12; i++) roofRibs.push([(i - 5.5) * .56, 3.104, 0, .067, .091, 3.49]);
+  boxes(casing, steel, roofRibs);
+  for (const z of [-1.767, 1.767]) {
+    for (let i = 0; i < 6; i++) box(casing, (i - 2.5) * 1.115, 1.95, z, 1.052, 1.82, .046, cladding);
+    for (const y of [1.03, 2.87]) box(casing, 0, y, z + .03 * Math.sign(z), 6.81, .105, .077, steel);
+  }
+  bevelBox(casing, -.86, 1.63, 1.808, 1.06, 1.30, .065, .025, paintedSteel);
+  for (const y of [1.30, 1.92]) box(casing, -.47, y, 1.851, .087, .133, .057, trim);
+  nameplate(casing, 'E-101 / CRYOGENIC PRECOOLER', .94, 2.37, 1.804, 2.26, .27, '#a1e4db');
+
+  for (let index = 0; index < 7; index++) {
+    const base = 1.00 + index * .306;
+    const layer = group(core, 0, base, 0), channel = group(layer);
+    const forward = index % 2 === 0;
+    const fluid = forward ? 'h2' : 'lng';
+    const color = forward ? BLUE : MINT;
+    const passageFinish = forward ? finBlue : finMint;
+    bevelBox(layer, 0, .014, 0, 6.47, .087, 3.03, .021, steel);
+    for (const edge of [-1, 1]) box(layer, 0, .14, edge * 1.46, 6.41, .193, .106, cladding);
+    const corrugations = [], passages = [];
+    for (let i = 0; i < 25; i++) {
+      const z = (i - 12) * .109;
+      corrugations.push([0, .131, z, 4.93, .135, .031]);
+      passages.push([0, .075, z + .053, 4.93, .027, .063]);
+    }
+    boxes(layer, fins, corrugations);
+    boxes(channel, passageFinish, passages);
+    box(channel, 0, .218, 1.51, 4.91, .035, .021, passageFinish);
+    for (const sign of [-1, 1]) {
+      const center = sign * 2.81;
+      box(layer, center, .093, 0, .69, .059, 2.70, cladding);
+      for (let i = 0; i < 9; i++) {
+        const z = (i - 4) * .264;
+        segment(channel, v(sign * 3.17, .131, z * .44), v(sign * 2.46, .131, z), .023, passageFinish);
+      }
+      box(channel, sign * 3.18, .135, 0, .079, .129, 1.39, passageFinish);
+    }
+    const points = forward ? [[-2.95,.222,.06],[2.95,.222,.06]] : [[2.95,.222,.06],[-2.95,.222,.06]];
+    const passage = route(channel, points, passageFinish, color, 7, 0, .56);
+    stack.push({ layer, channel, base, fluid, passage });
+  }
+  for (const side of [-1, 1]) {
+    const x = side * 3.44;
+    bevelBox(k, x, 1.93, 0, .25, 2.00, 3.58, .035, cladding);
+    for (const z of [-1.02, 1.02]) {
+      sphere(k, x + side * .025, 1.58, z, .36, .52, .51, steel);
+      cyl(k, x + side * .255, 1.38, z, .28, .36, steel, 'x');
+      flange(k, side * 3.86, 1.38, z, .41, 'x', steel, 10);
+    }
+  }
+  return { casing, core, stack };
+}
+
+export function loadingArm(g, points) {
+  box(g, 0, .15, 0, 1.10, .29, 1.08, trim);
+  cyl(g, 0, .34, 0, .31, .37, steel);
+  flange(g, 0, .45, 0, .35, 'y', steel, 10);
+  for (let index = 1; index < points.length; index++) {
+    segment(g, points[index - 1], points[index], .091, steel);
+  }
+  for (const p of points.slice(1, -1)) {
+    cyl(g, p.x, p.y, p.z, .193, .26, gold, 'x');
+    flange(g, p.x + .132, p.y, p.z, .144, 'x', steel, 6);
+  }
+  const p = points[1], crown = points[2];
+  segment(g, v(.27, 1.67, 0), v(.27, crown.y - .36, crown.z - .12), .055, steel);
+  segment(g, v(.27, p.y, p.z), v(.27, crown.y, -.64), .071, trim);
+  bevelBox(g, .27, crown.y - .03, -.62, .32, .34, .45, .042, trim);
+  nozzle(g, 0, points.at(-1).y, points.at(-1).z, .158, .21, 'z', mint);
+}
