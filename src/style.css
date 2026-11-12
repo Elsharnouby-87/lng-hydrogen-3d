@@ -530,3 +530,11 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
   .mobile-dock button{font-size:9px}
   .mobile-side-tools{right:8px}
 }
+
+@media(max-width:800px){
+  .mobile-side-tools svg,.mobile-dock svg{width:24px;height:24px;fill:none;
+    stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .mobile-dock svg{width:25px;height:25px}
+  .mobile-dock button[aria-pressed=true] svg{stroke:#a3fff1}
+  .mobile-dock button{gap:5px}
+}
