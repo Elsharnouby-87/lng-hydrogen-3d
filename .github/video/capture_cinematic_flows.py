@@ -2,7 +2,7 @@
 """Capture five authentic animated browser views for a 34-second LinkedIn showcase.
 Visual frames come only from the live Three.js website, never from slide decks or synthetic imagery."""
 from pathlib import Path
-import subprocess, shutil, json, traceback, sys, time
+import subprocess, shutil, json, traceback, sys, time, os
 from playwright.sync_api import sync_playwright
 
 OUT=Path("cinematic_raw")
@@ -93,11 +93,12 @@ def capture(p, spec):
     # This changes only the viewing layout, not 3D equipment/geometry.
     page.add_style_tag(content=MOBILE_CSS if w<600 else DESKTOP_CSS)
     cine(page,"present")
+    cine(page,"projection",False)
     cine(page,"flow",True)
     cine(page,"trace","both")
     cine(page,"labels",False)
     # Faster visualization of the site's own animated particles for screen legibility.
-    cine(page,"speed",3.2 if what!="hero" else 2.6)
+    cine(page,"speed",4.0 if what=="r" else 3.2 if what!="hero" else 2.6)
     if what=="hero":
         cine(page,"chapter",0,"overview",450)
     elif what=="e":
@@ -148,7 +149,7 @@ def capture(p, spec):
 def main():
     meta=[]
     with sync_playwright() as p:
-        for spec in SPECS:
+        for spec in (SPECS[-2:] if os.environ.get('ONLY_R101')=='1' else SPECS):
             meta.append(capture(p,spec))
     (OUT/"capture_manifest.json").write_text(json.dumps(meta,indent=2))
     print("ALL WEBSITE-ONLY CLIPS READY",flush=True)
