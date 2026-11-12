@@ -247,7 +247,7 @@ const views={
   flange:{look:[-3.72,1.59,.93],offset:[-5.0,1.65,3.3],scale:7.5},
   section:{look:[.15,1.88,.07],offset:[-13.3,10.8,15.8],scale:4.65},
   exchange:{look:[0,1.38,0],offset:[9.4,8.1,17.3],scale:3.71},
-  deep:{look:[9.25,1.63,-4.52],offset:[7.5,12,25],scale:3.22},
+  deep:{look:[9.25,1.79,-4.60],offset:[6.9,10.0,18.5],scale:5.45},
   feed:{look:[-14.7,1,-4.95],offset:[-8,11,20],scale:2.8},
   trim:{look:[-13.25,1,5.75],offset:[-10,11,19],scale:2.7},
   pump:{look:[11.1,1.17,5.78],offset:[10,7.9,19],scale:3.45},
@@ -404,7 +404,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     const offset=cameraView==='plan'?v(.02,40,.21):v(...view.offset);
     const position=look.clone().add(offset);
     const fit=dimensions.width/dimensions.height;
-    const shotScale=active==='deep'&&deepView==='exploded'?(compact?2.13:2.66):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
+    const shotScale=active==='deep'&&deepView==='exploded'?(compact?3.55:4.65):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
     const zoom=shotScale*Math.min(1,fit/(['overview','dispatch'].includes(active)?1.54:1.10));
     updateVisibility();
     if(immediate || reduced){camera.position.copy(position);controls.target.copy(look);camera.zoom=zoom;camera.updateProjectionMatrix();controls.update();tween=null;}
