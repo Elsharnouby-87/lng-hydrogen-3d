@@ -25,9 +25,9 @@ export const chapters = [
   {
     id: 'deep', label: 'Deep refrigeration', kicker: 'THE FINAL COOLING STAGES',
     title: 'The final descent to 20 K.',
-    body: 'A dedicated refrigeration train removes the remaining heat. Staged ortho–para conversion releases heat that the cold train must also remove.',
+    body: 'The R-101 cutaway illustrates three heat-exchanger stages, two helium turboexpander branches and a separate hydrogen process circuit. The remaining refrigeration and staged ortho–para conversion duties continue toward 20 K.',
     metrics: [['~20 K', 'LH₂ near atmospheric pressure'], ['~−253 °C', 'Product temperature']],
-    cue: 'Open the cold box. Follow the representative cooling and catalyst modules, then the phase separator and LH₂ vessel.',
+    cue: 'Compare Shell, Cutaway and Exploded. Switch between H₂ and helium flows; identify the separate exchanger passages. This is an illustrative cold-end arrangement.',
     focus: 'deep',
   },
   {
@@ -46,8 +46,8 @@ export const equipment = {
   pump: { code: 'P-201', label: 'High-pressure pump', detail: 'Pressurizes the LNG before the recovery tie-in and the terminal vaporizer.', chapter: 'lng' },
   exchange: { code: 'E-101', label: 'Countercurrent precooler', detail: 'Heat moves from hydrogen to LNG across a wall. A finite minimum approach limits the handoff temperature.', chapter: 'exchange' },
   trim: { code: 'E-202', label: 'Vaporizer / trim', detail: 'The terminal heater completes warming to the gas send-out specification. An independent bypass maintains terminal operation if the precooler is isolated.', chapter: 'lng' },
-  deep: { code: 'R-101', label: 'Deep refrigeration', detail: 'Dedicated cryogenic refrigeration and staged ortho–para conversion continue after precooling.', chapter: 'deep' },
-  cryo: { code: 'HX', label: 'Cryogenic exchanger', detail: 'Representative cooling module within the cold box. The exact refrigeration cycle and heat-exchange arrangement depend on the liquefier design.', chapter: 'deep' },
+  deep: { code: 'R-101', label: 'Deep refrigeration', detail: 'R-101 illustrates a helium reverse-Brayton cold end with three plate-fin stages, two parallel expander branches and an ortho–para catalyst vessel; external compression is outside the housing.', chapter: 'deep' },
+  cryo: { code: 'HX', label: 'Cryogenic exchanger', detail: 'HX-201/202/203 are representative, separately tagged plate-fin cores with isolated H₂ and helium passages. Their sizing and temperatures are illustrative.', chapter: 'deep' },
   catalyst: { code: 'CAT', label: 'Ortho–para conversion', detail: 'Catalyst beds accelerate conversion to para-hydrogen. The cold train removes the heat released during conversion.', chapter: 'deep' },
   separator: { code: 'SEP', label: 'Phase separator', detail: 'After the final pressure reduction, the separator directs liquid hydrogen to storage and separates the remaining vapor.', chapter: 'deep' },
   liquid: { code: 'LH₂', label: 'Liquid hydrogen', detail: 'Final expansion and phase separation deliver liquid hydrogen near 20 K on the near-atmospheric reference basis.', chapter: 'deep' },

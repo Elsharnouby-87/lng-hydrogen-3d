@@ -42,3 +42,11 @@ Open the repository’s **Settings → Pages**. Under **Build and deployment**, 
 ## Technical basis
 
 The conference presentation and its design review provide the process boundary and terminology. The geometry, exchanger temperature bound and normalized duty allocation serve as teaching examples. Site performance requires validated stream conditions, energy balances and operating data.
+
+## Stage 1 — Advanced R-101 Cryogenic Cold Box
+
+Select **Deep refrigeration** in the 3D presentation. R-101 now provides **Shell**, **Cutaway**, and **Exploded** views, plus **Both / H₂ only / Helium only** controls. The cutaway depicts three separately tagged aluminium plate-fin stages (HX-201/202/203), two conceptual parallel helium expander branches (EX-201/202), a staged ortho–para catalyst vessel (OP-201), separated process passages, supply/return headers, a skid and service nozzles. Flow indications follow the individual paths. In the exploded view connected piping is intentionally hidden rather than falsely shown as disconnected.
+
+**Engineering boundary:** This is a conceptual helium reverse-Brayton-type cold-end arrangement and is not a supplier design, a detailed flow simulation, a thermal-duty validation, or a full hydrogen liquefaction process. External helium compression, heat rejection, and downstream LH₂ handling are outside R-101. Performance values in the Egypt/Kuwait calculators are unchanged.
+
+**QA:** `node tools/test-coldbox.mjs` runs equipment, stream, view and flow checks. `npm run build` regenerates the self-contained offline site. E-101's previously approved geometry and the Egypt/Kuwait models are unchanged.

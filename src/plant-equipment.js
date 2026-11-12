@@ -1,3 +1,4 @@
+import { createAdvancedColdBox } from './coldbox-assembly.js';
 import * as T from 'three';
 import {
   BLUE, bevelBox, blue, box, boxes, cyl, dark, flange, gold, group,
@@ -192,56 +193,8 @@ function brazedCore(g, x, y, z, width, height, depth) {
   cyl(g, x, y + height / 2 + .10, z, .14, depth * .81, steel, 'z');
 }
 
-export function coldBox(g, x, z, route) {
-  skid(g, x, z, 6.94, 4.78);
-  const shell = group(g), inside = group(g);
-  const width = 5.9, depth = 3.44, bottom = .51, top = 3.21;
-  const y = (bottom + top) / 2;
-  bevelBox(shell, x, y, z, width, top - bottom, depth, .067, paintedSteel);
-  box(shell, x, top, z, width + .14, .13, depth + .15, trim);
-  for (const side of [-1, 1]) {
-    for (const end of [-1, 1]) box(shell, x + side * 2.925, y, z + end * 1.706, .14, top - bottom, .14, steel);
-    box(shell, x, .57, z + side * 1.74, width, .15, .14, trim);
-  }
-  const panelRibs = [];
-  for (let i = 0; i < 21; i++) panelRibs.push([x + (i - 10) * .274, 1.94, z + 1.734, .047, 2.33, .067]);
-  boxes(shell, cladding, panelRibs);
-  bevelBox(shell, x - 1.67, 1.46, z + 1.785, .80, 1.68, .112, .037, ice);
-  box(shell, x - 1.39, 1.46, z + 1.857, .040, .24, .037, trim);
-  nameplate(shell, 'R-101 / REFRIGERATION COLD BOX', x + .61, 2.35, z + 1.796, 2.64, .30, '#9ddaff');
-  for (const xx of [-1.54, 1.53]) {
-    nozzle(shell, x + xx, top + .23, z, .29, .44, 'y');
-    cyl(shell, x + xx, top + .51, z, .14, .25, steel, 'y', true);
-  }
-  box(inside, x, .535, z, width, .15, depth, trim);
-  box(inside, x, 1.85, z - 1.66, width, 2.49, .12, cladding);
-  box(inside, x, 3.08, z - 1.61, width, .13, .19, trim);
-  for (const cx of [x - 1.84, x + 1.72]) {
-    box(inside, cx, .68, z - .20, 1.29, .19, 1.62, trim);
-    brazedCore(inside, cx, 1.52, z - .19, 1.10, 1.55, 1.47);
-  }
-  horizontalVessel(inside, x, 1.19, z + .91, .35, 1.58, gold, 'ORTHO–PARA CATALYST');
-  for (const end of [-1, 1]) {
-    flange(inside, x + end * .66, 1.19, z + .91, .398, 'x');
-    segment(inside, v(x + end * 1.66, 2.40, z - .19), v(x + end * 1.66, 2.69, z - .19), .115, steel);
-  }
-  segment(inside, v(x - 2.49, 2.69, z - .19), v(x + 2.55, 2.69, z - .19), .103, steel);
-  for (const xx of [-1.68, 1.65]) flange(inside, x + xx, 2.69, z - .19, .16, 'x', steel, 6);
-  inside.visible = false;
-  const sepX = x + 3.25, sepZ = z + 1.85;
-  cyl(g, sepX, .99, sepZ, .46, 1.18, ice);
-  sphere(g, sepX, 1.58, sepZ, .46, .235, .46, ice);
-  sphere(g, sepX, .41, sepZ, .46, .23, .46, ice);
-  cyl(g, sepX, 1.57, sepZ, .471, .044, steel);
-  cyl(g, sepX, .44, sepZ, .471, .052, blue);
-  for (const dx of [-.26, .26]) box(g, sepX + dx, .27, sepZ, .14, .42, .32, trim);
-  nozzle(g, sepX, 1.94, sepZ, .15, .29, 'y');
-  instrument(g, sepX + .19, 1.90, sepZ + .18, .81);
-  nameplate(g, 'PHASE SEPARATOR', sepX, 1.14, sepZ + .467, .75, .164, '#9ddaff');
-  return {
-    shell, inside,
-    flow: route(inside, [[x-2.94,1.38,z],[x-1.84,1.38,z],[x-1.84,1.38,z+.91],[x+1.72,1.38,z+.91],[x+1.72,1.38,z],[x+2.94,1.38,z]], pipeBlue, BLUE, 12, .068, .63),
-  };
+export function coldBox(g, x, z) {
+  return createAdvancedColdBox(g, x, z);
 }
 
 export function exchanger(g) {

@@ -57,9 +57,18 @@
           <input id="section-depth" type="range" min="0" max="100" value="14" aria-valuetext="Flow distributor">
           <output id="section-feature" for="section-depth">Flow distributor</output>
         </div>
-        <div class="modes" id="deep-modes" role="group" aria-label="Cold box assembly view" hidden>
-          <button type="button" data-deep="shell" aria-pressed="false">Shell</button><button type="button" data-deep="cutaway" aria-pressed="true">Cutaway</button>
+        <div class="modes" id="deep-modes" role="group" aria-label="R-101 cold box assembly view" hidden>
+          <button type="button" data-deep="shell" aria-pressed="false">Shell</button><button type="button" data-deep="cutaway" aria-pressed="true">Cutaway</button><button type="button" data-deep="exploded" aria-pressed="false">Exploded</button>
         </div>
+        <div class="modes coldbox-stream-modes" id="deep-stream-modes" role="group" aria-label="R-101 internal fluid highlight" hidden>
+          <button type="button" data-deep-stream="both" aria-pressed="true">Both</button><button type="button" data-deep-stream="h2" aria-pressed="false">H₂ only</button><button type="button" data-deep-stream="he" aria-pressed="false">Helium only</button>
+        </div>
+      </div>
+      <div id="coldbox-note" class="coldbox-note" hidden aria-live="polite">
+        <strong>R-101 · ADVANCED COLD BOX</strong>
+        <span><i class="r101-h2"></i>Hydrogen <i class="r101-he"></i>Helium refrigerant</span>
+        <p id="coldbox-caption">Three staged exchangers and two expander branches.</p>
+        <small>CONCEPTUAL GEOMETRY · NOT A VERIFIED CYCLE</small>
       </div>
       <div id="screen-duty-overlay" class="duty-overlay" hidden><strong></strong><a>Return to model →</a></div>
       <div id="hotspots" class="hotspots"></div>
