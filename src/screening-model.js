@@ -6,7 +6,6 @@ export const markets = {
     type: 'Onshore terminal',
     prior: 5.74,
     imports: 4.42,
-    gate: 'Confirm accessible post-pump LNG at Al-Zour and match the hourly send-out to the hydrogen plant schedule.',
   },
   egypt: {
     name: 'Egypt',
@@ -14,7 +13,6 @@ export const markets = {
     type: 'Floating regasification',
     prior: 5.7,
     imports: 10.53,
-    gate: 'Identify the individual FSRU with accessible pre-vaporizer LNG and verify the ship-to-shore integration interface.',
   },
 };
 

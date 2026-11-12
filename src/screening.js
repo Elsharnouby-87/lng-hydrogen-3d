@@ -99,7 +99,6 @@ export function initScreening({ onRoute, onDuty }) {
     get('prior-bar').style.width = (market.prior / 12) * 100 + '%';
     get('import-bar').style.width = (market.imports / 12) * 100 + '%';
     say('mean', n(importRate(market)));
-    say('site-gate', market.gate);
   }
 
   function renderControls(state, result, keepFlow) {

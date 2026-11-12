@@ -99,22 +99,16 @@
       <div id="screen-sensitivity-rows"></div>
       <p class="screen-evidence-copy">100% arithmetic ceiling at selected uptake <strong id="screen-ceiling"></strong> t/day equivalent.</p>
     </section>
-    <section class="screen-card screen-site" aria-labelledby="screen-site-title">
-      <div class="screen-section-head"><div><h2 id="screen-site-title">From imports to site duty</h2><p>Practical recoverable potential</p></div></div>
-      <p id="screen-site-gate"></p>
-      <ol><li>Confirm hourly LNG flow, composition and pressure.</li><li>Check exchanger T–Q curves and internal pinch.</li><li>Compare net power at identical LH₂ quality.</li></ol>
-      <details id="screen-method">
-        <summary>Calculation basis and sources</summary>
-        <p>Precooling uses 2,471.48 kJ/kg LH₂ from interpolated ideal-gas enthalpy. Total heat removal is approximated as 5,100 kJ/kg LH₂. Available duty is LNG flow in t/h × usable uptake in kJ/kg ÷ 3,600. Heat applied to the reference plant is capped at 1.430 MWth.</p>
-        <p>Full-duty electrical benefit uses 0.362 kWh/kg reversible work divided by assumed second-law efficiency, less incremental auxiliaries. The calculator scales this net benefit with the fraction of reference precooling duty met.</p>
-        <p id="screen-power-basis"></p>
-        <ul>
-          <li>EPROM screening workbook and engineering study, 12 November 2026</li>
-          <li><a href="https://stanford.edu/~cantwell/AA210A_Course_Material/AA210A_Lectures/AA210A_Chapter_2_Thermo_of_gases_Brian_J_Cantwell.pdf" target="_blank" rel="noopener">Stanford AA210A · H₂ enthalpy table →</a></li>
-          <li><a href="https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/9013_energy_requirements_for_hydrogen_gas_compression.pdf" target="_blank" rel="noopener">DOE Record 9013 · electrical benchmark →</a></li>
-        </ul>
-      </details>
-    </section>
+    <details id="screen-method" class="screen-card screen-method">
+      <summary>Calculation basis and sources</summary>
+      <p>Precooling uses 2,471.48 kJ/kg LH₂ from interpolated ideal-gas enthalpy. Total heat removal is approximated as 5,100 kJ/kg LH₂. Available duty is LNG flow in t/h × usable uptake in kJ/kg ÷ 3,600. Heat applied to the reference plant is capped at 1.430 MWth.</p>
+      <p>Full-duty electrical benefit uses 0.362 kWh/kg reversible work divided by assumed second-law efficiency, less incremental auxiliaries. The calculator scales this net benefit with the fraction of reference precooling duty met.</p>
+      <p id="screen-power-basis"></p>
+      <ul>
+        <li><a href="https://stanford.edu/~cantwell/AA210A_Course_Material/AA210A_Lectures/AA210A_Chapter_2_Thermo_of_gases_Brian_J_Cantwell.pdf" target="_blank" rel="noopener">Stanford AA210A · H₂ enthalpy table →</a></li>
+        <li><a href="https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/9013_energy_requirements_for_hydrogen_gas_compression.pdf" target="_blank" rel="noopener">DOE Record 9013 · electrical benchmark →</a></li>
+      </ul>
+    </details>
   </div>
   <footer class="screen-footer"><span>EPROM · Preliminary engineering screening · 12 Nov 2026</span><span>Import-derived scenarios · Site recoverability pending validation</span></footer>
 </section>

@@ -14,7 +14,7 @@ Open `docs/index.html` in a current browser. The same file works locally with no
 
 Open [Kuwait](https://elsharnouby-87.github.io/lng-hydrogen-3d/#kuwait) or [Egypt](https://elsharnouby-87.github.io/lng-hydrogen-3d/#egypt). Adjust the allocated share or enter LNG flow in t/h, then select usable heat uptake and an electrical benefit case. The models retain their settings separately in the browser. **Meet 50 t/day** sets the theoretical full-precooling threshold. **View this duty in 3D** opens the precooler cutaway with the selected reference duty overlaid.
 
-The national case uses the same January–September 2026 import period for both countries. The reference plant heat balance caps applied cold at its precooling requirement. The electrical proxy follows the November 2026 study and scales net SEC reduction proportionally to covered precooling duty. The country views link to the published source and identify the terminal data required for a site assessment.
+The national case uses the same January–September 2026 import period for both countries. The reference plant heat balance caps applied cold at its precooling requirement. The electrical proxy follows the November 2026 study and scales net SEC reduction proportionally to covered precooling duty. The country views link to the published import data and provide the calculation basis and sources.
 
 ## Build
 

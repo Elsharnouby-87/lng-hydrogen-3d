@@ -292,7 +292,7 @@
 .screen-ledger dd strong { font-size: clamp(20px,2.2vw,32px); letter-spacing: -.045em; }
 .screen-ledger dd span { color: var(--secondary); font-size: 11px; white-space: nowrap; }
 .screening .screen-footnote { color: var(--secondary); font-size: 11px; line-height: 1.42; padding: 0 2px; }
-.screen-evidence { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); align-items: start; gap: 15px; margin-top: 15px; }
+.screen-evidence { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 15px; margin-top: 15px; }
 .screen-evidence > section { height: 100%; padding: 16px 17px; }
 .screen-section-head { margin-bottom: 13px; }
 .screen-section-head > strong { color: var(--accent); font-size: 20px; white-space: nowrap; }
@@ -312,15 +312,14 @@
 .import-row #screen-prior-bar { background: #63819a; }
 .import-row strong, .sensitivity-row strong { text-align: right; }
 .sensitivity-row.current { color: var(--accent); }
-.screen-evidence .screen-evidence-copy, .screen-site p, .screen-site ol, .screen-site li { color: var(--secondary); font-size: 12px; line-height: 1.48; }
+.screen-evidence .screen-evidence-copy, .screen-method p, .screen-method li { color: var(--secondary); font-size: 12px; line-height: 1.48; }
 .screen-evidence .screen-evidence-copy { margin: 9px 0 5px; }
 .screen-evidence-copy strong { color: var(--ink); }
 .screen-evidence a { font-size: 12px; text-underline-offset: 2px; }
-.screen-site ol { margin: 6px 0 9px; padding-left: 17px; }
-.screen-site details { border-top: 1px solid var(--border); padding-top: 8px; }
-.screen-site summary { cursor: pointer; color: var(--accent); font-size: 12px; font-weight: 700; }
-.screen-site details p { margin-top: 7px; }
-.screen-site ul { padding-left: 15px; margin-bottom: 0; }
+.screen-method { grid-column: 1/-1; padding: 11px 17px; }
+.screen-method summary { cursor: pointer; color: var(--accent); font-size: 12px; font-weight: 700; }
+.screen-method p { margin-top: 7px; max-width: 105ch; }
+.screen-method ul { padding-left: 15px; margin-bottom: 0; }
 .screen-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 13px 0; color: #a1b7c9; font-size: 11px; }
 .duty-overlay {
   position: absolute;
@@ -343,7 +342,6 @@
 .is-presenting .screening .screen-kpi h2, .is-presenting .screening .screen-balance h2 { font-size: 18px; }
 .is-presenting .screening .screen-footnote { font-size: 12px; }
 @media (max-width: 1050px) {
-  .is-screening .event { display: none; }
   .screen-grid { grid-template-columns: minmax(285px,.95fr) minmax(0,1.5fr); }
   .screen-controls { padding-inline: 15px; }
   .screen-ledger { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -359,8 +357,7 @@
   .screen-kpis { grid-row: 1; }
   .screen-hero { align-items: flex-start; flex-direction: column; gap: 13px; padding: 17px 15px; margin-bottom: 10px; }
   .screen-market { text-align: left; min-width: 0; }
-  .screen-evidence { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 10px; }
-  .screen-site { grid-column: 1/-1; }
+  .screen-evidence { gap: 10px; margin-top: 10px; }
   .screen-kpi { padding: 13px 12px; }
   .screen-kpi h2 { font-size: 14px; line-height: 1.25; }
   .screen-kpi strong { font-size: clamp(33px,9vw,53px); }
