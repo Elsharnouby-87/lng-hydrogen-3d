@@ -53,6 +53,21 @@ const deepModes = document.querySelectorAll('[data-deep]');
 const deepStreamModes = document.querySelectorAll('[data-deep-stream]');
 const lh2Modes = document.querySelectorAll('[data-lh2]');
 const traceModes = document.querySelectorAll('[data-trace]');
+const equipmentInfoMedia = matchMedia('(max-width:800px)');
+function setEquipmentInfoExpanded(expanded) {
+  const card = el('equipment-card');
+  card.classList.toggle('is-collapsed',!expanded);
+  el('equipment-body').hidden=!expanded;
+  const toggle=el('equipment-info-toggle');
+  toggle.setAttribute('aria-expanded',String(expanded));
+  toggle.textContent=expanded?'− Hide equipment info':'i · Equipment info';
+}
+el('equipment-info-toggle').addEventListener('click',()=>{
+  setEquipmentInfoExpanded(el('equipment-body').hidden);
+});
+equipmentInfoMedia.addEventListener('change',event=>{
+  if(!el('equipment-card').hidden)setEquipmentInfoExpanded(!event.matches);
+});
 
 // The R-101 explanation is useful on desktop, but hides the model on phones.
 // Start with a small, reversible info chip below the inspection controls.
@@ -174,6 +189,7 @@ function inspect(id) {
   el('equipment-name').textContent = item.label;
   el('equipment-detail').textContent = item.detail;
   el('equipment-card').hidden = false;
+  setEquipmentInfoExpanded(!equipmentInfoMedia.matches);
   if (focus === 'exchange' || focus === 'deep' || id === 'liquid') renderStageControls();
   else el('view-name').textContent = 'EQUIPMENT FOCUS';
 }
