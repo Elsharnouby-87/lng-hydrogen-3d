@@ -64,11 +64,18 @@
           <button type="button" data-deep-stream="both" aria-pressed="true">Both</button><button type="button" data-deep-stream="h2" aria-pressed="false">H₂ only</button><button type="button" data-deep-stream="he" aria-pressed="false">Helium only</button>
         </div>
       </div>
-      <div id="coldbox-note" class="coldbox-note" hidden aria-live="polite">
-        <strong>R-101 · ADVANCED COLD BOX</strong>
-        <span><i class="r101-h2"></i>Hydrogen <i class="r101-he"></i>Helium refrigerant</span>
-        <p id="coldbox-caption">Three staged exchangers and two expander branches.</p>
-        <small>CONCEPTUAL GEOMETRY · NOT A VERIFIED CYCLE</small>
+      <div id="coldbox-note" class="coldbox-note" hidden>
+        <button id="coldbox-info-toggle" type="button" class="coldbox-info-toggle"
+          aria-expanded="false" aria-controls="coldbox-info-details" aria-label="Show R-101 information">
+          <span id="coldbox-info-icon" aria-hidden="true">i</span>
+          <span id="coldbox-info-toggle-label">R-101 info</span>
+        </button>
+        <div id="coldbox-info-details" hidden aria-live="polite">
+          <strong>R-101 · ADVANCED COLD BOX</strong>
+          <span class="coldbox-info-fluids"><i class="r101-h2"></i>Hydrogen <i class="r101-he"></i>Helium refrigerant</span>
+          <p id="coldbox-caption">Three staged exchangers and two expander branches.</p>
+          <small>CONCEPTUAL GEOMETRY · NOT A VERIFIED CYCLE</small>
+        </div>
       </div>
       <div id="screen-duty-overlay" class="duty-overlay" hidden><strong></strong><a>Return to model →</a></div>
       <div id="hotspots" class="hotspots"></div>

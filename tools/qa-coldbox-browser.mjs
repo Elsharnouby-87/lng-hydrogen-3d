@@ -75,7 +75,7 @@ try {
   });
   const evalJS=async expression=>{
     const result=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
-    if(result.exceptionDetails)throw Error('Browser JS: '+result.exceptionDetails.text);
+    if(result.exceptionDetails)throw Error('Browser JS: '+(result.exceptionDetails.exception?.description || result.exceptionDetails.text));
     return result.result?.value;
   };
   await send('Page.enable');
@@ -108,6 +108,64 @@ try {
     const name='r101-stage1-'+view+'.png';
     await writeFile(new URL('../docs/'+name,import.meta.url),Buffer.from(image.data,'base64'));
     fileNames.push(name);
+  }
+  // Mobile regression: by default the information panel must not cover the
+  // cryogenic equipment. It can still be opened and closed with a 40px target.
+  for (const width of [390, 320]) {
+    await send('Emulation.setDeviceMetricsOverride',{
+      width,height:844,deviceScaleFactor:3,mobile:true,screenWidth:width,screenHeight:844
+    });
+    await send('Page.reload',{ignoreCache:true});
+    let ready=false;
+    for(let attempt=0;attempt<100;attempt++){
+      if(await evalJS("!!document.querySelector('[data-chapter=\"3\"]')")){
+        ready=true;break;
+      }
+      await sleep(200);
+    }
+    assert.ok(ready,'Mobile DOM did not initialize at '+width+'px');
+    await evalJS("document.querySelector('[data-chapter=\"3\"]').click()");
+    await sleep(950);
+    const collapsed=await evalJS(`(() => {
+      const note=document.querySelector('#coldbox-note');
+      const chip=document.querySelector('#coldbox-info-toggle');
+      const controls=document.querySelector('#inspection');
+      const b=chip.getBoundingClientRect(), stage=document.querySelector('#stage').getBoundingClientRect();
+      return {mobile:matchMedia('(max-width:800px)').matches,
+        noteVisible:!note.hidden,
+        detailsHidden:document.querySelector('#coldbox-info-details').hidden,
+        expanded:chip.getAttribute('aria-expanded'),
+        chipWidth:b.width,chipHeight:b.height,
+        withinStage:b.left>=stage.left&&b.right<=stage.right,
+        belowControls:b.top>=controls.getBoundingClientRect().bottom-1,
+        pageOverflow:document.documentElement.scrollWidth>innerWidth+2};
+    })()`);
+    assert.equal(collapsed.mobile,true,width+'px did not use mobile styles');
+    assert.equal(collapsed.noteVisible,true);
+    assert.equal(collapsed.detailsHidden,true,width+'px information blocks the model');
+    assert.equal(collapsed.expanded,'false');
+    assert.ok(collapsed.chipHeight>=38,width+'px chip too small');
+    assert.ok(collapsed.withinStage,width+'px chip clipped');
+    assert.ok(collapsed.belowControls,width+'px chip overlaps view/stream selectors');
+    assert.equal(collapsed.pageOverflow,false,width+'px layout overflows page');
+    if(width===390){
+      const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/r101-mobile-collapsed.png',import.meta.url),
+        Buffer.from(image.data,'base64'));
+    }
+    await evalJS("document.querySelector('#coldbox-info-toggle').click()");
+    assert.deepEqual(await evalJS(`({
+      detailsHidden:document.querySelector('#coldbox-info-details').hidden,
+      expanded:document.querySelector('#coldbox-info-toggle').getAttribute('aria-expanded')
+    })`),{detailsHidden:false,expanded:'true'});
+    if(width===390){
+      const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/r101-mobile-expanded.png',import.meta.url),
+        Buffer.from(image.data,'base64'));
+    }
+    await evalJS("document.querySelector('#coldbox-info-toggle').click()");
+    assert.equal(await evalJS("document.querySelector('#coldbox-info-details').hidden"),true);
+    console.log('PASS: mobile R-101 info compact/toggle at '+width+'px');
   }
   if(runtimeErrors.length)console.warn('Runtime warnings:',runtimeErrors.slice(0,5));
   console.log('PASS: headless Chrome / '+renderer+'; screenshots '+fileNames.join(', '));
