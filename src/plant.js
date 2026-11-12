@@ -603,3 +603,6 @@ export function createPlant(target, labelLayer, choose, reduced){
     setCamera(value){cameraView=value;focus(active);},
   };
 }
+
+export { box, coldBox, compressor, cyl, exchanger, group, horizontalVessel, makeWater, material,
+  mesh, pad, rail, route, segment, shadow, sphere, v, vaporizer };
