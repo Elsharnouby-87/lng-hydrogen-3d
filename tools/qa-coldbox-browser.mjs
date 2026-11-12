@@ -114,6 +114,14 @@ try {
 }finally {
   if(ws?.readyState===WebSocket.OPEN)ws.close();
   child.kill('SIGTERM');
+  await Promise.race([
+    new Promise(resolve => child.once('exit', resolve)),
+    sleep(1800),
+  ]);
   server.close();
-  await rm(userDir,{recursive:true,force:true});
+  // Chrome may still be finalizing its cache. This temporary directory is
+  // disposed with the ephemeral CI runner even if filesystem cleanup races.
+  await rm(userDir,{recursive:true,force:true,maxRetries:8,retryDelay:250}).catch(
+    error => console.warn('Temporary browser cache cleanup:',error.code)
+  );
 }
