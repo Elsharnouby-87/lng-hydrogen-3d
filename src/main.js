@@ -172,7 +172,7 @@ function inspect(id) {
   el('equipment-name').textContent = item.label;
   el('equipment-detail').textContent = item.detail;
   el('equipment-card').hidden = false;
-  if (focus === 'exchange' || focus === 'deep') renderStageControls();
+  if (focus === 'exchange' || focus === 'deep' || id === 'liquid') renderStageControls();
   else el('view-name').textContent = 'EQUIPMENT FOCUS';
 }
 function updateApproach() {
@@ -211,15 +211,16 @@ function renderStageControls() {
   const { id } = chapters[chapter];
   const exchange = id === 'exchange';
   const deep = id === 'deep';
+  const storageFocus = selection === 'liquid';
   el('inspection').hidden = !plant || (!exchange && !deep);
   el('core-modes').hidden = !exchange;
   el('e101-tour').hidden = plant?.kind !== 'webgl';
   el('section-controls').hidden = !exchange || coreView !== 'section' || plant?.kind !== 'webgl';
   document.querySelector('[data-core=section]').hidden = plant?.kind !== 'webgl';
   el('stream-modes').hidden = !exchange || coreView === 'shell' || Boolean(trace);
-  el('deep-modes').hidden = !deep;
-  el('deep-stream-modes').hidden = !deep || deepView === 'shell' || Boolean(trace);
-  el('coldbox-note').hidden = !deep;
+  el('deep-modes').hidden = !deep || storageFocus;
+  el('deep-stream-modes').hidden = !deep || storageFocus || deepView === 'shell' || Boolean(trace);
+  el('coldbox-note').hidden = !deep || storageFocus;
   el('coldbox-caption').textContent = deepView === 'shell'
     ? 'Insulated housing with distinct hydrogen and helium connection ports.'
     : deepView === 'exploded'
