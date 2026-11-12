@@ -536,5 +536,14 @@ export function createPlant(target, labelLayer, choose, reduced){
     setDeepStream(value){deepStream=value;updateVisibility();},
     setLH2View(value){lh2View=value;focus('liquid');},
     setCamera(value){cameraView=value;focus(active);},
+    zoomBy(multiplier){
+      // Mobile zoom controls complement pinch-to-zoom and OrbitControls.
+      if(!Number.isFinite(multiplier)||multiplier<=0)return;
+      tween=null;
+      camera.zoom=T.MathUtils.clamp(camera.zoom*multiplier,.35,18);
+      camera.updateProjectionMatrix();
+      controls.update();
+      redraw=true;
+    },
   };
 }
