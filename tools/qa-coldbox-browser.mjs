@@ -214,6 +214,15 @@ try {
     await evalJS("document.querySelector('[data-equipment=liquid]').click()");
     await sleep(900);
     assert.equal(await evalJS("document.querySelector('#lh2-modes').hidden"),false);
+    const infoInitially=await evalJS("({collapsed:document.querySelector('#equipment-card').classList.contains('is-collapsed'),bodyHidden:document.querySelector('#equipment-body').hidden,pressed:document.querySelector('#equipment-info-toggle').getAttribute('aria-expanded')})");
+    assert.deepEqual(infoInitially,{collapsed:true,bodyHidden:true,pressed:'false'},
+      'Mobile equipment card must be collapsed without losing LH2 controls');
+    await evalJS("document.querySelector('#equipment-info-toggle').click()");
+    assert.equal(await evalJS("document.querySelector('#equipment-body').hidden"),false,
+      'Equipment notes do not open on mobile');
+    await evalJS("document.querySelector('#equipment-info-toggle').click()");
+    assert.equal(await evalJS("document.querySelector('#equipment-body').hidden"),true,
+      'Equipment notes do not close on mobile');
     assert.equal(await evalJS("document.querySelector('#coldbox-note').hidden"),true);
     await evalJS("document.querySelector('[data-lh2=cutaway]').click()");
     assert.equal(await evalJS("document.querySelector('[data-lh2=cutaway]').getAttribute('aria-pressed')"),'true');
