@@ -407,7 +407,14 @@ export function createPlant(target, labelLayer, choose, reduced){
     const position=look.clone().add(offset);
     const fit=dimensions.width/dimensions.height;
     const shotScale=active==='deep'&&deepView==='exploded'?(compact?3.55:4.65):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
-    const zoom=shotScale*Math.min(1,fit/(['overview','dispatch'].includes(active)?1.54:1.10));
+    // Portrait mobile uses a closer editorial crop. The original desktop
+    // overview keeps its wide 45 m plant fit. Mobile users can always zoom
+    // back out or recenter with the floating controls.
+    const portrait=compact&&fit<.84&&cameraView!=='plan';
+    const fitDivisor=portrait
+      ? (['overview','dispatch'].includes(active)?.73:.91)
+      : (['overview','dispatch'].includes(active)?1.54:1.10);
+    const zoom=shotScale*Math.min(1,fit/fitDivisor);
     updateVisibility();
     if(immediate || reduced){camera.position.copy(position);controls.target.copy(look);camera.zoom=zoom;camera.updateProjectionMatrix();controls.update();tween=null;}
     else{tween={position,look,zoom,duration,start:performance.now(),from:camera.position.clone(),target:controls.target.clone(),fromZoom:camera.zoom};}
