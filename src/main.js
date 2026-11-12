@@ -52,6 +52,25 @@ const deepModes = document.querySelectorAll('[data-deep]');
 const deepStreamModes = document.querySelectorAll('[data-deep-stream]');
 const traceModes = document.querySelectorAll('[data-trace]');
 
+// The R-101 explanation is useful on desktop, but hides the model on phones.
+// Start with a small, reversible info chip below the inspection controls.
+const coldboxInfoMedia = window.matchMedia('(max-width: 800px)');
+function setColdboxInfoExpanded(expanded) {
+  el('coldbox-info-details').hidden = !expanded;
+  el('coldbox-note').classList.toggle('is-collapsed', !expanded);
+  const button = el('coldbox-info-toggle');
+  button.setAttribute('aria-expanded', String(expanded));
+  button.setAttribute('aria-label', expanded ? 'Hide R-101 information' : 'Show R-101 information');
+  el('coldbox-info-icon').textContent = expanded ? '×' : 'ⓘ';
+  el('coldbox-info-toggle-label').textContent = expanded ? 'Hide info' : 'R-101 info';
+}
+setColdboxInfoExpanded(!coldboxInfoMedia.matches);
+el('coldbox-info-toggle').addEventListener('click', () =>
+  setColdboxInfoExpanded(el('coldbox-info-details').hidden)
+);
+coldboxInfoMedia.addEventListener('change', event => setColdboxInfoExpanded(!event.matches));
+
+
 function markPressed(buttons, key, value) {
   for (const button of buttons) {
     button.setAttribute('aria-pressed', String(button.dataset[key] === value));
