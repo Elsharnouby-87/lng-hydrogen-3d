@@ -51,7 +51,7 @@ export function addPrecoolerRisers(parent, fluid, plane) {
 export function addPrecoolerPassages(parent, fluid, offset = 0, plane = null) {
   const material = flowMaterial(fluid, plane);
   const direction = fluid === 'h2' ? 1 : -1;
-  const height = offset + flowY;
+  const height = offset + flowY + (plane ? 0 : .086);
   const markers = new T.InstancedMesh(pulseGeometry, material, lanes * pulses);
   const arrows = new T.InstancedMesh(arrowGeometry, material, lanes);
   markers.frustumCulled = arrows.frustumCulled = false;
