@@ -247,7 +247,7 @@ const views={
   flange:{look:[-3.72,1.59,.93],offset:[-5.0,1.65,3.3],scale:7.5},
   section:{look:[.15,1.88,.07],offset:[-13.3,10.8,15.8],scale:4.65},
   exchange:{look:[0,1.38,0],offset:[9.4,8.1,17.3],scale:3.71},
-  deep:{look:[10.94,1.37,-4.52],offset:[7.5,15,26],scale:3.34},
+  deep:{look:[9.25,1.63,-4.52],offset:[7.5,12,25],scale:3.22},
   feed:{look:[-14.7,1,-4.95],offset:[-8,11,20],scale:2.8},
   trim:{look:[-13.25,1,5.75],offset:[-10,11,19],scale:2.7},
   pump:{look:[11.1,1.17,5.78],offset:[10,7.9,19],scale:3.45},
@@ -351,7 +351,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   controls.enableDamping=!reduced;controls.dampingFactor=.12;controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.47;
   controls.minZoom=.49;controls.maxZoom=8;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
-  let coreView='cutaway', stream='both', trace='both', deepView='cutaway', cameraView='iso', projection=false, spread=0;
+  let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null, redraw=true;
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
@@ -369,9 +369,12 @@ export function createPlant(target, labelLayer, choose, reduced){
     headers.visible=!(shot&&inspection.loaded);
     inspection?.update({shot,focus:passageFocus,running:flow&&live,enabled:live});
     if(inspection?.loaded)target.dataset.inspectionModel='glb';
-    refrigeration.inside.visible=active==='deep'&&deepView==='cutaway';
+    refrigeration.setView(deepView);
+    refrigeration.setStream(deepStream);
+    refrigeration.setFlow(flow && trace !== 'lng');
+    refrigeration.inside.visible=active==='deep' && deepView!=='shell';
     refrigeration.shell.visible=!refrigeration.inside.visible;
-    const nextShadowState = `${opened}/${refrigeration.inside.visible}/${mode}/${shot}/${inspection?.loaded}`;
+    const nextShadowState = `${opened}/${deepView}/${deepStream}/${refrigeration.inside.visible}/${mode}/${shot}/${inspection?.loaded}`;
     if (shadows && shadowState !== nextShadowState) {
       shadows.needsUpdate = true;
       shadowState = nextShadowState;
@@ -381,7 +384,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       indicators.visible=!shot&&flow&&live;
     }
     const coldFlow=flow&&trace!=='lng';
-    refrigeration.flow.glow.visible=coldFlow;refrigeration.flow.arrows.visible=coldFlow;
+    refrigeration.setFlow(coldFlow);
     for(const circuit of mainRoutes){
       const highlighted=trace==='both'||trace===circuit.fluid;
       const unloading=circuit!==dockFlow||active==='dock';
@@ -397,10 +400,11 @@ export function createPlant(target, labelLayer, choose, reduced){
     const exploded=active==='exchange'&&coreView==='exploded';
     const look=v(...view.look);
     if(exploded&&cameraView!=='plan')look.y=compact?3.29:3.09;
+    if(active==='deep'&&deepView==='exploded'&&cameraView!=='plan')look.y=2.05;
     const offset=cameraView==='plan'?v(.02,40,.21):v(...view.offset);
     const position=look.clone().add(offset);
     const fit=dimensions.width/dimensions.height;
-    const shotScale=compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
+    const shotScale=active==='deep'&&deepView==='exploded'?(compact?2.13:2.66):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
     const zoom=shotScale*Math.min(1,fit/(['overview','dispatch'].includes(active)?1.54:1.10));
     updateVisibility();
     if(immediate || reduced){camera.position.copy(position);controls.target.copy(look);camera.zoom=zoom;camera.updateProjectionMatrix();controls.update();tween=null;}
@@ -493,7 +497,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
         for(const entry of stack)if(entry.channel.visible)entry.animate(passageTravel);
       }
-      if(refrigeration.inside.visible&&refrigeration.flow.glow.visible)drawFlow(refrigeration.flow,travel);
+      if(refrigeration.inside.visible)refrigeration.animate(travel);
       if(dockFlow.glow.visible)drawFlow(dockFlow,travel);
       for(const f of routes.c)if(f.glow.visible)drawFlow(f,travel);
       for(const f of mode==='integrated'?routes.a:routes.s)if(f.glow.visible)drawFlow(f,travel);
@@ -526,7 +530,8 @@ export function createPlant(target, labelLayer, choose, reduced){
     setAvailable(value){available=value;updateVisibility();},
     setCore(value){coreView=value;focus(value==='section'?'section':active==='section'||active==='flange'?'exchange':active);},
     setStream(value){stream=value;updateVisibility();},
-    setDeep(value){deepView=value;updateVisibility();},
+    setDeep(value){deepView=value;focus(active);},
+    setDeepStream(value){deepStream=value;updateVisibility();},
     setCamera(value){cameraView=value;focus(active);},
   };
 }
