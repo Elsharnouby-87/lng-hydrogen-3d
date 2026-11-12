@@ -19,9 +19,12 @@
 </head>
 <body>
 <header class="masthead">
+  <button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-controls="mobile-site-nav" aria-expanded="false">☰</button>
   <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5 28.5 9.7v12.6L16 29.5 3.5 22.3V9.7Z"/><path d="m3.5 9.7 12.5 7 12.5-7M16 16.7v12.8M9.7 13.2l12.6-7.1"/></svg><div><strong>LNG <span>×</span> Hydrogen</strong><small>CRYOGENIC INTEGRATION ATLAS</small></div></div>
-  <div class="event"><span class="event-edition">OAPEC <b>2026</b></span><span class="event-divider" aria-hidden="true"></span><span class="event-credit">By/ Eng. <span class="event-signature">Ahmed Elsharnouby</span></span></div>
-  <div class="head-actions"><a id="screen-nav" class="screen-nav" href="#kuwait"><span class="screen-nav-mark" aria-hidden="true">▥</span><span>Country models</span></a><button id="open-show" class="quiet open-show" type="button">Cinematic intro</button><button id="sources" class="quiet" type="button">Technical basis</button><button id="hud" class="quiet" type="button" aria-pressed="true" hidden>Hide HUD</button><button id="present" class="outline" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg><span>Present</span></button></div>
+  <div class="mobile-site-nav" id="mobile-site-nav">
+    <div class="event"><span class="event-edition">OAPEC <b>2026</b></span><span class="event-divider" aria-hidden="true"></span><span class="event-credit">By/ Eng. <span class="event-signature">Ahmed Elsharnouby</span></span></div>
+    <div class="head-actions"><a id="screen-nav" class="screen-nav" href="#kuwait"><span class="screen-nav-mark" aria-hidden="true">▥</span><span>Country models</span></a><button id="open-show" class="quiet open-show" type="button">Cinematic intro</button><button id="sources" class="quiet" type="button">Technical basis</button><button id="hud" class="quiet" type="button" aria-pressed="true" hidden>Hide HUD</button><button id="present" class="outline" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg><span>Present</span></button></div>
+  </div>
 </header>
 <main>
   <div id="plant-view">
@@ -43,8 +46,19 @@
     <section id="stage" class="stage" aria-label="Three-dimensional plant model">
       <div id="model"></div>
       <div id="fallback" hidden></div>
-      <div class="stage-top"><div class="view-tag"><span></span><span id="view-name">ISOMETRIC PLANT VIEW</span></div>
+      <div class="stage-top"><div class="mobile-chapter-wrap">
+        <label class="sr-only" for="mobile-chapter">Select plant chapter</label>
+        <select id="mobile-chapter" aria-label="Select 3D scene"></select>
+      </div><div class="view-tag"><span></span><span id="view-name">ISOMETRIC PLANT VIEW</span></div>
       <div class="modes" aria-label="Precooling configuration"><button type="button" data-mode="integrated" aria-pressed="true">LNG-assisted</button><button type="button" data-mode="standalone" aria-pressed="false">Standalone H₂</button></div></div>
+      <nav class="mobile-side-tools" id="mobile-side-tools" aria-label="3D viewer controls">
+        <button id="mobile-reset" type="button" title="Recenter camera" aria-label="Recenter 3D camera">⌖</button>
+        <button id="mobile-zoom-in" type="button" title="Zoom in" aria-label="Zoom into 3D plant">+</button>
+        <button id="mobile-zoom-out" type="button" title="Zoom out" aria-label="Zoom out of 3D plant">−</button>
+        <button id="mobile-inspect" type="button" title="Show or hide equipment inspection controls" aria-expanded="false" aria-label="Toggle equipment inspection controls">▣</button>
+        <button id="mobile-clean" type="button" title="Clean 3D view" aria-pressed="false" aria-label="Hide controls for immersive 3D view">⛶</button>
+      </nav>
+      <button id="mobile-restore" class="mobile-restore" type="button" aria-label="Restore 3D controls" hidden>◎ Show controls</button>
       <div id="inspection" class="inspection" hidden>
         <div class="modes" id="core-modes" role="group" aria-label="Precooler assembly view" hidden>
           <button type="button" data-core="shell" aria-pressed="false">Shell</button><button type="button" data-core="cutaway" aria-pressed="true">Cutaway</button><button type="button" data-core="exploded" aria-pressed="false">Exploded</button><button type="button" data-core="section" aria-pressed="false" hidden>Section</button>
@@ -111,6 +125,18 @@
           <button id="walk-next" type="button" aria-label="Next E-101 shot">→</button>
           <button id="walk-close" type="button" aria-label="Close E-101 presentation">×</button>
         </div>
+      </section>
+      <div class="mobile-flow-legend" aria-label="3D stream legend"><span><i class="cyan"></i>H₂</span><span><i class="mint"></i>LNG / Gas</span></div>
+      <nav class="mobile-dock" aria-label="Mobile 3D actions">
+        <button type="button" data-mobile-panel="equipment" aria-pressed="false"><span aria-hidden="true">▣</span>Equipment</button>
+        <button type="button" data-mobile-panel="flow" aria-pressed="false"><span aria-hidden="true">≋</span>Flow</button>
+        <button type="button" data-mobile-panel="camera" aria-pressed="false"><span aria-hidden="true">◇</span>Camera</button>
+        <button type="button" data-mobile-panel="info" aria-pressed="false"><span aria-hidden="true">ⓘ</span>Info</button>
+      </nav>
+      <section id="mobile-bottom-sheet" class="mobile-bottom-sheet" aria-label="Mobile 3D options" hidden>
+        <button id="mobile-sheet-handle" class="mobile-sheet-handle" type="button" aria-label="Expand or collapse detail sheet" aria-expanded="false"><span></span></button>
+        <div class="mobile-sheet-heading"><strong id="mobile-sheet-title">Equipment</strong><button type="button" id="mobile-sheet-close" aria-label="Close detail sheet">×</button></div>
+        <div id="mobile-sheet-content" class="mobile-sheet-content" aria-live="polite"></div>
       </section>
       <div class="stage-bottom">
         <div class="legend"><span><i class="cyan"></i>Hydrogen</span><span><i class="mint"></i>LNG / gas</span><span id="bypass-legend" hidden>Precooler bypassed</span></div>
