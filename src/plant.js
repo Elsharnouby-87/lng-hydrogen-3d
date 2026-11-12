@@ -144,7 +144,7 @@ function terminal(scene){
   horizontalVessel(g,-18.12,.98,-4.95,.60,2.23,blue,'H₂ FEED VESSEL');
   const refrigeration=coldBox(g,9.25,-4.95,route);
   pad(g,17.6,-4.95,6,4.46);
-  lh2Tank(g,17.3,1.40,-4.95);
+  const lh2=lh2Tank(g,17.3,1.40,-4.95);
   pad(g,-18.35,5.78,4.6,2.9);
   for(let i=0;i<3;i++){
     const z=5.1+i*.64;
@@ -178,7 +178,7 @@ function terminal(scene){
   for(const x of [-.93,-.39,.21])box(utility,x,1.01,.834,.40,.29,.03,slab);
   box(utility,1.03,.61,.835,.49,.85,.035,steel);
   for(const x of [-1.1,1.02])cyl(utility,x,1.5,-.35,.115,.28,steel,'y',true);
-  return {g,refrigeration,dockFlow,storage};
+  return {g,refrigeration,dockFlow,storage,lh2};
 }
 const markerUp = v(0, 1, 0);
 const markerTransform = new T.Object3D();
@@ -239,7 +239,7 @@ function stageRoutes(scene, storage){
 const views={
   overview:{look:[0,0,1.9],offset:[21,25,36],scale:1},
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
-  lng:{look:[10.8,1.0,8.25],offset:[15,15,25],scale:1.88},
+  lng:{look:[17.15,2.50,5.68],offset:[12.8,13.9,20.5],scale:2.48},
   dock:{look:[12.2,1.22,12.55],offset:[17.8,9.8,24.2],scale:2.28},
   mechanical:{look:[-.2,.82,-7.08],offset:[9.6,14,25],scale:2.44},
   bypass:{look:[-2.6,.82,6.55],offset:[14,15,25],scale:1.54},
@@ -251,7 +251,7 @@ const views={
   compressor:{look:[-11.70,1.40,-4.95],offset:[-7.0,8.3,16.2],scale:4.35},
   trim:{look:[-11.55,1.57,5.78],offset:[-7.7,9.2,17.9],scale:3.72},
   pump:{look:[10.70,1.57,5.78],offset:[8.2,8.4,17.5],scale:4.04},
-  liquid:{look:[17.3,1.38,-4.95],offset:[8.0,8.8,18.1],scale:3.68},
+  liquid:{look:[17.3,1.38,-4.95],offset:[6.7,6.7,17.5],scale:4.25},
 };
 const anchor={
   feed:v(-17.9,2.24,-4.95),compressor:v(-11.7,2.91,-4.95),lng:v(17.35,5.0,5.76),pump:v(10.7,3.24,5.76),
@@ -323,7 +323,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     key.shadow.radius = 2;
   }
   const water=kind==='webgl'?makeWater(scene):null;
-  const {g,refrigeration,dockFlow,storage}=terminal(scene);
+  const {g,refrigeration,dockFlow,storage,lh2}=terminal(scene);
   const equipment=exchanger(g);
   const {casing,core,stack,headers}=equipment;
   const inspection=shadows?createPrecoolerInspection(g,equipment,updateVisibility):null;
@@ -352,7 +352,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   controls.enableDamping=!reduced;controls.dampingFactor=.12;controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.47;
   controls.minZoom=.49;controls.maxZoom=8;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
-  let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', cameraView='iso', projection=false, spread=0;
+  let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null, redraw=true;
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
@@ -372,6 +372,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     if(inspection?.loaded)target.dataset.inspectionModel='glb';
     refrigeration.setView(deepView);
     refrigeration.setStream(deepStream);
+    lh2.setCutaway(active==='liquid'?lh2View:'shell');
     refrigeration.setFlow(flow && trace !== 'lng');
     refrigeration.inside.visible=active==='deep' && deepView!=='shell';
     refrigeration.shell.visible=!refrigeration.inside.visible;
@@ -533,6 +534,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     setStream(value){stream=value;updateVisibility();},
     setDeep(value){deepView=value;focus(active);},
     setDeepStream(value){deepStream=value;updateVisibility();},
+    setLH2View(value){lh2View=value;focus('liquid');},
     setCamera(value){cameraView=value;focus(active);},
   };
 }
