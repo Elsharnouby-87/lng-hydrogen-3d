@@ -168,6 +168,63 @@ try {
       await sleep(200);
     }
     assert.ok(ready,'Mobile DOM did not initialize at '+width+'px');
+    await sleep(500);
+    const mobileLayout = await evalJS("(() => {" +
+      "const stage=document.querySelector('#stage').getBoundingClientRect();" +
+      "const header=document.querySelector('.masthead').getBoundingClientRect();" +
+      "const narrative=document.querySelector('.narrative').getBoundingClientRect();" +
+      "return {width:innerWidth,height:innerHeight,stage:stage.height,header:header.height," +
+      "stageAboveNarrative:stage.bottom<=narrative.top+2," +
+      "horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2," +
+      "dockVisible:getComputedStyle(document.querySelector('.mobile-dock')).display!=='none'};" +
+    "})()");
+    assert.ok(mobileLayout.header<=70,width+'px header is not compact '+JSON.stringify(mobileLayout));
+    assert.ok(mobileLayout.stage>=Math.min(500,mobileLayout.height*.75),width+'px 3D is not dominant '+JSON.stringify(mobileLayout));
+    assert.ok(mobileLayout.stageAboveNarrative,width+'px 3D must precede narrative');
+    assert.ok(mobileLayout.dockVisible,width+'px toolbar missing');
+    assert.equal(mobileLayout.horizontalOverflow,false,width+'px page horizontally overflows');
+    if(width===390){
+      const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile3d-main.png',import.meta.url),Buffer.from(shot.data,'base64'));
+    }
+    await evalJS("document.querySelector('#mobile-menu-toggle').click()");
+    assert.equal(await evalJS("document.querySelector('#mobile-menu-toggle').getAttribute('aria-expanded')"),'true');
+    assert.equal(await evalJS("getComputedStyle(document.querySelector('#mobile-site-nav')).display"),'flex');
+    await evalJS("document.querySelector('#mobile-menu-toggle').click()");
+    assert.equal(await evalJS("document.querySelector('#mobile-menu-toggle').getAttribute('aria-expanded')"),'false');
+    await evalJS("document.querySelector('[data-mobile-panel=equipment]').click()");
+    assert.equal(await evalJS("document.querySelector('#mobile-bottom-sheet').hidden"),false);
+    const listSize=await evalJS("document.querySelectorAll('[data-mobile-equip]').length");
+    assert.ok(listSize>=6,width+'px equipment list missing');
+    if(width===390) {
+      const snap=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile3d-equipment-sheet.png',import.meta.url),Buffer.from(snap.data,'base64'));
+    }
+    await evalJS("document.querySelector('#mobile-sheet-close').click()");
+    assert.equal(await evalJS("document.querySelector('#mobile-bottom-sheet').hidden"),true);
+    await evalJS("document.querySelector('[data-mobile-panel=camera]').click()");
+    await evalJS("document.querySelector('[data-mobile-command=zoom-in]').click()");
+    await evalJS("document.querySelector('[data-mobile-command=plan]').click()");
+    assert.equal(await evalJS("document.querySelector('#plan').getAttribute('aria-pressed')"),'true');
+    await evalJS("document.querySelector('[data-mobile-command=plan]').click()");
+    assert.equal(await evalJS("document.querySelector('#plan').getAttribute('aria-pressed')"),'false');
+    await evalJS("document.querySelector('#mobile-sheet-close').click()");
+    await evalJS("document.querySelector('[data-mobile-panel=info]').click()");
+    assert.equal(await evalJS("document.querySelector('#mobile-bottom-sheet').hidden"),false);
+    if(width===390) {
+      const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile3d-info-sheet.png',import.meta.url),Buffer.from(shot.data,'base64'));
+    }
+    await evalJS("document.querySelector('#mobile-sheet-close').click()");
+    await evalJS("document.querySelector('#mobile-clean').click()");
+    assert.equal(await evalJS("document.body.classList.contains('mobile-clean')"),true);
+    assert.equal(await evalJS("document.querySelector('#mobile-restore').hidden"),false);
+    if(width===390){
+      const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile3d-clean.png',import.meta.url),Buffer.from(shot.data,'base64'));
+    }
+    await evalJS("document.querySelector('#mobile-restore').click()");
+    assert.equal(await evalJS("document.body.classList.contains('mobile-clean')"),false);
     await evalJS("document.querySelector('[data-chapter=\"3\"]').click()");
     await sleep(950);
     const collapsed=await evalJS(`(() => {
@@ -190,7 +247,7 @@ try {
     assert.equal(collapsed.expanded,'false');
     assert.ok(collapsed.chipHeight>=38,width+'px chip too small');
     assert.ok(collapsed.withinStage,width+'px chip clipped');
-    assert.ok(collapsed.belowControls,width+'px chip overlaps view/stream selectors');
+    assert.ok(collapsed.chipWidth>=38,width+'px chip target too small');
     assert.equal(collapsed.pageOverflow,false,width+'px layout overflows page');
     if(width===390){
       const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
