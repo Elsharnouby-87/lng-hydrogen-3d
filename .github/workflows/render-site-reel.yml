@@ -28,7 +28,7 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
       - name: Record real site screens and synthesize original energetic instrumental
-        run: python .github/video/render_site_video.py
+        run: xvfb-run -a -s "-screen 0 1280x720x24" python .github/video/render_site_video_x11.py
       - name: Upload finished MP4
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,6 +36,7 @@ jobs:
           name: OAPEC-2026-website-only-3D-LinkedIn-video
           path: |
             oapec_site_video/OAPEC_Website_Only_3D_LinkedIn_33s.mp4
+            oapec_site_video/*_site.png
           if-no-files-found: warn
           retention-days: 14
       - name: Publish download-ready MP4 on isolated video branch
