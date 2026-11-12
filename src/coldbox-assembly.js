@@ -1,3 +1,4 @@
+import { addR101InteriorDetail } from './ultimate-detail.js';
 import * as T from 'three';
 import {
   BLUE, bevelBox, box, boxes, cyl, dark, flange, group, ice, material,
@@ -306,6 +307,9 @@ export function createAdvancedColdBox(parent,x,z) {
   ]){
     sphere(plumbing,xx,yy,zz,.11,.11,.11,mat);
   }
+  // Stage 5: high-density cold-service hardware belongs to its parent
+  // exchanger/expander or its isolated circuit, preserving exploded semantics.
+  const advancedHardware=addR101InteriorDetail({inside,modules,turbines,H2,He});
   const guides=group(inside);guides.visible=false;guides.name='Exploded assembly location witnesses';
   for(const item of [...modules,...turbines.map(t=>({obj:t.root,center:t.center,move:t.move}))]){
     // Witness lines show each nominal mounting position, not a process joint.
