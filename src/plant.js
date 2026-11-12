@@ -12,8 +12,7 @@ const seaWall=material(0x5f6c74,.04,.87), road=material(0x2f4150,.05,.9);
 const slab=material(0x81909c,.05,.94), white=material(0xf3e7d1,.1,.65);
 const blue=material(BLUE,.43,.31), mint=material(MINT,.40,.34), gold=material(GOLD,.55,.36);
 const pipeBlue=material(0x236794,.7,.37),pipeMint=material(0x267e70,.65,.39);
-const gray=material(0x446173,.42,.55), mutedPipe=material(0x465463,.49,.59);
-const pickers=[];
+const mutedPipe=material(0x465463,.49,.59);
 const unitBox=new T.BoxGeometry(1,1,1);
 const ball=new T.SphereGeometry(1,26,14);
 const cylinder=new T.CylinderGeometry(1,1,1,36,1);
@@ -60,7 +59,8 @@ function pad(g,x,z,w,d){
 }
 function pick(g,id,x,y,z,w,h,d){
   const o=box(g,x,y,z,w,h,d,new T.MeshBasicMaterial({visible:false}));
-  o.userData.equipment=id;pickers.push(o);
+  o.userData.equipment=id;
+  return o;
 }
 function tank(g,x,z,r,h,accent){
   const k=group(g,x,0,z);
@@ -403,25 +403,47 @@ const visibleLabels={
   dock:['dock','lng'],mechanical:['feed','deep'],bypass:['trim','pump'],
 };
 
+function createRenderer(scene) {
+  const canvas = document.createElement('canvas');
+  let renderer;
+  try {
+    const context = canvas.getContext('webgl2', {
+      antialias: true, powerPreference: 'high-performance', alpha: false,
+    });
+    if (context) {
+      renderer = new T.WebGLRenderer({ canvas, context, antialias: true });
+      renderer.outputColorSpace = T.SRGBColorSpace;
+      renderer.toneMapping = T.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.24;
+      const environment = new RoomEnvironment();
+      const pmrem = new T.PMREMGenerator(renderer);
+      try {
+        scene.environment = pmrem.fromScene(environment, .06).texture;
+        scene.environmentIntensity = .55;
+      } finally {
+        environment.dispose();
+        pmrem.dispose();
+      }
+      return { renderer, kind: 'webgl' };
+    }
+  } catch (error) {
+    renderer?.dispose();
+    console.warn('WebGL initialization failed; using Canvas 2D.', error);
+  }
+  return { renderer: softwareRenderer(), kind: 'canvas' };
+}
+
 export function createPlant(target, labelLayer, choose, reduced){
   const scene=new T.Scene();scene.background=new T.Color(0x1a2d3d);
   const camera=new T.OrthographicCamera(-30,30,19,-19,.05,350);
-  const canvas=document.createElement('canvas');
-  const context=canvas.getContext('webgl2',{antialias:true,powerPreference:'high-performance',alpha:false});
-  const renderer=context?new T.WebGLRenderer({canvas,context,antialias:true}):softwareRenderer();
+  const { renderer, kind } = createRenderer(scene);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
-  if(context){
-    renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.24;
-    const pmrem=new T.PMREMGenerator(renderer), environment=new RoomEnvironment();
-    scene.environment=pmrem.fromScene(environment,.06).texture;scene.environmentIntensity=.55;
-    environment.dispose();pmrem.dispose();
-  }
   renderer.domElement.setAttribute('aria-label','Interactive 3D plant. Drag to orbit and scroll or pinch to zoom.');
   target.appendChild(renderer.domElement);
   const ambient=new T.HemisphereLight(0xf4fbff,0x5c6880,2.4);scene.add(ambient);
   const key=new T.DirectionalLight(0xffe2bd,2.55);key.position.set(-16,31,9);scene.add(key);
   const fill=new T.DirectionalLight(0x8bd7ff,1.55);fill.position.set(10,13,-26);scene.add(fill);
-  const water=context?makeWater(scene):null;
+  const water=kind==='webgl'?makeWater(scene):null;
   const {g,refrigeration,dockFlow}=terminal(scene);
   const {casing,core,stack}=exchanger(g);
   const routes=stageRoutes(scene);
@@ -444,21 +466,23 @@ export function createPlant(target, labelLayer, choose, reduced){
     arrow.rotation.z=Math.PI;
   }
   thermal.visible=false;
-  pick(g,'dock',14.4,1.9,12.2,2.2,4.2,3.4);
-  pick(g,'feed',-13.55,1.15,-4.95,10,2.35,3.5);
-  pick(g,'lng',17.8,1.98,5.3,7.3,4.75,5.8);
-  pick(g,'pump',10.7,.9,5.78,4.3,1.9,2.5);
-  pick(g,'exchange',0,1.55,0,7.5,2.98,3.92);
-  pick(g,'trim',-11.55,1.5,5.78,5.8,3.0,4.1);
-  pick(g,'deep',9.25,1.52,-4.95,6.5,3.1,3.85);
-  pick(g,'liquid',17.4,1.3,-4.95,6.2,2.8,4.25);
-  pick(g,'grid',-18.2,.8,5.78,4.1,1.6,2.8);
+  const pickers = [
+    pick(g,'dock',14.4,1.9,12.2,2.2,4.2,3.4),
+    pick(g,'feed',-13.55,1.15,-4.95,10,2.35,3.5),
+    pick(g,'lng',17.8,1.98,5.3,7.3,4.75,5.8),
+    pick(g,'pump',10.7,.9,5.78,4.3,1.9,2.5),
+    pick(g,'exchange',0,1.55,0,7.5,2.98,3.92),
+    pick(g,'trim',-11.55,1.5,5.78,5.8,3.0,4.1),
+    pick(g,'deep',9.25,1.52,-4.95,6.5,3.1,3.85),
+    pick(g,'liquid',17.4,1.3,-4.95,6.2,2.8,4.25),
+    pick(g,'grid',-18.2,.8,5.78,4.1,1.6,2.8),
+  ];
   scene.updateMatrixWorld(true);
 
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=!reduced;controls.dampingFactor=.12;controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.47;
   controls.minZoom=.49;controls.maxZoom=6.5;
-  let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=.78;
+  let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null;
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
@@ -510,18 +534,29 @@ export function createPlant(target, labelLayer, choose, reduced){
   }
   function resize(){
     const {width,height}=target.getBoundingClientRect();
-    if(!width || !height)return;
+    if(!width || !height || (width===dimensions.width && height===dimensions.height))return;
     const first=dimensions.width===1;
     dimensions={width,height};compact=width<620;
     frameViewport();renderer.setSize(width,height,false);
     if(first||!tween)focus(active,true);
   }
-  function pointer(e){const r=renderer.domElement.getBoundingClientRect();mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);}
-  renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
-  renderer.domElement.addEventListener('pointerup',e=>{
-    if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>6){down=null;return;}
-    down=null;pointer(e);ray.setFromCamera(mouse,camera);
-    const hit=ray.intersectObjects(pickers,false)[0];if(hit)choose(hit.object.userData.equipment);
+  const surface = renderer.domElement;
+  surface.addEventListener('pointerdown', event => {
+    down = event.isPrimary && event.button === 0
+      ? { id: event.pointerId, x: event.clientX, y: event.clientY }
+      : null;
+  });
+  surface.addEventListener('pointercancel', () => { down = null; });
+  surface.addEventListener('pointerup', event => {
+    const start = down;
+    down = null;
+    if (!start || start.id !== event.pointerId || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
+    const bounds = surface.getBoundingClientRect();
+    mouse.set((event.clientX - bounds.left) / bounds.width * 2 - 1,
+      1 - (event.clientY - bounds.top) / bounds.height * 2);
+    ray.setFromCamera(mouse, camera);
+    const [hit] = ray.intersectObjects(pickers, false);
+    if (hit) choose(hit.object.userData.equipment);
   });
   controls.addEventListener('start',()=>{tween=null;});
   const ro=new ResizeObserver(resize);ro.observe(target);resize();
@@ -555,7 +590,6 @@ export function createPlant(target, labelLayer, choose, reduced){
     }
   }
   function animate(now){
-    if(suspended){last=now;return;}
     const gap=active==='exchange'&&coreView==='exploded'?1:0;
     spread=reduced?gap:spread+(gap-spread)*.18;
     for(const [index,{layer,base}] of stack.entries()){
@@ -588,8 +622,18 @@ export function createPlant(target, labelLayer, choose, reduced){
   }
   renderer.setAnimationLoop(animate);
   return {
-    focus,kind:context?'webgl':'canvas',
-    setSuspended(value){suspended=value;},
+    focus, kind,
+    setSuspended(value) {
+      if (suspended === value) return;
+      suspended = value;
+      if (value) {
+        renderer.setAnimationLoop(null);
+      } else {
+        last = performance.now();
+        resize();
+        renderer.setAnimationLoop(animate);
+      }
+    },
     setScreeningDuty(value){screeningDuty=value;},
     setFlow(value){flow=value;updateVisibility();},
     setTrace(value){trace=value;updateVisibility();},

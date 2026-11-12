@@ -24,7 +24,7 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
 @media(max-width:365px){.legend{gap:3px}.legend i{width:5px;height:5px}.view-tools button{padding-inline:4px}}
 
 /* Projection puts the equipment on the screen, with the notes in a compact lower third. */
-.open-show{color:var(--mint)}.open-show span{margin-right:4px;font-size:10px}
+.open-show{color:var(--mint)}
 .stage-actions{display:flex;gap:6px;align-items:flex-end;justify-content:flex-end;flex-wrap:wrap}
 .circuit-tools button{display:flex;align-items:center;gap:5px}
 .circuit-tools i{width:6px;height:6px;border-radius:50%;background:var(--cyan)}
@@ -53,7 +53,7 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
 @media(min-width:801px){
  .is-presenting main{max-width:none;padding:9px 18px 0}
  .is-presenting .masthead{min-height:52px;padding-inline:20px}
- .is-presenting .experience{position:relative;display:block;height:calc(100dvh - 132px);min-height:0;overflow:hidden}
+ .is-presenting .experience{position:relative;display:block;height:calc(100dvh - 138px);min-height:0;overflow:hidden}
  .is-presenting .stage{position:absolute;inset:0;height:100%}
  .is-presenting .narrative{position:absolute;z-index:5;left:17px;bottom:65px;width:clamp(250px,23vw,330px);max-height:calc(100% - 132px);overflow:auto;padding:17px 18px 15px;border:1px solid #4a6478;border-left:2px solid var(--mint);border-radius:6px;background:#0b1929ef}
  .is-presenting h1{margin:9px 0 8px;font-size:clamp(24px,2.4vw,36px);line-height:1.03}
@@ -65,7 +65,7 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
  .is-presenting .chapters button span{font-size:12px}.is-presenting .footer{min-height:19px}
 }
 @media(max-width:800px){
- .open-show{font-size:10px;white-space:nowrap}.open-show span{display:none}
+ .open-show{font-size:10px;white-space:nowrap}
  .stage-actions{gap:3px;max-width:100%}.stage-bottom{flex-wrap:wrap;justify-content:space-between;gap:4px;align-items:flex-end}
  .trace-panel{right:8px;width:calc(100% - 16px);bottom:71px;padding:6px}
  .trace-stops button{font-size:9px;padding:4px}.trace-heading{margin-bottom:4px}
@@ -85,7 +85,6 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
 .profile-scrub{display:flex;align-items:center;gap:12px;color:#cedae4;font-size:11px}
 .profile-scrub label{white-space:nowrap;font-weight:700}.profile-scrub output{color:var(--mint);margin-left:4px}.profile-scrub input{flex:1;min-width:0;accent-color:var(--mint)}
 .hud-hidden .profile-panel,.is-opening .profile-panel{visibility:hidden}
-@media(min-width:801px){.is-presenting .experience{height:calc(100dvh - 138px)}}
 @media(max-width:800px){.profile-panel{bottom:72px;right:8px;width:calc(100% - 16px);padding:7px 8px}.profile-heading strong{font-size:10px}.profile-panel .modes button{font-size:9px;padding:4px 3px}.profile-heading .eyebrow{font-size:8px}}
 @media(max-width:800px){
  .brand strong,.brand small{white-space:nowrap}
