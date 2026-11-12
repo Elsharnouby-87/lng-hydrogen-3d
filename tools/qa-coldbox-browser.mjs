@@ -117,7 +117,7 @@ try {
     ['trim','E-202','e202'],
     ['liquid','TK-301','tk301'],
   ]){
-    const clicked=await evalJS("(() => { const b=document.querySelector('[data-equipment=\\\""+id+"\\\"]'); if(!b)return false; b.click(); return true; })()");
+    const clicked=await evalJS("(() => { const b=document.querySelector('[data-equipment="+id+"]'); if(!b)return false; b.click(); return true; })()");
     assert.equal(clicked,true,'Missing Stage 3 equipment hotspot '+id);
     await sleep(1600);
     const displayed=await evalJS("({code:document.querySelector('#equipment-code').textContent, visible:!document.querySelector('#equipment-card').hidden, renderer:document.querySelector('#model').dataset.renderer})");
