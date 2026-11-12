@@ -35,7 +35,7 @@ const spec={
   'TK-301': {minMeshes:50,minInstruments:2,minActuators:0},
 };
 for(const [tag,create,x,z,portCount] of positions){
-  const g=create(root,x,z);
+  const g=tag==='TK-301'?create(root,x,1.40,z):create(root,x,z);
   assert.equal(g.userData.equipmentTag,tag);
   assert.deepEqual(g.position.toArray(),[x,0,z]);
   const ports=g.userData.processPorts;
