@@ -46,9 +46,9 @@ for(const [tag,create,x,z,portCount] of positions){
   console.log('PASS',tag,n.meshes,'meshes',n.instruments,'instruments',n.actuators,'actuators');
 }
 const endpoints=[
-  ['K-101',[[-13.66,1.38,-4.95],[-9.74,1.38,-4.95]]],
+  ['K-101',[[-13.77,1.38,-4.95],[-9.75,1.38,-4.95]]],
   ['P-201',[[10.70,.94,5.25],[8.70,1.38,5.78]]],
-  ['E-202',[[-8.63,1.38,5.78],[-14.47,1.38,5.78]]],
+  ['E-202',[[-8.59,1.38,5.78],[-14.51,1.38,5.78]]],
   ['TK-301',[[15.28,1.38,-4.95]]],
 ];
 for(const [tag,worlds] of endpoints){
