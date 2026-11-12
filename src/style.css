@@ -138,7 +138,14 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
 }
 .coldbox-info-toggle:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 .coldbox-info-toggle:hover{border-color:var(--mint);color:var(--mint)}
-#coldbox-info-icon{font-size:17px;line-height:1}
+#coldbox-info-icon{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:18px;height:18px;border:1px solid currentColor;border-radius:50%;
+  font:bold 12px/1 Arial,Helvetica,sans-serif;
+}
+.coldbox-info-toggle[aria-expanded=true] #coldbox-info-icon{
+  font-size:23px;border:0;
+}
 .coldbox-note.is-collapsed{
   width:auto;max-width:calc(100% - 16px);
   padding:0;background:transparent;border:0;box-shadow:none;
