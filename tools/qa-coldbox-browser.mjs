@@ -75,7 +75,7 @@ try {
   });
   const evalJS=async expression=>{
     const result=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
-    if(result.exceptionDetails)throw Error('Browser JS: '+result.exceptionDetails.text);
+    if(result.exceptionDetails)throw Error('Browser JS: '+(result.exceptionDetails.exception?.description || result.exceptionDetails.text));
     return result.result?.value;
   };
   await send('Page.enable');
@@ -116,7 +116,14 @@ try {
       width,height:844,deviceScaleFactor:3,mobile:true,screenWidth:width,screenHeight:844
     });
     await send('Page.reload',{ignoreCache:true});
-    await sleep(1400);
+    let ready=false;
+    for(let attempt=0;attempt<100;attempt++){
+      if(await evalJS("!!document.querySelector('[data-chapter=\"3\"]')")){
+        ready=true;break;
+      }
+      await sleep(200);
+    }
+    assert.ok(ready,'Mobile DOM did not initialize at '+width+'px');
     await evalJS("document.querySelector('[data-chapter=\"3\"]').click()");
     await sleep(950);
     const collapsed=await evalJS(`(() => {
