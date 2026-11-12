@@ -186,6 +186,8 @@ try {
     if(width===390){
       const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
       await writeFile(new URL('../docs/mobile3d-main.png',import.meta.url),Buffer.from(shot.data,'base64'));
+      const preview=await send('Page.captureScreenshot',{format:'jpeg',quality:70,captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile3d-main-preview.jpg',import.meta.url),Buffer.from(preview.data,'base64'));
     }
     await evalJS("document.querySelector('#mobile-menu-toggle').click()");
     assert.equal(await evalJS("document.querySelector('#mobile-menu-toggle').getAttribute('aria-expanded')"),'true');
@@ -222,6 +224,8 @@ try {
     if(width===390){
       const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
       await writeFile(new URL('../docs/mobile3d-clean.png',import.meta.url),Buffer.from(shot.data,'base64'));
+      const preview=await send('Page.captureScreenshot',{format:'jpeg',quality:70,captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile3d-clean-preview.jpg',import.meta.url),Buffer.from(preview.data,'base64'));
     }
     await evalJS("document.querySelector('#mobile-restore').click()");
     assert.equal(await evalJS("document.body.classList.contains('mobile-clean')"),false);
