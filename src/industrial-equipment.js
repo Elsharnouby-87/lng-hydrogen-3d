@@ -10,9 +10,9 @@ import {
  * Equipment sizes are illustrative; connection coordinates deliberately match
  * existing animated plant-route endpoints, in the same local model units.
  *
- * K-101: axial hydrogen suction (-1.96,1.38,0) and discharge (+1.96,1.38,0)
+ * K-101: axial hydrogen suction (-2.07,1.38,0) and discharge (+1.95,1.38,0)
  * P-201: LNG suction (0,.94,-.53) and discharge (-2,1.38,0)
- * E-202: manifold west/east service (-2.92,+2.92,1.38,0)
+ * E-202: manifold west/east service (-2.96,+2.96,1.38,0)
  * LH2: vacuum-jacketed process port (-2.02,1.38,0) to vessel shell.
  * No safety, relief, electrical or instrumentation design is implied.
  */
@@ -43,9 +43,9 @@ const whitePaint=material(0xc1d1dc,.29,.49);
 const warning=material(0xe2ac52,.22,.48);
 
 const localPorts = {
-  'K-101': [{name:'H2 suction',point:[-1.96,1.38,0]},{name:'H2 discharge',point:[1.96,1.38,0]}],
+  'K-101': [{name:'H2 suction',point:[-2.07,1.38,0]},{name:'H2 discharge',point:[1.95,1.38,0]}],
   'P-201': [{name:'LNG suction',point:[0,.94,-.53]},{name:'LNG discharge',point:[-2,1.38,0]}],
-  'E-202': [{name:'Terminal LNG inlet',point:[2.92,1.38,0]},{name:'Gas send-out',point:[-2.92,1.38,0]}],
+  'E-202': [{name:'Terminal LNG inlet',point:[2.96,1.38,0]},{name:'Gas send-out',point:[-2.96,1.38,0]}],
   'TK-301': [{name:'LH2 liquid inlet',point:[-2.02,1.38,0]}],
 };
 export const STAGE3_PORTS=Object.freeze(localPorts);
@@ -177,8 +177,8 @@ export function industrialCompressor(parent,x,z) {
     boltRing(root,dx,CY,0,.65,'x');
   }
   // Suction annulus / axial inlet with exactly aligned route connection.
-  processRun(root,[[-1.96,1.38,0],[-1.62,1.38,0]],.151,bluePipe);
-  boltRing(root,-1.95,1.38,0,.27,'x');
+  processRun(root,[[-2.07,1.38,0],[-1.62,1.38,0]],.151,bluePipe);
+  boltRing(root,-2.07,1.38,0,.27,'x');
   // Motor and fan end with mechanically continuous guarded coupling.
   cyl(root,.10,CY,0,.22,.47,steel,'x');
   cyl(root,.28,CY,0,.38,.41,warning,'x');
@@ -217,10 +217,10 @@ export function industrialCompressor(parent,x,z) {
   flange(root,-.47,2.24,-.16,.265,'y',steel,8);
   processRun(root,[
     [-.47,2.14,-.16],[-.47,2.48,-.16],[-.47,2.48,-.88],
-    [1.90,2.48,-.88],[1.90,1.38,-.88],[1.96,1.38,-.88],
-    [1.96,1.38,0],
+    [1.90,2.48,-.88],[1.90,1.38,-.88],[1.95,1.38,-.88],
+    [1.95,1.38,0],
   ],.118,bluePipe);
-  boltRing(root,1.96,1.38,0,.21,'x');
+  boltRing(root,1.95,1.38,0,.21,'x');
   actuatedValve(root,1.30,2.48,-.88,.105);
   pipeShoe(root,1.93,1.38,-.87,.24);
   // Seal-gas / lube-oil instrumentation on an accessible service panel.
@@ -334,10 +334,10 @@ export function industrialVaporizer(parent,x,z) {
   // at the TOP, preserving the two established E-202 boundary positions.
   cyl(root,2.64,.80,0,.137,2.38,steel,'z');
   cyl(root,-2.64,2.84,0,.137,2.38,steel,'z');
-  processRun(root,[[2.92,1.38,0],[2.76,1.38,0],[2.76,.80,0],[2.64,.80,0]],.112,greenPipe);
-  processRun(root,[[-2.64,2.84,0],[-2.76,2.84,0],[-2.76,1.38,0],[-2.92,1.38,0]],.112,greenPipe);
-  boltRing(root,-2.92,1.38,0,.20,'x');
-  boltRing(root,2.92,1.38,0,.20,'x');
+  processRun(root,[[2.96,1.38,0],[2.76,1.38,0],[2.76,.80,0],[2.64,.80,0]],.112,greenPipe);
+  processRun(root,[[-2.64,2.84,0],[-2.76,2.84,0],[-2.76,1.38,0],[-2.96,1.38,0]],.112,greenPipe);
+  boltRing(root,-2.96,1.38,0,.20,'x');
+  boltRing(root,2.96,1.38,0,.20,'x');
   handValve(root,-2.78,1.38,0,.092);
   actuatedValve(root,2.76,1.38,0,.095);
   // Header temperature/pressure tapping; indicator faces the front aisle.
