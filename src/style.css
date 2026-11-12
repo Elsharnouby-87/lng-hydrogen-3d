@@ -548,22 +548,22 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
   .masthead .brand small{font-size:6.7px;letter-spacing:.065em}
   .mobile-header-credit{
     display:flex;flex:none;margin-left:auto;min-width:0;
-    flex-direction:column;align-items:flex-end;justify-content:center;
-    gap:2px;color:#dfa36c;white-space:nowrap;text-align:right;
+    flex-direction:row;align-items:baseline;justify-content:flex-end;
+    gap:5px;color:#dfa36c;white-space:nowrap;text-align:right;
   }
   .mobile-header-by{
-    font:700 9px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;
-    letter-spacing:.045em;color:#d6a77f;
+    font:700 8.5px/1.15 ui-monospace,SFMono-Regular,Consolas,monospace;
+    letter-spacing:.015em;color:#d6a77f;
   }
   .mobile-header-signature{
     display:block;white-space:nowrap;line-height:1.12;
-    font-size:clamp(14px,3.6vw,17px);letter-spacing:-.035em;
+    font-size:clamp(12px,3.55vw,14px);letter-spacing:-.055em;
     -webkit-text-stroke:.18px currentColor;
   }
 }
 @media(max-width:375px){
-  /* Avoid colliding with the title on compact iPhones: signature takes a
-     slender second line, while the first row remains a compact brand. */
+  /* Narrow iPhones keep the complete By/ Eng. + signature on one shared
+     baseline underneath the title, never stacked as two separate lines. */
   .masthead,.is-presenting .masthead{
     display:grid;grid-template-columns:44px minmax(0,1fr);
     grid-template-rows:44px 23px;column-gap:9px;row-gap:0;
@@ -577,5 +577,5 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
     justify-content:flex-end;align-items:baseline;gap:7px;
     width:100%;margin:0;
   }
-  .mobile-header-signature{font-size:17px}
+  .mobile-header-signature{font-size:15px}
 }

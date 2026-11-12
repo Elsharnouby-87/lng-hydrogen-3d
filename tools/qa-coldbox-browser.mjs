@@ -192,6 +192,20 @@ try {
     assert.ok(creditFit.bottom<=creditFit.headerBottom+1,width+'px creator name clipped vertically');
     assert.ok((width>375 ? creditFit.left>=creditFit.brandRight-2 : creditFit.top>=creditFit.brandBottom-2),
       width+'px creator name overlaps the brand '+JSON.stringify(creditFit));
+    const creditLine=await evalJS("(() => {"+
+      "const a=document.querySelector('.mobile-header-by').getBoundingClientRect();"+
+      "const b=document.querySelector('.mobile-header-signature').getBoundingClientRect();"+
+      "const c=document.querySelector('.mobile-header-credit').getBoundingClientRect();"+
+      "return {byRight:a.right,nameLeft:b.left,nameRight:b.right,"+
+      "byMid:(a.top+a.bottom)/2,nameMid:(b.top+b.bottom)/2,"+
+      "groupHeight:c.height,groupWidth:c.width}})()");
+    assert.ok(creditLine.nameLeft>=creditLine.byRight,
+      width+'px byline and signature collide');
+    assert.ok(Math.abs(creditLine.byMid-creditLine.nameMid)<9,
+      width+'px byline and signature not aligned on one line '+JSON.stringify(creditLine));
+    assert.ok(creditLine.groupHeight<30,width+'px credit wraps into multiple rows');
+    assert.equal(await evalJS("document.body.textContent.includes('Preliminary engineering screening · 12 Nov 2026')"),false);
+    assert.equal(await evalJS("document.body.textContent.includes('Import-derived scenarios · Site recoverability pending validation')"),false);
     assert.ok(mobileLayout.stage>=Math.min(500,mobileLayout.height*.75),width+'px 3D is not dominant '+JSON.stringify(mobileLayout));
     assert.ok(mobileLayout.stageAboveNarrative,width+'px 3D must precede narrative');
     assert.ok(mobileLayout.dockVisible,width+'px toolbar missing');

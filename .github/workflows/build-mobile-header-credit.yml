@@ -1,7 +1,7 @@
 name: Mobile author credit — visual regression
 on:
   push:
-    branches: [mobile-header-signature-credit]
+    branches: [mobile-header-signature-credit, fix-mobile-credit-inline-screening-footer]
   workflow_dispatch:
 concurrency:
   group: mobile-credit-${{ github.ref }}
