@@ -1,3 +1,7 @@
+import {
+  addCompressorStageDetail, addPumpDriveDetail, addVaporizerDetail,
+  createLH2AnnulusCutaway,
+} from './ultimate-detail.js';
 import * as T from 'three';
 import {
   BLUE, MINT, bevelBox, blue, box, boxes, cyl, dark, flange, gold,
@@ -238,6 +242,7 @@ export function industrialCompressor(parent,x,z) {
     cyl(root,dx,.48,.85,.040,.052,fastener,'y',true);
   }
   nameplate(root,'K-101 / H₂ COMPRESSOR',-.95,1.31,.662,1.32,.21,'#aae0ff');
+  addCompressorStageDetail(root);
   return root;
 }
 
@@ -287,6 +292,7 @@ export function industrialLNGPump(parent,x,z) {
   box(root,.95,1.38,.67,.56,.085,.40,lightMetal);
   for(const xx of [.82,1.08])cyl(root,xx,.80,.89,.055,.28,lightMetal,'y',true);
   nameplate(root,'P-201 / LNG PUMP',0,1.77,.496,.96,.195,'#b5f1de');
+  addPumpDriveDetail(root);
   return root;
 }
 
@@ -348,6 +354,7 @@ export function industrialVaporizer(parent,x,z) {
   box(root,-2.73,.56,.10,.24,.23,.25,guarded);
   box(root,2.76,.56,.10,.24,.23,.25,guarded);
   nameplate(root,'E-202 / FINNED VAPORIZER',.0,.64,1.63,2.10,.21,'#b7f5e1');
+  addVaporizerDetail(root);
   return root;
 }
 
@@ -355,21 +362,23 @@ export function industrialLH2Tank(parent,x,y,z) {
   const root=identity(group(parent,x,0,z),'TK-301',localPorts['TK-301']);
   pad(root,0,0,6.12,3.66);
   const r=1.02, mid=y;
+  const jacket=group(root);
+  jacket.name='TK-301 / removable outer insulation shell';
   // Horizontal inner vessel within the visibly thicker outer vacuum
   // jacket; endcaps are ellipsoidal and partially overlap the cylinder.
-  cyl(root,0,mid,0,r,3.42,cryoWhite,'x');
+  cyl(jacket,0,mid,0,r,3.42,cryoWhite,'x');
   for(const end of [-1,1]){
-    sphere(root,end*1.69,mid,0,.31,r,r,cryoWhite);
-    cyl(root,end*1.60,mid,0,r+.017,.074,lightMetal,'x');
-    cyl(root,end*1.72,mid,0,r+.026,.040,compressorSteel,'x');
+    sphere(jacket,end*1.69,mid,0,.31,r,r,cryoWhite);
+    cyl(jacket,end*1.60,mid,0,r+.017,.074,lightMetal,'x');
+    cyl(jacket,end*1.72,mid,0,r+.026,.040,compressorSteel,'x');
     for(const a of [0,Math.PI/2,Math.PI,1.5*Math.PI]){
-      const p=box(root,end*1.68,mid+Math.cos(a)*r*.93,Math.sin(a)*r*.93,
+      const p=box(jacket,end*1.68,mid+Math.cos(a)*r*.93,Math.sin(a)*r*.93,
         .068,.14,.13,lightMetal);
       p.rotation.x=a;
     }
   }
   for(const xx of [-1.34,-.69,0,.69,1.34])
-    cyl(root,xx,mid,0,r+.010,.036,lightMetal,'x',true);
+    cyl(jacket,xx,mid,0,r+.010,.036,lightMetal,'x',true);
   for(const xx of [-1.15,1.15])saddle(root,xx,mid,0,r);
   // Vacuum annulus service and insulated connections. The animated LH2
   // delivery line terminates at the fixed -2.02 x flange.
@@ -402,6 +411,16 @@ export function industrialLH2Tank(parent,x,y,z) {
     box(root,xx,.26,.71,.47,.10,.24,guarded);
     cyl(root,xx,.31,.71,.035,.068,fastener,'y',true);
   }
+  const cutaway=createLH2AnnulusCutaway(root,mid,r);
+  let section='shell';
+  root.setCutaway=(value)=>{
+    section=value==='cutaway'?'cutaway':'shell';
+    jacket.visible=section==='shell';
+    cutaway.visible=section==='cutaway';
+    root.userData.sectionView=section;
+  };
+  root.setCutaway('shell');
   root.userData.outerJacket='Vacuum insulated shell (schematic)';
+  root.userData.cutawayGroup=cutaway;
   return root;
 }

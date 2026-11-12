@@ -1,3 +1,4 @@
+import { addLNGTankDetail } from './ultimate-detail.js';
 import { createAdvancedColdBox } from './coldbox-assembly.js';
 import {
   industrialCompressor, industrialLNGPump, industrialVaporizer,
@@ -88,6 +89,11 @@ export function tank(parent, x, z, radius, height, accent, tag) {
     }
     for (const dx of [-.31, 0, .31]) segment(g, v(ladderX + dx, 1.14, ladderZ + (dx ? .17 : .38)), v(ladderX + dx, rimY, ladderZ + (dx ? .17 : .38)), .016, gold);
     box(g, ladderX, deckY, (ladderZ + radius * .42) / 2, .61, .071, ladderZ - radius * .42, trim);
+  }
+  if(tag && tag.includes('TK-201')) {
+    addLNGTankDetail(g,{radius,height,deckY});
+    g.userData.equipmentTag='TK-201';
+    g.userData.storageDetail='Roof penetrations, access, level gauge, BOG connection';
   }
   return { deckY };
 }

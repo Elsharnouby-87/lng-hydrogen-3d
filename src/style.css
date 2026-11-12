@@ -290,3 +290,38 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
   .masthead .head-actions .quiet,
   .masthead .head-actions .outline{font-size:10px;padding:7px 4px}
 }
+
+/* Stage 5: mobile equipment focus is non-obstructive by default. The inspector
+   can choose to reveal the complete equipment notes at any time. */
+.equipment-card .equipment-info-toggle{display:none}
+@media(max-width:800px){
+  .equipment-card{
+    right:8px;bottom:76px;top:auto;max-height:52%;
+    width:min(324px,calc(100% - 16px));overflow:auto;
+  }
+  .equipment-card.is-collapsed{
+    right:8px;top:58px;bottom:auto;
+    width:auto;max-width:calc(100% - 16px);max-height:none;
+    padding:0;border:0;background:transparent;box-shadow:none;
+    overflow:visible;
+  }
+  .equipment-card .equipment-info-toggle{
+    display:inline-flex;align-items:center;justify-content:center;
+    position:relative;min-height:36px;margin:0 0 10px;
+    padding:7px 11px;color:#e9f5fc;font-size:11px;font-weight:700;
+    border:1px solid #51798e;background:#183144;
+    border-radius:5px;white-space:nowrap;cursor:pointer;
+  }
+  .equipment-card.is-collapsed .equipment-info-toggle{
+    min-height:40px;margin:0;padding:8px 12px;
+    background:#101d2cf1;border-color:#6d8fa3;
+    box-shadow:0 4px 14px #07101e99;
+  }
+  .equipment-card .equipment-info-toggle:focus-visible{
+    outline:2px solid var(--mint);outline-offset:2px;
+  }
+  .equipment-card:not(.is-collapsed) #equipment-body{max-height:200px;overflow:auto}
+}
+@media(max-width:360px){
+  .equipment-card.is-collapsed{top:108px}
+}
