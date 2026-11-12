@@ -700,7 +700,6 @@ initScreening({
     if (plan) setPlan(false);
     setCoreView('cutaway');
     setStream('both');
-    if (!flow) el('flow').click();
     plant?.setAvailable(coverage);
     plant?.setScreeningDuty(coverage);
     dutyOverlay.firstElementChild.textContent = label;

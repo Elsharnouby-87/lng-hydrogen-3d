@@ -225,7 +225,7 @@ const views={
   bypass:{look:[-2.6,.82,6.55],offset:[14,15,25],scale:1.54},
   flange:{look:[-3.72,1.59,.93],offset:[-5.0,1.65,3.3],scale:7.5},
   section:{look:[.15,1.88,.07],offset:[-13.3,10.8,15.8],scale:4.65},
-  exchange:{look:[0,1.83,.18],offset:[5.5,10,16],scale:4.25},
+  exchange:{look:[0,1.83,.18],offset:[5.5,10,16],scale:5.0},
   deep:{look:[9.25,1.79,-4.60],offset:[6.9,10.0,18.5],scale:5.45},
   feed:{look:[-17.3,1.19,-4.95],offset:[-8,11,20],scale:3.05},
   compressor:{look:[-11.70,1.40,-4.95],offset:[-7.0,8.3,16.2],scale:4.35},
@@ -424,8 +424,8 @@ export function createPlant(target, labelLayer, choose, reduced){
     // Keep the entire terminal in the overview on narrow screens.
     const portrait=compact&&fit<.84&&cameraView!=='plan';
     const fitDivisor=portrait
-      ? (['overview','exchange'].includes(active)?1.00:active==='dispatch'?.70:.80)
-      : (['overview','dispatch'].includes(active)?1.54:1.10);
+      ? (active==='overview'?1.66:active==='exchange'?1.18:active==='dispatch'?.70:.80)
+      : (active==='overview'?1.62:active==='dispatch'?1.54:1.10);
     const zoom=shotScale*Math.min(1,fit/fitDivisor);
     updateVisibility();
     if(immediate || reduced){camera.position.copy(position);controls.target.copy(look);camera.zoom=zoom;camera.updateProjectionMatrix();controls.update();tween=null;}
