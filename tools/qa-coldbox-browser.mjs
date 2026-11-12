@@ -124,6 +124,12 @@ try {
     assert.equal(displayed.code,tag,'Incorrect equipment nameplate selection '+id);
     assert.equal(displayed.visible,true,'Equipment inspection card hidden '+id);
     assert.ok(displayed.renderer==='webgl'||displayed.renderer==='canvas','Failed render '+id);
+    if(id==='liquid'){
+      const tankUI=await evalJS("({noteHidden:document.querySelector('#coldbox-note').hidden, modesHidden:document.querySelector('#deep-modes').hidden, title:document.querySelector('#view-name').textContent})");
+      assert.equal(tankUI.noteHidden,true,'R-101 info obscures the LH2 vessel');
+      assert.equal(tankUI.modesHidden,true,'R-101 controls shown during LH2 vessel inspection');
+      assert.ok(tankUI.title.includes('TK-301'),'Wrong tank camera view label');
+    }
     const snap=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
     await writeFile(new URL('../docs/stage3-'+file+'-closeup.png',import.meta.url),Buffer.from(snap.data,'base64'));
   }
