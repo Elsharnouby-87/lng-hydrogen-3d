@@ -1,4 +1,4 @@
-name: Site-only 3D LinkedIn Reel (33 sec)
+name: Guided Website-only 3D Showcase (33.6 sec)
 on:
   push:
     branches:
@@ -27,25 +27,29 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
-      - name: Record real site screens and synthesize original energetic instrumental
-        run: xvfb-run -a -s "-screen 0 1280x720x24" python .github/video/render_site_video_x11.py
+      - name: Build unmodified 3D website plus private on-branch camera controls
+        run: |
+          npm ci
+          npm run build
+      - name: Record professionally guided 3D website with original high-energy music
+        run: xvfb-run -a -s "-screen 0 1280x720x24" python .github/video/render_guided_showcase.py
       - name: Upload finished MP4
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: OAPEC-2026-website-only-3D-LinkedIn-video
+          name: OAPEC-2026-guided-website-3D-LinkedIn-reel
           path: |
-            oapec_site_video/OAPEC_Website_Only_3D_LinkedIn_33s.mp4
-            oapec_site_video/*_site.png
+            oapec_guided_reel/OAPEC_2026_3D_Guided_Website_Only_33s.mp4
+            oapec_guided_reel/*.png
           if-no-files-found: warn
           retention-days: 14
       - name: Publish download-ready MP4 on isolated video branch
         if: success()
         run: |
           mkdir -p showcase
-          cp oapec_site_video/OAPEC_Website_Only_3D_LinkedIn_33s.mp4 showcase/
+          cp oapec_guided_reel/OAPEC_2026_3D_Guided_Website_Only_33s.mp4 showcase/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add showcase/OAPEC_Website_Only_3D_LinkedIn_33s.mp4
-          git commit -m "Publish website-only 33-second 3D reel [skip ci]"
+          git add showcase/OAPEC_2026_3D_Guided_Website_Only_33s.mp4
+          git commit -m "Publish guided website-only 3D showcase [skip ci]"
           git push origin HEAD:video-site-only-linkedin-2026
