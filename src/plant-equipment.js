@@ -13,7 +13,7 @@ import {
 } from './plant-geometry.js';
 
 import layout from './precooler-layout.json';
-import { addPrecoolerPassages, fluidAt, lanePositions, layerY, riserSpan } from './precooler-flow.js';
+import { addPrecoolerPassages, addPrecoolerRisers, fluidAt, lanePositions, layerY, riserSpan } from './precooler-flow.js';
 
 const paintedSteel = material(0xb9c3c6, .25, .58);
 const cladding = material(0x9cacb3, .62, .44);
@@ -193,6 +193,11 @@ export function exchanger(g) {
     stack.push({ layer, channel, base, fluid, flow, animate: addPrecoolerPassages(flow, fluid) });
   }
   const headers = group(k);
+  const risers = ['h2', 'lng'].map(fluid => {
+    const root = group(core);
+    addPrecoolerRisers(root, fluid);
+    return { fluid, root };
+  });
   for (const side of [-1, 1]) {
     const x = side * 3.44;
     for (const fluid of ['h2', 'lng']) {
@@ -207,7 +212,7 @@ export function exchanger(g) {
       flange(headers, side * 3.86, 1.38, z, .41, 'x', steel, 10);
     }
   }
-  return { casing, core, stack, headers };
+  return { casing, core, stack, headers, risers };
 }
 
 export function loadingArm(g, points) {

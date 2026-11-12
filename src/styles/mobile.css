@@ -138,7 +138,6 @@
   .inspection .modes{flex:none;max-width:none}
   .inspection .modes button{min-height:38px;font-size:10px;padding:6px 8px}
   .inspection .section-depth{flex:none;min-width:245px}
-  .equipment-card.is-collapsed{top:60px;right:10px;bottom:auto;max-width:calc(100% - 20px)}
   .coldbox-note.is-collapsed{top:61px;left:11px;right:auto;max-width:calc(100% - 80px)}
   .coldbox-note:not(.is-collapsed){top:96px;left:10px;right:64px;max-width:calc(100% - 75px)}
   .mobile-sheet-open .equipment-card,.mobile-sheet-open .coldbox-note{visibility:hidden}

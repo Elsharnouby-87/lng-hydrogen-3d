@@ -69,21 +69,12 @@ export function softwareRenderer() {
     const now = performance.now();
     if (prior >= 0 && now - prior < 32) return false;
     prior = now;
-    const dark = ctx.createLinearGradient(0, 0, width * 0.78, height);
-    dark.addColorStop(0, '#2d4e62');
-    dark.addColorStop(0.47, '#1c364b');
-    dark.addColorStop(1, '#10263a');
-    ctx.fillStyle = dark;
+    const water = ctx.createLinearGradient(0, 0, width * 0.72, height);
+    water.addColorStop(0, '#91afba');
+    water.addColorStop(0.51, '#7598a7');
+    water.addColorStop(1, '#577f92');
+    ctx.fillStyle = water;
     ctx.fillRect(0, 0, width, height);
-    ctx.lineWidth = 0.7;
-    for (let i = 0; i < 25; i++) {
-      const y = ((i + 0.6) * height) / 25;
-      ctx.strokeStyle = i % 4 === 0 ? '#82b4c31b' : '#76aab815';
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y - height * 0.13);
-      ctx.stroke();
-    }
     scene.updateMatrixWorld(true);
     viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     const list = [];

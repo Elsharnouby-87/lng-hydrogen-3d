@@ -7,13 +7,14 @@ export const lanePositions = Array.from({ length: lanes }, (_, i) => (i - (lanes
 export const layerY = index => layout.firstLayerY + index * layout.layerPitch;
 export const fluidAt = index => index % 2 === 0 ? 'h2' : 'lng';
 const pulses = 4;
-const pulseGeometry = new T.BoxGeometry(.094, .019, .019);
-const arrowGeometry = new T.ConeGeometry(.026, .106, 5);
+const pulseGeometry = new T.BoxGeometry(.137, .028, .028);
+const arrowGeometry = new T.ConeGeometry(.034, .128, 6);
 const transform = new T.Object3D();
 
 function flowMaterial(fluid, plane) {
   return new T.MeshBasicMaterial({
     color: fluid === 'h2' ? BLUE : MINT,
+    toneMapped: false,
     clippingPlanes: plane ? [plane] : null,
     // The inspection layer shows both circuits even when the metal obscures one.
     depthTest: !plane,
@@ -21,12 +22,11 @@ function flowMaterial(fluid, plane) {
   });
 }
 
-function manifold(parent, material, height, fluid, fullConnection) {
+function manifold(parent, material, height, fluid) {
   const portZ = fluid === 'h2' ? -nozzleZ : nozzleZ;
   for (const side of [-1, 1]) {
-    const end = lanePositions.at(-1) + (fullConnection ? .024 : 0);
+    const end = lanePositions.at(-1) + .024;
     segment(parent, v(side * headerX, height, -end), v(side * headerX, height, end), .022, material).renderOrder = 4;
-    if (!fullConnection) continue;
     segment(parent, v(side * headerX, height, portZ), v(side * riserX, height, portZ), .018, material).renderOrder = 4;
   }
 }
@@ -51,8 +51,9 @@ export function addPrecoolerRisers(parent, fluid, plane) {
 export function addPrecoolerPassages(parent, fluid, offset = 0, plane = null) {
   const material = flowMaterial(fluid, plane);
   const direction = fluid === 'h2' ? 1 : -1;
-  const height = offset + flowY + (plane ? 0 : .086);
-  const markers = new T.InstancedMesh(pulseGeometry, material, lanes * pulses);
+  const height = offset + flowY + (plane ? 0 : .073);
+  const portZ = fluid === 'h2' ? -nozzleZ : nozzleZ;
+  const markers = new T.InstancedMesh(pulseGeometry, material, lanes * pulses + 8);
   const arrows = new T.InstancedMesh(arrowGeometry, material, lanes);
   markers.frustumCulled = arrows.frustumCulled = false;
   markers.renderOrder = arrows.renderOrder = 5;
@@ -64,7 +65,18 @@ export function addPrecoolerPassages(parent, fluid, offset = 0, plane = null) {
     transform.updateMatrix();
     arrows.setMatrixAt(i, transform.matrix);
   }
-  manifold(parent, material, height, fluid, Boolean(plane));
+  manifold(parent, material, height, fluid);
+  const headerPulses = [];
+  for (const side of [-1, 1]) {
+    for (const end of [lanePositions[0], lanePositions.at(-1)]) {
+      headerPulses.push({
+        start: v(side * riserX, height, portZ),
+        turn: v(side * headerX, height, portZ),
+        end: v(side * headerX, height, end),
+        outbound: side === direction,
+      });
+    }
+  }
   return function animate(phase) {
     transform.rotation.set(0, 0, 0);
     for (const [i, z] of lanesZ.entries()) {
@@ -75,6 +87,23 @@ export function addPrecoolerPassages(parent, fluid, offset = 0, plane = null) {
         markers.setMatrixAt(i * pulses + j, transform.matrix);
       }
     }
+    headerPulses.forEach(({ start, turn, end, outbound }, i) => {
+      const feedLength = Math.abs(turn.x - start.x);
+      const branchLength = Math.abs(end.z - turn.z);
+      for (let j = 0; j < 2; j++) {
+        const t = (phase + j / 2 + i * .13) % 1;
+        const distance = (outbound ? 1 - t : t) * (feedLength + branchLength);
+        if (distance < feedLength) {
+          transform.position.copy(start).lerp(turn, distance / feedLength);
+          transform.rotation.y = 0;
+        } else {
+          transform.position.copy(turn).lerp(end, (distance - feedLength) / branchLength);
+          transform.rotation.y = Math.PI / 2;
+        }
+        transform.updateMatrix();
+        markers.setMatrixAt(lanes * pulses + i * 2 + j, transform.matrix);
+      }
+    });
     markers.instanceMatrix.needsUpdate = true;
   };
 }

@@ -102,6 +102,30 @@ try {
     'Desktop event did not shift toward free left-hand space: '+JSON.stringify(desktopCredit));
   const desktopHeader=await send('Page.captureScreenshot',{format:'jpeg',quality:78,captureBeyondViewport:false});
   await writeFile(new URL('../docs/desktop-header-aligned.jpg',import.meta.url),Buffer.from(desktopHeader.data,'base64'));
+  async function captureHarbor(name) {
+    const image = await send('Page.captureScreenshot', {format:'png',captureBeyondViewport:false});
+    await writeFile(new URL('../docs/stage5-harbor-' + name + '.png', import.meta.url), Buffer.from(image.data,'base64'));
+  }
+  await captureHarbor('overview');
+  const location = "JSON.stringify(['lng','exchange'].map(id=>{const {left,top}=document.querySelector('[data-equipment='+id+']').style;return [left,top]}))";
+  const initialLocation = await evalJS(location);
+  await evalJS("document.querySelector('[data-mode=standalone]').click()");
+  assert.match(await evalJS("document.querySelector('#mode-status').textContent"),/LNG bypasses E/);
+  assert.equal(await evalJS(location), initialLocation, 'Configuration switch moved the plant camera');
+  await captureHarbor('standalone');
+  await evalJS("document.querySelector('[data-mode=integrated]').click()");
+  await evalJS("document.querySelector('[data-equipment=exchange]').click()");
+  await sleep(1150);
+  assert.equal(await evalJS("document.querySelector('#view-name').textContent"),'E-101 CUTAWAY');
+  assert.equal(await evalJS("document.querySelector('[data-stream=both]').getAttribute('aria-pressed')"),'true');
+  await captureHarbor('precooler');
+  await evalJS("document.querySelector('#open-show').click()");
+  await sleep(2000);
+  assert.equal(await evalJS("document.querySelector('#opener').hidden"),false);
+  await captureHarbor('intro');
+  await evalJS("document.querySelector('#skip-opening').click()");
+  await evalJS("if(document.fullscreenElement) document.exitFullscreen()");
+  console.log('PASS: daylight plant, fixed-camera mode comparison, E-101 cutaway, and cinematic intro');
   await evalJS("document.querySelector('[data-chapter=\"3\"]').click()");
   await sleep(1700);
   const renderer=await evalJS("document.querySelector('#model').dataset.renderer");
@@ -184,6 +208,17 @@ try {
     }
     assert.ok(ready,'Mobile DOM did not initialize at '+width+'px');
     await sleep(500);
+    if (width === 390) {
+      await captureHarbor('mobile');
+      await evalJS("document.querySelector('[data-equipment=exchange]').click()");
+      await sleep(1050);
+      const location = await evalJS("(() => { const info=document.querySelector('#equipment-card').getBoundingClientRect(); const stage=document.querySelector('#stage').getBoundingClientRect(); return (info.bottom-stage.top)/stage.height; })()");
+      assert.ok(location > .75 && location < .98, 'Mobile equipment details must sit near the bottom');
+      await evalJS("document.querySelector('#equipment-info-toggle').click()");
+      assert.equal(await evalJS("document.querySelector('#equipment-info-toggle').getAttribute('aria-expanded')"),'true');
+      await captureHarbor('mobile-precooler');
+      await evalJS("document.querySelector('[data-chapter=0]').click()");
+    }
     const mobileLayout = await evalJS("(() => {" +
       "const stage=document.querySelector('#stage').getBoundingClientRect();" +
       "const header=document.querySelector('.masthead').getBoundingClientRect();" +

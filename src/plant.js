@@ -2,6 +2,7 @@ import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { softwareRenderer } from './software.js';
+import { addHarbor, harborSky } from './harbor.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
 import {
@@ -88,33 +89,12 @@ function ground(scene){
     box(g,x,.124,12.22,.26,.13,.23,trim);
   }
   for(const x of [3.2,7,11,15,18])cyl(g,x,-.89,12.35,.14,1.1,trim,'y',true);
-  rail(g,-21.2,-10.1,21.2,-10.1,-.02);
+  rail(g,-21.2,-10.1,-7.5,-10.1,-.02);
+  rail(g,-2.3,-10.1,21.2,-10.1,-.02);
   rail(g,-21.5,10,-5.8,10,-.02);
   rail(g,19,10,21.5,10,-.02);
   lights(g);
   return g;
-}
-function makeWater(scene){
-  const wave=new T.ShaderMaterial({
-    uniforms:{uTime:{value:0}},
-    vertexShader:`varying vec2 p;void main(){p=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-    fragmentShader:`uniform float uTime; varying vec2 p;
-      void main(){
-        float phase=sin(p.y*.31+p.x*.17)*1.9;
-        float a=cos(p.x*3.13+p.y*1.74+phase+uTime*.76);
-        float b=cos(p.x*.83-p.y*4.20-uTime*.44);
-        float c=cos(p.x*1.52+p.y*1.05+sin(p.y*.67)*.8-uTime*.56);
-        vec3 normal=normalize(vec3(.15*a+.07*c,1.,.11*b+.12*c));
-        vec3 view=normalize(cameraPosition-vec3(p.x,-1.03,-p.y));
-        float fresnel=pow(1.-clamp(dot(normal,view),0.,1.),3.);
-        float highlight=pow(max(0.,dot(normal,normalize(view+vec3(-.46,.68,.38)))),36.);
-        float shelter=exp(-length((p-vec2(8.,-12.))*vec2(.047,.084)));
-        vec3 color=mix(vec3(.036,.083,.115),vec3(.095,.174,.233),fresnel*.66+shelter*.25);
-        gl_FragColor=vec4(color+vec3(.19,.29,.34)*highlight*.36,1.0);
-      }`,
-  });
-  const m=mesh(scene,new T.PlaneGeometry(390,390),wave,0,-1.03,0);m.rotation.x=-Math.PI/2;
-  return wave;
 }
 let contactShade;
 function shadow(g,x,z,w,d){
@@ -237,7 +217,7 @@ function stageRoutes(scene, storage){
   return {assisted,standalone,a,s,c};
 }
 const views={
-  overview:{look:[0,0,1.9],offset:[21,25,36],scale:1},
+  overview:{look:[.15,.22,2.15],offset:[19,26,36],scale:1.13},
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
   lng:{look:[17.15,2.50,5.68],offset:[12.8,13.9,20.5],scale:2.48},
   dock:{look:[12.2,1.22,12.55],offset:[17.8,9.8,24.2],scale:2.28},
@@ -245,7 +225,7 @@ const views={
   bypass:{look:[-2.6,.82,6.55],offset:[14,15,25],scale:1.54},
   flange:{look:[-3.72,1.59,.93],offset:[-5.0,1.65,3.3],scale:7.5},
   section:{look:[.15,1.88,.07],offset:[-13.3,10.8,15.8],scale:4.65},
-  exchange:{look:[0,1.38,0],offset:[9.4,8.1,17.3],scale:3.71},
+  exchange:{look:[0,1.83,.18],offset:[5.5,10,16],scale:4.25},
   deep:{look:[9.25,1.79,-4.60],offset:[6.9,10.0,18.5],scale:5.45},
   feed:{look:[-17.3,1.19,-4.95],offset:[-8,11,20],scale:3.05},
   compressor:{look:[-11.70,1.40,-4.95],offset:[-7.0,8.3,16.2],scale:4.35},
@@ -260,7 +240,7 @@ const anchor={
   dock:v(14.4,4.45,11.66),cryo:v(7.28,2.62,-4.72),catalyst:v(9.22,1.77,-4.34),separator:v(12.5,1.66,-3.10),
 };
 const visibleLabels={
-  overview:['feed','lng','exchange','trim','deep','liquid'],
+  overview:['exchange','lng','deep','liquid'],
   dispatch:['feed','lng','exchange','trim','deep','liquid'],
   lng:['lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
   feed:['feed'],compressor:['compressor'],trim:['trim','grid'],pump:['pump'],liquid:['liquid'],
@@ -298,7 +278,7 @@ function createRenderer(scene) {
 }
 
 export function createPlant(target, labelLayer, choose, reduced){
-  const scene=new T.Scene();scene.background=new T.Color(0x172b3b);
+  const scene=new T.Scene();scene.background=new T.Color(harborSky);
   const camera=new T.OrthographicCamera(-30,30,19,-19,.05,350);
   const { renderer, kind } = createRenderer(scene);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
@@ -322,14 +302,15 @@ export function createPlant(target, labelLayer, choose, reduced){
     key.shadow.bias = -.00014;
     key.shadow.radius = 2;
   }
-  const water=kind==='webgl'?makeWater(scene):null;
+  const waterTime=addHarbor(scene, kind==='webgl');
   const {g,refrigeration,dockFlow,storage,lh2}=terminal(scene);
-  const equipment=exchanger(g);
-  const {casing,core,stack,headers}=equipment;
-  const inspection=shadows?createPrecoolerInspection(g,equipment,updateVisibility):null;
+  const precooler=group(scene);
+  const equipment=exchanger(precooler);
+  const {casing,core,stack,headers,risers}=equipment;
+  const inspection=shadows?createPrecoolerInspection(precooler,equipment,updateVisibility):null;
   const routes=stageRoutes(scene,storage);
   const mainRoutes=[...routes.c,...routes.a,...routes.s,dockFlow];
-  const mechanical=group(g);
+  const mechanical=group(scene);
   horizontalVessel(mechanical,-1.24,1.38,-7.08,.48,3.06,blue);
   mechanical.visible=false;
   routes.standalone.visible=false;
@@ -346,6 +327,27 @@ export function createPlant(target, labelLayer, choose, reduced){
     pick(g,'grid',-18.2,.8,5.78,4.1,1.6,2.8),
   ];
   batchStaticMeshes(scene);
+  const subdued = new Map();
+  const scenery = [];
+  const dockParts = new Set([...dockFlow.pipes, dockFlow.glow, dockFlow.arrows]);
+  g.traverse(node => {
+    const finish = node.material;
+    if (!finish?.color || !finish.visible || finish.transparent || dockParts.has(node)) return;
+    if (!subdued.has(finish)) {
+      const soft = finish.clone();
+      soft.color.lerp(new T.Color(0x96a9af), .59);
+      if (soft.isMeshStandardMaterial) {
+        soft.metalness *= .40;
+        soft.roughness = Math.max(soft.roughness, .70);
+      }
+      subdued.set(finish, soft);
+    }
+    scenery.push({ node, finish, soft: subdued.get(finish) });
+  });
+  const activePipe = new Map([
+    [pipeBlue, material(0x2184bd, .30, .44)],
+    [pipeMint, material(0x147862, .30, .44)],
+  ]);
   scene.updateMatrixWorld(true);
 
   const controls=new OrbitControls(camera,renderer.domElement);
@@ -353,16 +355,22 @@ export function createPlant(target, labelLayer, choose, reduced){
   controls.minZoom=.49;controls.maxZoom=8;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
-  let suspended=false, screeningDuty=null, redraw=true;
+  let suspended=false, screeningDuty=null, redraw=true, compareUntil=0;
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
   const ray=new T.Raycaster(), mouse=new T.Vector2();let down=null;
-  let shadowState;
+  let shadowState, isolated;
   function updateVisibility(){
     redraw = true;
+    const isolate = ['exchange', 'section', 'flange'].includes(active);
+    if (isolated !== isolate) {
+      isolated = isolate;
+      for (const {node, finish, soft} of scenery) node.material = isolate ? soft : finish;
+    }
+    const comparing = compareUntil > 0;
     const shot=inspection&&(active==='flange'||active==='section')?active:null;
-    const opened=active==='exchange'&&coreView!=='shell';
+    const opened=active==='exchange'&&coreView!=='shell'&&mode==='integrated';
     const live=mode==='integrated'&&available>0;
     const passageFocus=trace==='both'?stream:trace;
     casing.visible=!opened&&shot!=='section'&&!(shot&&inspection.loaded);
@@ -385,15 +393,21 @@ export function createPlant(target, labelLayer, choose, reduced){
       channel.visible=passageFocus==='both'||passageFocus===fluid;
       indicators.visible=!shot&&flow&&live;
     }
-    const coldFlow=flow&&trace!=='lng';
-    refrigeration.setFlow(coldFlow);
+    for (const {fluid, root} of risers) {
+      root.visible = !shot && opened && coreView !== 'exploded' && live && flow &&
+        (passageFocus === 'both' || passageFocus === fluid);
+    }
     for(const circuit of mainRoutes){
-      const highlighted=trace==='both'||trace===circuit.fluid;
+      const focused=trace==='both'||trace===circuit.fluid;
+      const shared=routes.c.includes(circuit)||circuit===dockFlow;
+      const highlighted=focused&&(!comparing||!shared);
       const unloading=circuit!==dockFlow||active==='dock';
       const starved=available<=0&&circuit.fluid==='lng'&&routes.a.includes(circuit);
       circuit.glow.visible=flow&&highlighted&&unloading&&!starved;
       circuit.arrows.visible=circuit.glow.visible;
-      for(const pipe of circuit.pipes)pipe.material=highlighted?circuit.mat:mutedPipe;
+      for(const pipe of circuit.pipes) {
+        pipe.material = !highlighted ? mutedPipe : comparing ? activePipe.get(circuit.mat) : circuit.mat;
+      }
     }
   }
   function focus(key, immediate=false, duration=900){
@@ -407,12 +421,10 @@ export function createPlant(target, labelLayer, choose, reduced){
     const position=look.clone().add(offset);
     const fit=dimensions.width/dimensions.height;
     const shotScale=active==='deep'&&deepView==='exploded'?(compact?3.55:4.65):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
-    // Portrait mobile uses a closer editorial crop. The original desktop
-    // overview keeps its wide 45 m plant fit. Mobile users can always zoom
-    // back out or recenter with the floating controls.
+    // Keep the entire terminal in the overview on narrow screens.
     const portrait=compact&&fit<.84&&cameraView!=='plan';
     const fitDivisor=portrait
-      ? (['overview','dispatch'].includes(active)?.53:.91)
+      ? (['overview','exchange'].includes(active)?1.00:active==='dispatch'?.70:.80)
       : (['overview','dispatch'].includes(active)?1.54:1.10);
     const zoom=shotScale*Math.min(1,fit/fitDivisor);
     updateVisibility();
@@ -466,10 +478,10 @@ export function createPlant(target, labelLayer, choose, reduced){
   }
   function placeLabels(){
     const set=visibleLabels[active];const bounds=[];
-    const order=active==='overview'?['exchange','lng','deep','liquid','feed','trim','pump','grid']:[...set,...Object.keys(anchor).filter(k=>!set.includes(k))];
+    const order=[...set,...Object.keys(anchor).filter(k=>!set.includes(k))];
     for(const id of order){
       const b=buttons.get(id), p=anchor[id];if(!b)continue;
-      const covered=active==='deep'&&deepView==='shell'&&['cryo','catalyst','separator'].includes(id);
+      const covered=(active==='deep'&&deepView==='shell'&&['cryo','catalyst','separator'].includes(id))||(active==='exchange'&&id==='exchange'&&coreView!=='shell'&&mode==='integrated');
       const exploded=active==='exchange'&&coreView==='exploded'&&id==='exchange';
       if(!labels||!set.includes(id)||covered||exploded||(compact&&active==='overview'&&!['exchange','lng','liquid'].includes(id))){b.hidden=true;continue;}
       projected.copy(p).project(camera);
@@ -499,8 +511,12 @@ export function createPlant(target, labelLayer, choose, reduced){
       if(t===1)tween=null;
     }
     controls.update();
+    if (compareUntil && now >= compareUntil) {
+      compareUntil = 0;
+      updateVisibility();
+    }
     if (!redraw && (!flow || reduced)) return;
-    if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;if(water)water.uniforms.uTime.value+=delta;}
+    if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;if(waterTime)waterTime.value+=delta;}
     if(flow){
       inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
@@ -535,7 +551,14 @@ export function createPlant(target, labelLayer, choose, reduced){
     setTrace(value){trace=value;updateVisibility();},
     setProjection(value){if(projection!==value){projection=value;frameViewport();}},
     setLabels(value){labels=value;redraw=true;},
-    setMode(value){mode=value;routes.assisted.visible=value==='integrated';routes.standalone.visible=value==='standalone';mechanical.visible=value==='standalone';updateVisibility();},
+    setMode(value, compare = false) {
+      mode = value;
+      compareUntil = compare ? performance.now() + 3000 : 0;
+      routes.assisted.visible = value === 'integrated';
+      routes.standalone.visible = value === 'standalone';
+      mechanical.visible = value === 'standalone';
+      updateVisibility();
+    },
     setAvailable(value){available=value;updateVisibility();},
     setCore(value){coreView=value;focus(value==='section'?'section':active==='section'||active==='flange'?'exchange':active);},
     setStream(value){stream=value;updateVisibility();},

@@ -28,7 +28,7 @@ let trace = null,
   openingTimer = null;
 let screeningOpen = false;
 let mobileUI;
-let inspectionShot = null;
+let inspectionShot = null, modeStatusTimer = null;
 const inspectionShots = [
   { chapter: 0, camera: 'overview', title: 'Plant overview', note: 'Find E-101 between the LNG and hydrogen systems.' },
   { chapter: 2, camera: 'flange', title: 'E-101 flange close-up', note: 'Inspect the machined flange, gasket joint and insulated casing.' },
@@ -62,7 +62,7 @@ function setEquipmentInfoExpanded(expanded) {
   el('equipment-body').hidden=!expanded;
   const toggle=el('equipment-info-toggle');
   toggle.setAttribute('aria-expanded',String(expanded));
-  toggle.textContent=expanded?'− Hide equipment info':'i · Equipment info';
+  toggle.querySelector('span').textContent = expanded ? 'Hide details' : 'Equipment details';
 }
 el('equipment-info-toggle').addEventListener('click',()=>{
   setEquipmentInfoExpanded(el('equipment-body').hidden);
@@ -183,6 +183,12 @@ function inspect(id) {
   closeCard();
   const nextChapter = chapters.findIndex((c) => c.id === item.chapter);
   setChapter(nextChapter, false);
+  if (id === 'exchange') {
+    if (plan) setPlan(false);
+    setCoreView('cutaway');
+    setStream('both');
+    if (!flow) el('flow').click();
+  }
   const focus = id === 'grid' ? 'trim' : ['cryo', 'catalyst', 'separator'].includes(id) ? 'deep' : id;
   plant?.focus(exchangeFocus(focus));
   selection = id;
@@ -231,14 +237,15 @@ const names = [
 function renderStageControls() {
   const { id } = chapters[chapter];
   const exchange = id === 'exchange';
+  const exchangeOnline = exchange && mode === 'integrated';
   const deep = id === 'deep';
   const storageFocus = selection === 'liquid';
-  el('inspection').hidden = !plant || (!exchange && !deep);
-  el('core-modes').hidden = !exchange;
+  el('inspection').hidden = !plant || (!exchangeOnline && !deep);
+  el('core-modes').hidden = !exchangeOnline;
   el('e101-tour').hidden = plant?.kind !== 'webgl';
-  el('section-controls').hidden = !exchange || coreView !== 'section' || plant?.kind !== 'webgl';
+  el('section-controls').hidden = !exchangeOnline || coreView !== 'section' || plant?.kind !== 'webgl';
   document.querySelector('[data-core=section]').hidden = plant?.kind !== 'webgl';
-  el('stream-modes').hidden = !exchange || coreView === 'shell' || Boolean(trace);
+  el('stream-modes').hidden = !exchangeOnline || coreView === 'shell' || Boolean(trace);
   el('deep-modes').hidden = !deep || storageFocus;
   el('deep-stream-modes').hidden = !deep || storageFocus || deepView === 'shell' || Boolean(trace);
   el('lh2-modes').hidden = !storageFocus || Boolean(trace);
@@ -250,7 +257,7 @@ function renderStageControls() {
       : 'Three plate-fin heat exchanger stages, two helium expander branches and an ortho–para bed.';
   el('profile-panel').hidden = id !== 'match' || Boolean(trace);
   const title = exchange
-    ? 'E-101 ' + coreView.toUpperCase()
+    ? (exchangeOnline ? 'E-101 ' + coreView.toUpperCase() : 'E-101 BYPASSED')
     : deep
       ? (storageFocus ? 'TK-301 · LH₂ ' + lh2View.toUpperCase() : 'R-101 ' + deepView.toUpperCase())
       : names[chapter];
@@ -275,17 +282,26 @@ function setChapter(i, moveCamera = true) {
   if (mobileUI?.panel === 'info') mobileUI.renderSheet();
   if (moveCamera) plant?.focus(exchangeFocus(c.focus));
 }
-function setMode(value) {
+function setMode(value, compare = false) {
+  const changed = value !== mode;
+  if (!changed && compare) return;
   clearScreeningDuty();
   mode = value;
   markPressed(modes, 'mode', value);
   el('bypass-legend').hidden = value !== 'standalone';
-  plant?.setMode(value);
+  plant?.setMode(value, changed && compare);
+  const status = el('mode-status');
+  status.textContent = changed && compare ? (mode === 'integrated'
+    ? 'H₂ and LNG pass through E‑101.'
+    : 'H₂ uses mechanical precooling. LNG bypasses E‑101.') : '';
+  clearTimeout(modeStatusTimer);
+  if (status.textContent) modeStatusTimer = setTimeout(() => { status.textContent = ''; }, 5000);
+  renderStageControls();
   operatingMatch.setMode(value);
   if (el('approach')) updateApproach();
   if (trace) {
     renderTraceRail();
-    showTraceStop(traceIndex);
+    showTraceStop(traceIndex, !compare);
   }
   const h = el('schematic-h2'),
     l = el('schematic-lng');
@@ -404,7 +420,7 @@ function renderTraceRail() {
     )
     .join('');
 }
-function showTraceStop(i) {
+function showTraceStop(i, moveCamera = true) {
   if (!trace) return;
   const steps = traceSteps();
   traceIndex = Math.max(0, Math.min(i, steps.length - 1));
@@ -418,7 +434,7 @@ function showTraceStop(i) {
   el('next').disabled = traceIndex === steps.length - 1;
   markCurrent(el('trace-stops').children, traceIndex);
   el('view-name').textContent = (plan ? 'PLAN · ' : '') + stop.tag;
-  plant?.focus(stop.view);
+  if (moveCamera) plant?.focus(stop.view);
 }
 function clearTrace(restore = true) {
   if (!trace) return;
@@ -522,6 +538,8 @@ async function startOpening() {
   stopTour();
   clearTrace(false);
   setMode('integrated');
+  setCoreView('cutaway');
+  setStream('both');
   setChapter(0);
   openingFrame = 0;
   document.body.classList.add('is-opening');
@@ -604,7 +622,7 @@ for (const [buttons, key, apply] of [
     });
   }
 }
-modes.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.mode)));
+modes.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.mode, true)));
 document.addEventListener('keydown', (e) => {
   if (
     e.altKey ||
@@ -682,6 +700,7 @@ initScreening({
     if (plan) setPlan(false);
     setCoreView('cutaway');
     setStream('both');
+    if (!flow) el('flow').click();
     plant?.setAvailable(coverage);
     plant?.setScreeningDuty(coverage);
     dutyOverlay.firstElementChild.textContent = label;
