@@ -538,3 +538,44 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
   .mobile-dock button[aria-pressed=true] svg{stroke:#a3fff1}
   .mobile-dock button{gap:5px}
 }
+
+/* Creator credit stays visible beside the mobile brand, retaining the OAPEC
+   warm copper and original handwritten signature treatment. No desktop change. */
+.mobile-header-credit{display:none}
+@media(max-width:800px){
+  .masthead .brand{flex:0 1 auto}
+  .masthead .brand strong{font-size:clamp(15px,4vw,18px);letter-spacing:-.75px}
+  .masthead .brand small{font-size:6.7px;letter-spacing:.065em}
+  .mobile-header-credit{
+    display:flex;flex:none;margin-left:auto;min-width:0;
+    flex-direction:column;align-items:flex-end;justify-content:center;
+    gap:2px;color:#dfa36c;white-space:nowrap;text-align:right;
+  }
+  .mobile-header-by{
+    font:700 9px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;
+    letter-spacing:.045em;color:#d6a77f;
+  }
+  .mobile-header-signature{
+    display:block;white-space:nowrap;line-height:1.12;
+    font-size:clamp(14px,3.6vw,17px);letter-spacing:-.035em;
+    -webkit-text-stroke:.18px currentColor;
+  }
+}
+@media(max-width:375px){
+  /* Avoid colliding with the title on compact iPhones: signature takes a
+     slender second line, while the first row remains a compact brand. */
+  .masthead,.is-presenting .masthead{
+    display:grid;grid-template-columns:44px minmax(0,1fr);
+    grid-template-rows:44px 23px;column-gap:9px;row-gap:0;
+    height:79px;min-height:79px;padding:5px 12px 6px;
+    align-items:center;
+  }
+  .masthead .mobile-menu-toggle{grid-column:1;grid-row:1}
+  .masthead .brand{grid-column:2;grid-row:1}
+  .mobile-header-credit{
+    grid-column:1/-1;grid-row:2;flex-direction:row;
+    justify-content:flex-end;align-items:baseline;gap:7px;
+    width:100%;margin:0;
+  }
+  .mobile-header-signature{font-size:17px}
+}
