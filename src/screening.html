@@ -14,46 +14,6 @@
     </div>
   </header>
 
-  <section id="country-site" class="screen-card country-site" aria-labelledby="country-site-title">
-    <header class="country-site-head">
-      <div><p>3D site concept</p><h2 id="country-site-title"></h2></div>
-      <button id="country-calc-jump" type="button">Go to calculator <span aria-hidden="true">↓</span></button>
-    </header>
-    <div class="country-site-body">
-      <div id="country-viewport" class="country-viewport">
-        <div id="country-labels" aria-hidden="true"></div>
-        <p class="site-render-fallback">The scene requires WebGL or Canvas. Use the views for a text description of the layout.</p>
-        <div class="country-viewport-tools" role="group" aria-label="3D view controls">
-          <button type="button" data-site-zoom="1" aria-label="Zoom in">+</button>
-          <button type="button" data-site-zoom="-1" aria-label="Zoom out">−</button>
-          <button type="button" id="country-flow-toggle" aria-pressed="true">Pause flow</button>
-        </div>
-        <p class="country-orbit-hint">Drag to orbit · + / − to zoom</p>
-      </div>
-      <div class="country-explain">
-        <div class="country-views" role="group" aria-label="Site camera views">
-          <button type="button" data-site-view="overview" aria-pressed="true">Overview</button>
-          <button type="button" data-site-view="source" aria-pressed="false">LNG source</button>
-          <button type="button" data-site-view="precool" aria-pressed="false">Cold tie-in</button>
-          <button type="button" data-site-view="hydrogen" aria-pressed="false">H₂ plant</button>
-        </div>
-        <div class="country-explain-copy" aria-live="polite">
-          <h3 id="country-caption"></h3><p id="country-detail"></p>
-        </div>
-        <dl class="country-site-readout" aria-label="Selected screening case">
-          <div><dt>Allocated LNG</dt><dd id="country-site-flow"></dd></div>
-          <div><dt>Precooling covered</dt><dd id="country-site-coverage"></dd></div>
-        </dl>
-      </div>
-    </div>
-    <footer class="country-site-foot">
-      <div class="country-site-legend" aria-label="Flow legend">
-        <span><i></i> LNG</span><span><i></i> Proposed LNG tie-in</span><span><i></i> H₂ / LH₂</span><span><i></i> Gas send-out</span>
-      </div>
-      <p>Conceptual layout · terminal reference <a id="country-source" target="_blank" rel="noopener"></a></p>
-    </footer>
-  </section>
-
   <div class="screen-grid">
     <section class="screen-card screen-controls" aria-labelledby="screen-alloc-title">
       <h2 id="screen-alloc-title">Allocate LNG to precooling</h2>

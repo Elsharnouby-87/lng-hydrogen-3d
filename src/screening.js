@@ -1,4 +1,3 @@
-import { initSiteView } from './site-view.js';
 import { basis, importRate, markets, powerCases, screen, uptakeCases } from './screening-model.js';
 
 const key = 'lng-hydrogen-screening-v1';
@@ -31,7 +30,6 @@ function loadScenarios() {
 
 export function initScreening({ onRoute, onDuty }) {
   const scenarios = loadScenarios();
-  const site = initSiteView();
   const nav = get('nav');
   const slider = get('share');
   const flow = get('flow');
@@ -79,7 +77,6 @@ export function initScreening({ onRoute, onDuty }) {
     say('electric', n(r.electricalShare));
     say('electric-range', 'vs 11.5 kWh/kg · ' + n(r.lowShare) + '–' + n(r.highShare) + '% vs 10–13 kWh/kg');
     say('coverage', n(r.coverage * 100) + '%');
-    site.update(r.coverage, n(r.flow, 2) + ' t/h', n(r.coverage * 100) + '%');
     get('duty-fill').style.width = r.coverage * 100 + '%';
     say('recovered', n(r.recovered, 3) + ' MWth');
     say('makeup', n(r.makeup, 3) + ' MWth');
@@ -129,7 +126,6 @@ export function initScreening({ onRoute, onDuty }) {
     nav.firstElementChild.textContent = selected ? '◇' : '▥';
     page.hidden = !selected;
     onRoute(Boolean(selected));
-    site.select(selected);
     if (selected) render();
     if (focus && previous !== selected) {
       window.scrollTo(0, 0);
