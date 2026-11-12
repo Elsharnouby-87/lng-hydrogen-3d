@@ -1,4 +1,9 @@
 import { createAdvancedColdBox } from './coldbox-assembly.js';
+import {
+  industrialCompressor, industrialLNGPump, industrialVaporizer,
+  industrialLH2Tank,
+} from './industrial-equipment.js';
+export { industrialLH2Tank as lh2Tank } from './industrial-equipment.js';
 import * as T from 'three';
 import {
   BLUE, bevelBox, blue, box, boxes, cyl, dark, flange, gold, group,
@@ -110,73 +115,15 @@ export function horizontalVessel(g, x, y, z, radius, length, accent, tag) {
 }
 
 export function compressor(g, x, z) {
-  skid(g, x, z, 4.20, 2.15);
-  const y = 1.38;
-  for (const side of [-1, 1]) box(g, x + side * 1.04, .69, z, .58, .47, 1.31, trim);
-  cyl(g, x - .71, y, z, .73, 1.37, steel, 'x');
-  sphere(g, x - 1.38, y, z, .25, .72, .72, steel);
-  flange(g, x - 1.30, y, z, .76, 'x');
-  nozzle(g, x - 1.94, y, z, .31, .62, 'x');
-  cyl(g, x + .10, y, z, .34, .36, serviceYellow, 'x');
-  cyl(g, x + .91, y, z, .57, 1.29, motorPaint, 'x');
-  for (let i = 0; i < 9; i++) cyl(g, x + .36 + i * .13, y, z, .613, .044, trim, 'x', true);
-  flange(g, x + 1.61, y, z, .57, 'x', steel, 8);
-  nozzle(g, x - .54, 2.12, z - .20, .21, .32, 'y');
-  const outlet = [v(x-.54,2.12,z-.20), v(x-.54,2.42,z-.20), v(x-.54,2.42,z-.83), v(x+1.67,2.42,z-.83), v(x+1.67,y,z-.83), v(x+1.67,y,z), v(x+1.96,y,z)];
-  pipeTube(g, pipePath(outlet, .20), .112, steel);
-  flange(g, x + 1.94, y, z, .16, 'x', steel, 6);
-  bevelBox(g, x + .90, y + .50, z + .26, .54, .38, .48, .035, motorPaint);
-  cyl(g, x - .62, 2.23, z, .135, .46, steel, 'y', true);
-  instrument(g, x - .62, 2.56, z, 1.14);
-  nameplate(g, 'K-101 / H₂ COMPRESSOR', x - .60, 1.31, z + .734, 1.23, .19, '#9bd7fa');
+  return industrialCompressor(g, x, z);
 }
 
 export function lngPump(g, x, z) {
-  skid(g, x - .15, z, 4.04, 2.39);
-  const radius = .48;
-  cyl(g, x, .62, z, .63, .30, trim);
-  cyl(g, x, 1.52, z, radius, 1.79, ice);
-  for (const y of [.82, 1.49, 2.12]) cyl(g, x, y, z, radius + .018, .068, steel);
-  flange(g, x, 2.43, z, .62, 'y', steel, 12);
-  sphere(g, x, 2.49, z, .42, .24, .42, cladding);
-  cyl(g, x + .04, 2.83, z, .086, .33, steel);
-  bevelBox(g, x + .04, 2.98, z + .03, .34, .22, .27, .028, motorPaint);
-  nozzle(g, x, .94, z - .53, .25, .36, 'z', mint);
-  nozzle(g, x - .59, 2.24, z, .23, .50, 'x', steel);
-  const discharge = [v(x-.59,2.24,z),v(x-1.33,2.24,z),v(x-1.33,1.38,z),v(x-2.00,1.38,z)];
-  pipeTube(g, pipePath(discharge, .20), .113, steel);
-  flange(g, x - 1.96, 1.38, z, .17, 'x', steel, 6);
-  instrument(g, x - .93, 2.55, z, .93);
-  box(g, x + .72, .81, z + .61, .31, .68, .39, trim);
-  box(g, x + .72, 1.19, z + .61, .32, .14, .39, cladding);
-  nameplate(g, 'P-201 / LNG SEND-OUT PUMP', x, 1.71, z + .484, .85, .18, '#a1e4cb');
+  return industrialLNGPump(g, x, z);
 }
 
 export function vaporizer(g, x, z) {
-  pad(g, x, z, 6.15, 4.24);
-  for (const side of [-1, 1]) {
-    const center = x + side * 1.41;
-    box(g, center, .29, z, 2.5, .25, 3.33, trim);
-    const finStrips = [];
-    for (const dz of [-1, 0, 1]) {
-      const row = z + dz * .83;
-      cyl(g, center, .53, row, .116, 2.47, steel, 'x');
-      cyl(g, center, 2.91, row, .103, 2.45, steel, 'x');
-      for (let i = 0; i < 8; i++) {
-        const xx = center + (i - 3.5) * .28;
-        for (const offset of [-.056, .056]) {
-          finStrips.push([xx, 1.73, row + offset, .218, 2.27, .027], [xx + offset, 1.73, row, .025, 2.27, .216]);
-        }
-      }
-    }
-    boxes(g, cladding, finStrips);
-    for (const xx of [-1.19, 1.19]) for (const zz of [-1.29, 1.29]) box(g, center + xx, 1.60, z + zz, .095, 2.75, .097, trim);
-    for (const zz of [-1.29, 1.29]) box(g, center, 3.01, z + zz, 2.49, .105, .12, trim);
-    nozzle(g, center, .57, z + 1.49, .17, .62, 'z', mint);
-  }
-  segment(g, v(x - 2.82, .66, z + 1.49), v(x + 2.82, .66, z + 1.49), .102, steel);
-  for (const side of [-1, 1]) nozzle(g, x + side * 2.92, 1.38, z, .19, .43, 'x');
-  nameplate(g, 'E-202 / VAPORIZER', x + 1.39, .92, z + 1.49, 1.42, .22, '#a1e4cb');
+  return industrialVaporizer(g, x, z);
 }
 
 function brazedCore(g, x, y, z, width, height, depth) {
