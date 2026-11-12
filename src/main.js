@@ -672,6 +672,7 @@ window.__siteFilm = {
   flow(value) { flow = Boolean(value); plant?.setFlow(flow); },
   speed(value) { plant?.setFilmFlowSpeed(value); },
   zoom(value) { plant?.zoomBy(value); },
+  projection(value) { plant?.setProjection(Boolean(value)); },
   present() { if (!presenting) applyPresent(true); },
   ready() { return plant?.kind === 'webgl'; }
 };
