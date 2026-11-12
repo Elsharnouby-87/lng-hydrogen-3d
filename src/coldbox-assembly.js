@@ -77,7 +77,6 @@ function animatedPipe(parent, name, points, radius, fluid, direction = 1) {
       const t = (direction > 0 ? phase + jitter(i + .5, arrows.count) : 1 - phase - jitter(i + .5, arrows.count) + 5) % 1;
       curve.getPoint(t, pose.position);
       pose.position.y += radius + .025;
-      curve.getTangent(t, pose.scale.set(0, 0, 0)); // scratch vector only
       const tangent = curve.getTangent(t).normalize();
       if (direction < 0) tangent.negate();
       pose.quaternion.setFromUnitVectors(yAxis, tangent);
@@ -247,16 +246,16 @@ export function createAdvancedColdBox(parent,x,z) {
     box(base,xx,.58,1.45,.16,.26,.20,stiffener);
   }
   const modules=[
-    {obj:exchanger(inside,-1.80,'HX-201',1),move:[-.24,.66,-.16]},
-    {obj:exchanger(inside,0,'HX-202',2),move:[0,.95,-.22]},
-    {obj:exchanger(inside,1.80,'HX-203',3),move:[.24,1.19,-.25]},
+    {obj:exchanger(inside,-1.80,'HX-201',1),center:[-1.80,1.8,-.32],move:[-.24,.66,-.16]},
+    {obj:exchanger(inside,0,'HX-202',2),center:[0,1.8,-.32],move:[0,.95,-.22]},
+    {obj:exchanger(inside,1.80,'HX-203',3),center:[1.80,1.8,-.32],move:[.24,1.19,-.25]},
   ];
   const turbines=[
-    { ...expander(inside,-1.82,'EX-201'), move:[-.36,.26,.50] },
-    { ...expander(inside,-.60,'EX-202'), move:[-.10,.39,.57] },
+    { ...expander(inside,-1.82,'EX-201'), center:[-1.82,1.10,1.02], move:[-.36,.26,.50] },
+    { ...expander(inside,-.60,'EX-202'), center:[-.60,1.10,1.02], move:[-.10,.39,.57] },
   ];
   const bed=catalystBed(inside);
-  modules.push({obj:bed,move:[.45,.36,.57]});
+  modules.push({obj:bed,center:[.98,.94,1.02],move:[.45,.36,.57]});
   // Only service nozzles are flanged: inboard brazed aluminium connections
   // are shown as continuous welded/connected segments, not random flanges.
   const plumbing=group(inside);plumbing.name='Connected service tubing';
@@ -308,10 +307,9 @@ export function createAdvancedColdBox(parent,x,z) {
     sphere(plumbing,xx,yy,zz,.11,.11,.11,mat);
   }
   const guides=group(inside);guides.visible=false;guides.name='Exploded assembly location witnesses';
-  for(const item of [...modules,...turbines.map(t=>({obj:t.root,move:t.move}))]){
-    // No physically broken pipes are shown while equipment is displaced.
-    const spot=item.obj.getWorldPosition(new T.Vector3());
-    const from=v(item.obj.position.x,1.00,item.obj.position.z);
+  for(const item of [...modules,...turbines.map(t=>({obj:t.root,center:t.center,move:t.move}))]){
+    // Witness lines show each nominal mounting position, not a process joint.
+    const from=v(...item.center);
     const to=from.clone().add(v(...item.move));
     segment(guides,from,to,.017,ghost);
     const marker=mesh(guides,new T.SphereGeometry(.038,8,6),ghost,from.x,from.y,from.z);
