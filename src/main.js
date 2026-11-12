@@ -61,7 +61,7 @@ function setColdboxInfoExpanded(expanded) {
   const button = el('coldbox-info-toggle');
   button.setAttribute('aria-expanded', String(expanded));
   button.setAttribute('aria-label', expanded ? 'Hide R-101 information' : 'Show R-101 information');
-  el('coldbox-info-icon').textContent = expanded ? '×' : 'ⓘ';
+  el('coldbox-info-icon').textContent = expanded ? '×' : 'i';
   el('coldbox-info-toggle-label').textContent = expanded ? 'Hide info' : 'R-101 info';
 }
 setColdboxInfoExpanded(!coldboxInfoMedia.matches);
