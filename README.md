@@ -63,3 +63,19 @@ The mechanical equipment is rebuilt as inspectable Three.js assemblies with pres
 All four use **representative geometry**, *not mechanical detail engineering or vendor designs*. Ratings, dimensions, support loads, metallurgy, insulation performance, valve type and pressure-class selection need equipment-vendor confirmation. Added K-101 selection and equipment-specific close-up camera presets. The original E-101 pre-cooler, R-101 cooling module and Egypt/Kuwait screening mathematics are intentionally unchanged.
 
 Quality gate: `node tools/test-industrial.mjs` validates key equipment, connection coordinates and instruments; `node tools/qa-coldbox-browser.mjs` captures WebGL close-ups for each equipment and continues the mobile/desktop R-101 regressions. The Stage-3 workflow rebuilds `docs/index.html`, generating four screenshots named `stage3-*-closeup.png`.
+
+## Stage 5 — Full equipment-level 3D detailing (six equipment systems)
+
+Stage 5 builds upon the previously accepted Stage-1 R-101, Stage-3 K-101/P-201/E-202/TK-301, and the untouched E-101 precooler.
+
+- **K-101:** three named compression zones on the split barrel, **IC-101A/B** intercooler barrels, visibly continuous independent representative interstage H₂ spools, coupling and motor/cooling detail, instrument panel, supports and service indicators. These are *illustrative* compression stages; they do not establish actual pressure ratios or intercooler duties.
+- **P-201:** upper motor, electrical cable routing with terminating junction, lifting eyes, pump sleeve jacket/bolting, bracketed instrumentation and mechanical supports, without changing the LNG suction/discharge coordinates.
+- **E-202:** enhanced fin-array geometry, bottom LNG and upper gas headers, constrained expansion/bellows demonstration zones, accessible platform, supports and instrumentation.
+- **R-101:** higher-density exchanger fins, endplates and mounts, dedicated hydrogen vs helium header supports, expander bearing/bolt detailing. Shell / Cutaway / Exploded controls and fluid isolation are preserved.
+- **TK-301 LH₂ vessel:** **Tank shell / Vacuum cutaway** selectable modes reveal inner vessel, representative multilayer thermal shield, vacuum annulus spacers and insulated process inlet, plus unchanged safety-service interfaces. No certified relief/vent network or actual liquid level is represented.
+- **TK-201 LNG storage:** main tank roof/service penetrations, a mechanically capped BOG interface, roof access, vessel level indication, tank-wall retainers and main supply nozzle tied to the existing LNG transfer endpoint.
+- **Mobile UI:** equipment information starts minimized as a small, reversible info chip on narrow displays so it does not hide the equipment or prevent the LH₂ cutaway toggle. The inspector can expand/collapse without losing equipment selection.
+
+These are **well-detailed, optimized procedural Three.js representations**, not imported CAD/GLB vendor models or verified as-built equipment. The present reference assumptions and original screening calculations have not changed. They are for conference education, not fabrication, hazardous-area electrical design, process safety, pressure-vessel or thermal performance certification.
+
+Verification: `node tools/test-detailing.mjs` confirms all six equipment groups and TK-301 cutaway/port interfaces; `node tools/test-industrial.mjs`, `node tools/test-coldbox.mjs` and the headless 3D browser smoke test protect existing features. Stage 5 builds independent review screenshots under `docs/stage5-*.png`.
