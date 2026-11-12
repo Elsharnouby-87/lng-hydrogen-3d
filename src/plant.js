@@ -412,7 +412,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     // back out or recenter with the floating controls.
     const portrait=compact&&fit<.84&&cameraView!=='plan';
     const fitDivisor=portrait
-      ? (['overview','dispatch'].includes(active)?.73:.91)
+      ? (['overview','dispatch'].includes(active)?.53:.91)
       : (['overview','dispatch'].includes(active)?1.54:1.10);
     const zoom=shotScale*Math.min(1,fit/fitDivisor);
     updateVisibility();
