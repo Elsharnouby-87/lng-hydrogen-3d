@@ -5,6 +5,7 @@ on:
       - video-site-only-linkedin-2026
     paths:
       - .github/workflows/render-site-reel.yml
+      - .github/video/render_guided_showcase.py
   workflow_dispatch:
 permissions:
   contents: write
