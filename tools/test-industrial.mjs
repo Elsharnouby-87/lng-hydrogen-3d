@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import * as T from 'three';
 import { industrialCompressor, industrialLNGPump, industrialVaporizer, industrialLH2Tank, STAGE3_PORTS, INDUSTRIAL_REFERENCE } from '../src/industrial-equipment.js';
-import { compressor, lngPump, vaporizer, lh2Tank } from '../src/plant-equipment.js';
+// Use exported industrial implementations directly; the browser build checks
+// that the existing plant-equipment wrappers correctly import this module.
+const compressor=industrialCompressor, lngPump=industrialLNGPump,
+  vaporizer=industrialVaporizer, lh2Tank=industrialLH2Tank;
 
 // No live canvas needed to build the Node-side geometry.
 globalThis.document={createElement(){return {getContext(){return null;}};}};
