@@ -37,11 +37,11 @@ const child=spawn(chromeBinary(),[
   '--disable-background-networking','--no-first-run',
   '--remote-debugging-port=0','--user-data-dir='+userDir,
   '--window-size=1600,950','about:blank',
-],{stdio:'ignore'});
+],{stdio:['ignore','ignore','inherit']});
 let ws;
 try {
   let port=null;
-  for(let i=0;i<100;i++) {
+  for(let i=0;i<320;i++) {
     if(child.exitCode!==null)throw Error('Chrome exited prematurely '+child.exitCode);
     try{
       const p=(await readFile(join(userDir,'DevToolsActivePort'),'utf8')).split('\n');
