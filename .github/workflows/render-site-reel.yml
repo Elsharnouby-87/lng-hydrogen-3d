@@ -1,4 +1,4 @@
-name: Guided Website-only 3D Showcase (33.6 sec)
+name: Cinematic WebGL Desktop Mobile Flow Capture
 on:
   push:
     branches:
@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/render-site-reel.yml
       - .github/video/render_guided_showcase.py
+      - .github/video/capture_cinematic_flows.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -32,25 +33,16 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Record professionally guided 3D website with original high-energy music
-        run: xvfb-run -a -s "-screen 0 1280x720x24" python .github/video/render_guided_showcase.py
+      - name: Capture actual moving 3D flows in desktop and mobile scenes
+        run: python .github/video/capture_cinematic_flows.py
       - name: Upload finished MP4
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: OAPEC-2026-guided-website-3D-LinkedIn-reel
+          name: OAPEC-2026-animated-E101-R101-desktop-mobile-raw
           path: |
-            oapec_guided_reel/OAPEC_2026_3D_Guided_Website_Only_33s.mp4
-            oapec_guided_reel/*.png
+            cinematic_raw/*.mp4
+            cinematic_raw/*_QA.png
+            cinematic_raw/capture_manifest.json
           if-no-files-found: warn
           retention-days: 14
-      - name: Publish download-ready MP4 on isolated video branch
-        if: success()
-        run: |
-          mkdir -p showcase
-          cp oapec_guided_reel/OAPEC_2026_3D_Guided_Website_Only_33s.mp4 showcase/
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add showcase/OAPEC_2026_3D_Guided_Website_Only_33s.mp4
-          git commit -m "Publish guided website-only 3D showcase [skip ci]"
-          git push origin HEAD:video-site-only-linkedin-2026
