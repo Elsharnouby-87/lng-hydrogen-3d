@@ -1,3 +1,4 @@
+import { initScreening } from './screening.js';
 import {chapters,equipment} from './content.js';
 import {createPlant} from './plant.js';
 import {bypass,coldAtHour,dutyProfiles,opening,traces} from './storyboard.js';
@@ -8,6 +9,7 @@ let chapter=0, mode='integrated', approach=8, available=78;
 let flow=true, labels=true, selection=null, tourTimer=null, plant=null, presenting=false;
 let coreView='cutaway', deepView='cutaway', plan=false, hud=true;
 let trace=null, traceIndex=0, openingFrame=-1, openingTimer=null;
+let screeningOpen=false;
 let dutyProfile='variable', hour=10, manualDuty=false;
 
 const chaptersNav=el('chapters');
@@ -157,6 +159,7 @@ function renderStageControls(){
   el('view-name').textContent=plan?'PLAN · '+title:title;
 }
 function setChapter(i,moveCamera=true){
+  clearScreeningDuty();
   chapter=i;
   const c=chapters[i];
   closeCard();
@@ -176,6 +179,7 @@ function setChapter(i,moveCamera=true){
   if(moveCamera)plant?.focus(c.focus);
 }
 function setMode(value){
+  clearScreeningDuty();
   mode=value;
   for(const b of document.querySelectorAll('[data-mode]'))b.setAttribute('aria-pressed',String(value===b.dataset.mode));
   el('stage').classList.toggle('thermal-off',value==='standalone');
@@ -344,6 +348,10 @@ el('plan').disabled=!plant;
 document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.addEventListener('keydown',e=>{
   if(e.altKey||e.ctrlKey||e.metaKey||el('basis').open||e.target.closest('input:not([type=range]),textarea,select,[contenteditable]'))return;
+  if(screeningOpen){
+    if(e.key.toLowerCase()==='f'&&!e.repeat)togglePresent();
+    return;
+  }
   if(!e.target.closest('input[type=range]')){
     if(e.key==='ArrowRight'){e.preventDefault();trace?showTraceStop(traceIndex+1):step(chapter+1);}
     if(e.key==='ArrowLeft'){e.preventDefault();trace?showTraceStop(traceIndex-1):step(chapter-1);}
@@ -353,5 +361,42 @@ document.addEventListener('keydown',e=>{
   if(e.key.toLowerCase()==='h'&&presenting&&!e.repeat)applyHud(!hud);
   if(e.key==='Escape'){if(openingFrame>=0)stopOpening();else if(trace)clearTrace();else{closeCard();if(presenting&&!document.fullscreenElement)applyPresent(false);}}
 });
+const dutyOverlay=el('screen-duty-overlay');
 setChapter(0);
 setMode('integrated');
+function clearScreeningDuty(){
+  if(dutyOverlay.hidden)return;
+  dutyOverlay.hidden=true;
+  plant?.setScreeningDuty(null);
+  plant?.setAvailable(available/100);
+}
+
+initScreening({
+  onRoute(value){
+    screeningOpen=value;
+    if(value){stopTour();stopOpening(false);}
+    document.body.classList.toggle('is-screening',value);
+    el('plant-view').hidden=value;
+    plant?.setSuspended(value);
+  },
+  onDuty({id,label,coverage}){
+    step(2);
+    setMode('integrated');
+    if(plan){plan=false;el('plan').setAttribute('aria-pressed','false');plant?.setCamera('iso');}
+    coreView='cutaway';
+    for(const button of document.querySelectorAll('[data-core]')){
+      button.setAttribute('aria-pressed',String(button.dataset.core===coreView));
+    }
+    for(const button of document.querySelectorAll('[data-stream]')){
+      button.setAttribute('aria-pressed',String(button.dataset.stream==='both'));
+    }
+    plant?.setCore(coreView);
+    plant?.setStream('both');
+    plant?.setAvailable(coverage);
+    plant?.setScreeningDuty(coverage);
+    renderStageControls();
+    dutyOverlay.firstElementChild.textContent=label;
+    dutyOverlay.lastElementChild.href='#'+id;
+    dutyOverlay.hidden=false;
+  },
+});

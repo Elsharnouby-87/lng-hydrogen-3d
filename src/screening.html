@@ -1,0 +1,120 @@
+<section id="screening" class="screening" aria-labelledby="screen-title" hidden>
+  <header class="screen-hero">
+    <div class="screen-heading">
+      <p class="screen-kicker">OAPEC 2026 <span></span> Engineering screening</p>
+      <h1 id="screen-title" tabindex="-1">LNG cold recovery</h1>
+      <p class="screen-facility"><strong id="screen-terminal"></strong><span id="screen-facility-type"></span></p>
+    </div>
+    <div class="screen-market">
+      <nav class="market-tabs" aria-label="Country models">
+        <a href="#kuwait" data-market="kuwait">Kuwait</a>
+        <a href="#egypt" data-market="egypt">Egypt</a>
+      </nav>
+      <p>50 t/day LH₂ reference plant <span></span> Jan–Sep 2026 LNG imports</p>
+    </div>
+  </header>
+
+  <div class="screen-grid">
+    <section class="screen-card screen-controls" aria-labelledby="screen-alloc-title">
+      <h2 id="screen-alloc-title">Allocate LNG to precooling</h2>
+      <div class="allocation-display">
+        <div><label for="screen-share">Share of national average</label><output id="screen-share-value" for="screen-share"></output></div>
+        <div class="screen-flow-field"><label for="screen-flow">LNG flow</label><div><input id="screen-flow" type="number" inputmode="decimal" min="0" step="any"><span>t/h</span></div></div>
+      </div>
+      <div class="screen-slider">
+        <div class="screen-rail"><i id="screen-threshold" aria-hidden="true"></i></div>
+        <input id="screen-share" type="range" min="0" max="5" step="0.01" value="1" aria-describedby="screen-target">
+        <div class="slider-axis" aria-hidden="true"><span>0%</span><span id="screen-axis-end">5%</span></div>
+      </div>
+      <div class="screen-presets" role="group" aria-label="LNG allocation presets">
+        <button type="button" data-share="0.5" aria-pressed="false">0.5%</button>
+        <button type="button" data-share="1" aria-pressed="true">1%</button>
+        <button type="button" data-share="2" aria-pressed="false">2%</button>
+        <button type="button" id="screen-fit">Meet 50 t/day</button>
+      </div>
+      <div class="screen-target"><p id="screen-target"></p><button type="button" id="screen-range" aria-pressed="false">Expand to 100%</button></div>
+      <fieldset class="screen-assumption">
+        <legend>Usable LNG heat uptake <span>kJ/kg LNG</span></legend>
+        <div class="screen-choice">
+          <label><input type="radio" name="uptake" value="300"><span>300 <small>Low</small></span></label>
+          <label><input type="radio" name="uptake" value="500" checked><span>500 <small>Base</small></span></label>
+          <label><input type="radio" name="uptake" value="700"><span>700 <small>High</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset class="screen-assumption">
+        <legend>Electrical benefit case</legend>
+        <div class="screen-choice">
+          <label><input type="radio" name="power" value="low"><span>Low</span></label>
+          <label><input type="radio" name="power" value="central" checked><span>Central</span></label>
+          <label><input type="radio" name="power" value="high"><span>High</span></label>
+        </div>
+      </fieldset>
+      <button id="screen-show-plant" class="screen-plant-link" type="button">View this duty in 3D <span aria-hidden="true">→</span></button>
+    </section>
+
+    <div class="screen-results">
+      <div class="screen-kpis">
+        <article class="screen-card screen-kpi screen-kpi-main">
+          <h2>LH₂ capacity supported</h2>
+          <p><strong id="screen-equivalent"></strong><span>t/day</span></p>
+          <small>Equivalent capacity with full 300 → 120 K precooling</small>
+        </article>
+        <article class="screen-card screen-kpi screen-kpi-power">
+          <h2>Estimated electricity saving</h2>
+          <p><strong id="screen-electric"></strong><span>%</span></p>
+          <small id="screen-electric-range"></small>
+        </article>
+      </div>
+
+      <section class="screen-card screen-balance" aria-labelledby="screen-balance-title">
+        <div class="screen-balance-head"><div><h2 id="screen-balance-title">50 t/day precooling balance</h2><p>300 → 120 K · 1.430 MWth required</p></div><strong id="screen-coverage"></strong></div>
+        <div class="screen-duty-track" aria-hidden="true"><i id="screen-duty-fill"></i></div>
+        <div class="screen-duty-legend">
+          <span><i></i>LNG applied <b id="screen-recovered"></b></span>
+          <span><i></i>Mechanical makeup <b id="screen-makeup"></b></span>
+        </div>
+        <p class="screen-duty-note" id="screen-duty-note"></p>
+      </section>
+
+      <dl class="screen-card screen-ledger" aria-label="Additional scenario results">
+        <div><dt>Allocated cold</dt><dd><strong id="screen-available"></strong><span> MWth</span></dd></div>
+        <div><dt>Total thermal load offset</dt><dd><strong id="screen-thermal"></strong><span>%</span></dd></div>
+        <div><dt>Net SEC reduction</dt><dd><strong id="screen-delta"></strong><span> kWh/kg</span></dd></div>
+        <div><dt>Annual electricity saving</dt><dd><strong id="screen-annual"></strong><span> GWh/yr</span></dd></div>
+      </dl>
+      <p class="screen-footnote" id="screen-footnote"></p>
+    </div>
+  </div>
+
+  <div class="screen-evidence">
+    <section class="screen-card screen-history" aria-labelledby="screen-history-title">
+      <div class="screen-section-head"><div><h2 id="screen-history-title">LNG import history</h2><p>January–September · million tonnes</p></div><strong id="screen-yoy"></strong></div>
+      <div class="import-row"><span>2025</span><div><i id="screen-prior-bar"></i></div><strong id="screen-prior"></strong></div>
+      <div class="import-row"><span>2026</span><div><i id="screen-import-bar"></i></div><strong id="screen-imports"></strong></div>
+      <p class="screen-evidence-copy"><strong id="screen-mean"></strong> t/h mean import-equivalent flow over 273 days.</p>
+      <a id="screen-oapec" target="_blank" rel="noopener">OAPEC Q2–Q3 2026 · p. 25 →</a>
+    </section>
+    <section class="screen-card screen-sensitivity" aria-labelledby="screen-sensitivity-title">
+      <div class="screen-section-head"><div><h2 id="screen-sensitivity-title">Capacity sensitivity</h2><p id="screen-sensitivity-caption"></p></div></div>
+      <div id="screen-sensitivity-rows"></div>
+      <p class="screen-evidence-copy">100% arithmetic ceiling at selected uptake <strong id="screen-ceiling"></strong> t/day equivalent.</p>
+    </section>
+    <section class="screen-card screen-site" aria-labelledby="screen-site-title">
+      <div class="screen-section-head"><div><h2 id="screen-site-title">From imports to site duty</h2><p>Practical recoverable potential</p></div></div>
+      <p id="screen-site-gate"></p>
+      <ol><li>Confirm hourly LNG flow, composition and pressure.</li><li>Check exchanger T–Q curves and internal pinch.</li><li>Compare net power at identical LH₂ quality.</li></ol>
+      <details id="screen-method">
+        <summary>Calculation basis and sources</summary>
+        <p>Precooling uses 2,471.48 kJ/kg LH₂ from interpolated ideal-gas enthalpy. Total heat removal is approximated as 5,100 kJ/kg LH₂. Available duty is LNG flow in t/h × usable uptake in kJ/kg ÷ 3,600. Heat applied to the reference plant is capped at 1.430 MWth.</p>
+        <p>Full-duty electrical benefit uses 0.362 kWh/kg reversible work divided by assumed second-law efficiency, less incremental auxiliaries. The calculator scales this net benefit with the fraction of reference precooling duty met.</p>
+        <p id="screen-power-basis"></p>
+        <ul>
+          <li>EPROM screening workbook and engineering study, 12 November 2026</li>
+          <li><a href="https://stanford.edu/~cantwell/AA210A_Course_Material/AA210A_Lectures/AA210A_Chapter_2_Thermo_of_gases_Brian_J_Cantwell.pdf" target="_blank" rel="noopener">Stanford AA210A · H₂ enthalpy table →</a></li>
+          <li><a href="https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/9013_energy_requirements_for_hydrogen_gas_compression.pdf" target="_blank" rel="noopener">DOE Record 9013 · electrical benchmark →</a></li>
+        </ul>
+      </details>
+    </section>
+  </div>
+  <footer class="screen-footer"><span>EPROM · Preliminary engineering screening · 12 Nov 2026</span><span>Import-derived scenarios · Site recoverability pending validation</span></footer>
+</section>

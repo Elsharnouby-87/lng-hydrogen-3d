@@ -460,7 +460,8 @@ export function createPlant(target, labelLayer, choose, reduced){
   controls.minZoom=.49;controls.maxZoom=6.5;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=.78;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', cameraView='iso', projection=false, spread=0;
-  let last=performance.now(), travel=0, compact=false, dimensions={width:1,height:1};
+  let suspended=false, screeningDuty=null;
+  let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), up=v(0,1,0), point=v(0,0,0), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
   const ray=new T.Raycaster(), mouse=new T.Vector2();let down=null;
@@ -554,6 +555,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     }
   }
   function animate(now){
+    if(suspended){last=now;return;}
     const gap=active==='exchange'&&coreView==='exploded'?1:0;
     spread=reduced?gap:spread+(gap-spread)*.18;
     for(const [index,{layer,base}] of stack.entries()){
@@ -564,6 +566,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     heatAcross.position.y=3.37;
     heatBetween.position.y=stack.at(-1).layer.position.y-.09;
     const delta=Math.min((now-last)/1000,.05);last=now;
+    const pace=screeningDuty===null?1:.4+.6*screeningDuty;
     if(tween){
       const t=Math.min(1,(now-tween.start)/tween.duration),f=1-(1-t)**3;
       camera.position.lerpVectors(tween.from,tween.position,f);controls.target.lerpVectors(tween.target,tween.look,f);
@@ -571,10 +574,10 @@ export function createPlant(target, labelLayer, choose, reduced){
       if(t===1)tween=null;
     }
     controls.update();
-    if(flow&&!reduced){travel=(travel+delta*.143)%1;if(water)water.uniforms.uTime.value+=delta;}
+    if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;if(water)water.uniforms.uTime.value+=delta;}
     if(flow){
       if(core.visible&&mode==='integrated'&&available>0){
-        for(const {channel,passage} of stack)if(channel.visible)drawFlow(passage,travel);
+        for(const {channel,passage} of stack)if(channel.visible)drawFlow(passage,passageTravel);
       }
       if(refrigeration.inside.visible&&refrigeration.flow.glow.visible)drawFlow(refrigeration.flow,travel);
       if(dockFlow.glow.visible)drawFlow(dockFlow,travel);
@@ -586,6 +589,8 @@ export function createPlant(target, labelLayer, choose, reduced){
   renderer.setAnimationLoop(animate);
   return {
     focus,kind:context?'webgl':'canvas',
+    setSuspended(value){suspended=value;},
+    setScreeningDuty(value){screeningDuty=value;},
     setFlow(value){flow=value;updateVisibility();},
     setTrace(value){trace=value;updateVisibility();},
     setProjection(value){if(projection!==value){projection=value;frameViewport();}},
