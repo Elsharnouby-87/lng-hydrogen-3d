@@ -300,7 +300,7 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
     width:min(324px,calc(100% - 16px));overflow:auto;
   }
   .equipment-card.is-collapsed{
-    right:8px;top:125px;bottom:auto;
+    right:8px;top:58px;bottom:auto;
     width:auto;max-width:calc(100% - 16px);max-height:none;
     padding:0;border:0;background:transparent;box-shadow:none;
     overflow:visible;
@@ -323,5 +323,5 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
   .equipment-card:not(.is-collapsed) #equipment-body{max-height:200px;overflow:auto}
 }
 @media(max-width:360px){
-  .equipment-card.is-collapsed{top:151px}
+  .equipment-card.is-collapsed{top:108px}
 }
