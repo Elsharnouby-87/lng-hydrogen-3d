@@ -718,6 +718,7 @@ function renderMobileSheet() {
       '<button type="button" data-mobile-command="zoom-in">+ Zoom in</button>'+
       '<button type="button" data-mobile-command="zoom-out">− Zoom out</button>'+
       '<button type="button" data-mobile-command="inspect">▣ Equipment sections</button>'+
+      (chapter===2 ? '<button type="button" data-mobile-command="e101-tour">E-101 inspection tour</button>' : '')+
       '<button type="button" data-mobile-command="clean">⛶ Clean 3D view</button></div>';
   } else {
     const e=selection?equipment[selection]:null;
@@ -798,6 +799,7 @@ const mobileCommands={
   'flow':()=>el('flow').click(),
   'labels':()=>el('labels').click(),
   'inspect':mobileInspection,
+  'e101-tour':()=>{setMobilePanel(null);el('e101-tour').click();},
   'clean':()=>setMobileClean(true),
   'trace-h2':()=>{setMobilePanel(null);startTrace('h2');},
   'trace-lng':()=>{setMobilePanel(null);startTrace('lng');},
