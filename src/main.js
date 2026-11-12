@@ -17,6 +17,7 @@ let flow = true,
   presenting = false;
 let coreView = 'cutaway',
   deepView = 'cutaway',
+  deepStream = 'both',
   plan = false,
   hud = true;
 let trace = null,
@@ -48,6 +49,7 @@ const modes = document.querySelectorAll('[data-mode]');
 const coreModes = document.querySelectorAll('[data-core]');
 const streamModes = document.querySelectorAll('[data-stream]');
 const deepModes = document.querySelectorAll('[data-deep]');
+const deepStreamModes = document.querySelectorAll('[data-deep-stream]');
 const traceModes = document.querySelectorAll('[data-trace]');
 
 function markPressed(buttons, key, value) {
@@ -197,6 +199,13 @@ function renderStageControls() {
   document.querySelector('[data-core=section]').hidden = plant?.kind !== 'webgl';
   el('stream-modes').hidden = !exchange || coreView === 'shell' || Boolean(trace);
   el('deep-modes').hidden = !deep;
+  el('deep-stream-modes').hidden = !deep || deepView === 'shell' || Boolean(trace);
+  el('coldbox-note').hidden = !deep;
+  el('coldbox-caption').textContent = deepView === 'shell'
+    ? 'Insulated housing with distinct hydrogen and helium connection ports.'
+    : deepView === 'exploded'
+      ? 'Modules lifted for inspection; piping hidden to avoid disconnected joints.'
+      : 'Three plate-fin heat exchanger stages, two helium expander branches and an ortho–para bed.';
   el('profile-panel').hidden = id !== 'match' || Boolean(trace);
   const title = exchange
     ? 'E-101 ' + coreView.toUpperCase()
@@ -313,8 +322,14 @@ function setStream(value) {
 function setDeepView(value) {
   deepView = value;
   markPressed(deepModes, 'deep', value);
-  plant?.focus('deep');
   plant?.setDeep(value);
+  renderStageControls();
+}
+
+function setDeepStream(value) {
+  deepStream = value;
+  markPressed(deepStreamModes, 'deepStream', value);
+  plant?.setDeepStream(value);
   renderStageControls();
 }
 
@@ -528,6 +543,7 @@ for (const [buttons, key, apply] of [
   [coreModes, 'core', setCoreView],
   [streamModes, 'stream', setStream],
   [deepModes, 'deep', setDeepView],
+  [deepStreamModes, 'deepStream', setDeepStream],
 ]) {
   for (const button of buttons) {
     button.addEventListener('click', () => {
