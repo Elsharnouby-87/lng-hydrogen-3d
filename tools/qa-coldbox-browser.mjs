@@ -87,6 +87,21 @@ try {
     if(status.includes('|5|'))break;
     await sleep(120);
   }
+  const desktopCredit=await evalJS("(() => {"+
+    "const brand=document.querySelector('.brand').getBoundingClientRect();"+
+    "const event=document.querySelector('#mobile-site-nav > .event').getBoundingClientRect();"+
+    "const actions=document.querySelector('#mobile-site-nav .head-actions').getBoundingClientRect();"+
+    "return {viewport:innerWidth,brandRight:brand.right,eventLeft:event.left,eventRight:event.right,"+
+    "eventMiddle:(event.left+event.right)/2,actionsLeft:actions.left};"+
+  "})()");
+  assert.ok(desktopCredit.eventLeft>=desktopCredit.brandRight+16,
+    'Desktop event too close to LNG title: '+JSON.stringify(desktopCredit));
+  assert.ok(desktopCredit.eventRight<=desktopCredit.actionsLeft-30,
+    'Desktop event collides with action buttons: '+JSON.stringify(desktopCredit));
+  assert.ok(desktopCredit.eventMiddle<desktopCredit.viewport/2-40,
+    'Desktop event did not shift toward free left-hand space: '+JSON.stringify(desktopCredit));
+  const desktopHeader=await send('Page.captureScreenshot',{format:'jpeg',quality:78,captureBeyondViewport:false});
+  await writeFile(new URL('../docs/desktop-header-aligned.jpg',import.meta.url),Buffer.from(desktopHeader.data,'base64'));
   await evalJS("document.querySelector('[data-chapter=\"3\"]').click()");
   await sleep(1700);
   const renderer=await evalJS("document.querySelector('#model').dataset.renderer");
@@ -192,6 +207,12 @@ try {
     assert.ok(creditFit.bottom<=creditFit.headerBottom+1,width+'px creator name clipped vertically');
     assert.ok((width>375 ? creditFit.left>=creditFit.brandRight-2 : creditFit.top>=creditFit.brandBottom-2),
       width+'px creator name overlaps the brand '+JSON.stringify(creditFit));
+    const creditIndent=await evalJS("(() => {"+
+      "const a=document.querySelector('.mobile-header-credit').getBoundingClientRect();"+
+      "const h=document.querySelector('.masthead').getBoundingClientRect();"+
+      "return {rightGap:h.right-a.right,left:a.left,headerLeft:h.left};})()");
+    assert.ok(creditIndent.rightGap>=29,
+      width+'px signature still hugs the right edge: '+JSON.stringify(creditIndent));
     const creditLine=await evalJS("(() => {"+
       "const a=document.querySelector('.mobile-header-by').getBoundingClientRect();"+
       "const b=document.querySelector('.mobile-header-signature').getBoundingClientRect();"+
@@ -210,6 +231,10 @@ try {
     assert.ok(mobileLayout.stageAboveNarrative,width+'px 3D must precede narrative');
     assert.ok(mobileLayout.dockVisible,width+'px toolbar missing');
     assert.equal(mobileLayout.horizontalOverflow,false,width+'px page horizontally overflows');
+    if(width===320){
+      const narrowShot=await send('Page.captureScreenshot',{format:'jpeg',quality:78,captureBeyondViewport:false});
+      await writeFile(new URL('../docs/mobile-credit-320.jpg',import.meta.url),Buffer.from(narrowShot.data,'base64'));
+    }
     if(width===390){
       const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
       await writeFile(new URL('../docs/mobile3d-main.png',import.meta.url),Buffer.from(shot.data,'base64'));

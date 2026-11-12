@@ -579,3 +579,25 @@ dialog{max-width:min(590px,calc(100vw - 30px));max-height:calc(100dvh - 40px);bo
   }
   .mobile-header-signature{font-size:15px}
 }
+
+/* Author-credit alignment refinement:
+   desktop keeps all site actions in place while shifting the OAPEC credit
+   toward the visual center of the free header area; on phones the single-line
+   signature is inset from the right instead of hugging the screen edge. */
+@media(min-width:1450px){
+  .mobile-site-nav > .event{
+    margin-right:clamp(70px,5.5vw,112px);
+  }
+}
+@media(min-width:801px) and (max-width:1449px){
+  .mobile-site-nav > .event{transform:translateX(-20px)}
+}
+@media(max-width:800px) and (min-width:376px){
+  .mobile-header-credit{margin-right:24px}
+}
+@media(max-width:375px){
+  .mobile-header-credit{
+    width:calc(100% - 24px);
+    margin:0;
+  }
+}

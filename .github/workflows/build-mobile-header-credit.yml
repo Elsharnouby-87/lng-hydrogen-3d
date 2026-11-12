@@ -1,7 +1,7 @@
 name: Mobile author credit — visual regression
 on:
   push:
-    branches: [mobile-header-signature-credit, fix-mobile-credit-inline-screening-footer]
+    branches: [mobile-header-signature-credit, fix-mobile-credit-inline-screening-footer, align-author-credit-mobile-desktop]
   workflow_dispatch:
 concurrency:
   group: mobile-credit-${{ github.ref }}
@@ -23,7 +23,7 @@ jobs:
         run: node tools/qa-coldbox-browser.mjs
       - name: Publish updated standalone page and visual previews to branch
         run: |
-          git add docs/index.html docs/mobile3d-*.png docs/mobile3d-*.jpg docs/r101-stage1-*.png docs/r101-mobile-*.png docs/stage3-*.png docs/stage5-*.png
+          git add docs/index.html docs/mobile3d-*.png docs/mobile3d-*.jpg docs/desktop-header-aligned.jpg docs/mobile-credit-320.jpg docs/r101-stage1-*.png docs/r101-mobile-*.png docs/stage3-*.png docs/stage5-*.png
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
