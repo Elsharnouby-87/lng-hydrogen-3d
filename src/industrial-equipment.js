@@ -330,18 +330,20 @@ export function industrialVaporizer(parent,x,z) {
   boxes(root,cryoWhite,finDims);
   // Connected distribution manifold: externally established west gas-sendout
   // and east regasification service ports are intentionally unchanged.
-  cyl(root,-2.64,.80,0,.137,2.38,steel,'z');
-  cyl(root,2.64,2.84,0,.137,2.38,steel,'z');
-  processRun(root,[[-2.92,1.38,0],[-2.73,1.38,0],[-2.73,.80,0],[-2.64,.80,0]],.112,greenPipe);
-  processRun(root,[[2.64,2.84,0],[2.76,2.84,0],[2.76,1.38,0],[2.92,1.38,0]],.112,greenPipe);
+  // Incoming LNG is distributed to the BOTTOM; warmed gas is collected
+  // at the TOP, preserving the two established E-202 boundary positions.
+  cyl(root,2.64,.80,0,.137,2.38,steel,'z');
+  cyl(root,-2.64,2.84,0,.137,2.38,steel,'z');
+  processRun(root,[[2.92,1.38,0],[2.76,1.38,0],[2.76,.80,0],[2.64,.80,0]],.112,greenPipe);
+  processRun(root,[[-2.64,2.84,0],[-2.76,2.84,0],[-2.76,1.38,0],[-2.92,1.38,0]],.112,greenPipe);
   boltRing(root,-2.92,1.38,0,.20,'x');
   boltRing(root,2.92,1.38,0,.20,'x');
   handValve(root,-2.78,1.38,0,.092);
-  actuatedValve(root,2.76,1.83,0,.095);
+  actuatedValve(root,2.76,1.38,0,.095);
   // Header temperature/pressure tapping; indicator faces the front aisle.
-  processRun(root,[[2.60,2.84,1.05],[2.60,3.07,1.05]],.029,lightMetal);
-  gauge(root,2.60,3.22,1.05,.82);
-  transmitter(root,-2.60,1.10,1.10);
+  processRun(root,[[-2.60,2.84,1.05],[-2.60,3.07,1.05]],.029,lightMetal);
+  gauge(root,-2.60,3.22,1.05,.82);
+  transmitter(root,2.60,1.10,1.10);
   // Pipe shoes under actual centerline on the left/right service runs.
   box(root,-2.73,.56,.10,.24,.23,.25,guarded);
   box(root,2.76,.56,.10,.24,.23,.25,guarded);
