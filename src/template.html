@@ -91,7 +91,15 @@
         <svg id="duty-chart" viewBox="0 0 460 130" role="img" aria-label="Normalized LNG cold availability over a 24-hour operating day"></svg>
         <div class="profile-scrub"><label for="hour">Hour <output id="hour-value">10:00</output></label><input id="hour" type="range" min="0" max="24" step="1" value="10"></div>
       </section>
-      <div id="equipment-card" class="equipment-card" hidden><button type="button" aria-label="Close equipment detail" id="close-card">×</button><small id="equipment-code"></small><strong id="equipment-name"></strong><p id="equipment-detail"></p></div>
+      <div id="equipment-card" class="equipment-card" hidden>
+        <button type="button" id="equipment-info-toggle" class="equipment-info-toggle"
+          aria-expanded="true" aria-controls="equipment-body">i · Equipment info</button>
+        <div id="equipment-body">
+          <button type="button" aria-label="Close equipment detail" id="close-card">×</button>
+          <small id="equipment-code"></small><strong id="equipment-name"></strong>
+          <p id="equipment-detail"></p>
+        </div>
+      </div>
       <section class="inspection-walk" id="inspection-walk" aria-label="E-101 presentation" hidden>
         <div class="walk-copy" aria-live="polite">
           <strong id="walk-title"></strong>
