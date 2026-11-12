@@ -178,7 +178,20 @@ try {
       "horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2," +
       "dockVisible:getComputedStyle(document.querySelector('.mobile-dock')).display!=='none'};" +
     "})()");
-    assert.ok(mobileLayout.header<=70,width+'px header is not compact '+JSON.stringify(mobileLayout));
+    assert.ok(mobileLayout.header<=(width<=375?85:70),width+'px header is not compact '+JSON.stringify(mobileLayout));
+    const creditFit=await evalJS("(() => {"+
+      "const brand=document.querySelector('.brand').getBoundingClientRect();"+
+      "const signature=document.querySelector('.mobile-header-signature').getBoundingClientRect();"+
+      "const header=document.querySelector('.masthead').getBoundingClientRect();"+
+      "return {left:signature.left,right:signature.right,top:signature.top,bottom:signature.bottom,"+
+      "brandRight:brand.right,brandBottom:brand.bottom,headerRight:header.right,headerBottom:header.bottom,"+
+      "visible:getComputedStyle(document.querySelector('.mobile-header-credit')).display!=='none'};"+
+    "})()");
+    assert.ok(creditFit.visible,width+'px creator signature hidden');
+    assert.ok(creditFit.right<=creditFit.headerRight-5,width+'px creator name clipped on right '+JSON.stringify(creditFit));
+    assert.ok(creditFit.bottom<=creditFit.headerBottom+1,width+'px creator name clipped vertically');
+    assert.ok((width>375 ? creditFit.left>=creditFit.brandRight-2 : creditFit.top>=creditFit.brandBottom-2),
+      width+'px creator name overlaps the brand '+JSON.stringify(creditFit));
     assert.ok(mobileLayout.stage>=Math.min(500,mobileLayout.height*.75),width+'px 3D is not dominant '+JSON.stringify(mobileLayout));
     assert.ok(mobileLayout.stageAboveNarrative,width+'px 3D must precede narrative');
     assert.ok(mobileLayout.dockVisible,width+'px toolbar missing');
