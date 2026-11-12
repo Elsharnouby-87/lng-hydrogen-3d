@@ -1,81 +1,55 @@
-# LNG × Hydrogen · Cryogenic Integration Atlas
+# LNG × Hydrogen — Cryogenic Integration Atlas
 
-An interactive 3D walkthrough for the OAPEC 2026 Gas Experts Meeting in Kuwait. The plant is a conceptual flowsheet rendered in Three.js.
+[Live site](https://elsharnouby-87.github.io/lng-hydrogen-3d/) · [Kuwait](https://elsharnouby-87.github.io/lng-hydrogen-3d/#kuwait) · [Egypt](https://elsharnouby-87.github.io/lng-hydrogen-3d/#egypt)
 
-## Present the demo
+Interactive OAPEC 2026 Three.js engineering demonstrator: LNG regasification cold energy supports hydrogen **precooling** without replacing dedicated deep refrigeration to approximately 20 K. This is a **conceptual process and screening model**, not an as-built design or Aspen/HYSYS-validated plant.
 
-[Open the live presentation](https://elsharnouby-87.github.io/lng-hydrogen-3d/).
-
-Open `docs/index.html` in a current browser. The same file works locally with no internet connection. Use **Present** or **F** for the stage layout and **← / →** or **1–5** for chapters. **Cinematic intro** opens a three-shot camera sequence and returns to the interactive overview. **H** hides or restores the presentation overlay. **Play guided tour** advances through five views in the regular layout. Drag to orbit, scroll or pinch to zoom, and select a label or equipment to inspect it. **Plan** switches between isometric and overhead views. **Flow**, **Labels**, and **Reset camera** are independent controls.
-
-**Trace H₂** and **Trace LNG** highlight a circuit and open four camera stops. Use **← / →** to move between its stops, or select an individual stop on the rail. The circuit follows the bypass in standalone mode. The exchanger opens in shell, cutaway and exploded views. Highlight either the hydrogen or the LNG passages to demonstrate countercurrent flow. Open the cold box to inspect the cryogenic exchangers, ortho–para conversion and phase separation. The approach-temperature control illustrates a lower bound using 111 K as an assumed LNG inlet. The operating-match control shows a normalized cold-duty balance for an illustrative steady, variable or interrupted operating day. Scrub the hour to compare recovered cold against mechanical makeup. The two modes route fluids through the exchanger or around it, with deep refrigeration retained in both cases.
-
-**E-101 tour** adds three manual stops: plant overview, flange close-up and the plate-fin core. Use **← / →** or the tour buttons to advance. In **Section**, drag the section plane and select **H₂**, **LNG** or **Both**. The colored paths represent counterflow through separate passages. The inspection is available with WebGL, including offline.
-
-## Country models
-
-Open [Kuwait](https://elsharnouby-87.github.io/lng-hydrogen-3d/#kuwait) or [Egypt](https://elsharnouby-87.github.io/lng-hydrogen-3d/#egypt). Adjust the allocated share or enter LNG flow in t/h, then select usable heat uptake and an electrical benefit case. The models retain their settings separately in the browser. **Meet 50 t/day** sets the theoretical full-precooling threshold. **View this duty in 3D** opens the precooler cutaway with the selected reference duty overlaid.
-
-The national case uses the same January–September 2026 import period for both countries. The reference plant heat balance caps applied cold at its precooling requirement. The electrical proxy follows the November 2026 study and scales net SEC reduction proportionally to covered precooling duty. The country views link to the published import data and provide the calculation basis and sources.
-
-## Build
+## Build, test and preview
 
 ```sh
 npm ci
+npm test
 npm run build
+node tools/test-built-site.mjs
+npm run preview
 ```
 
-The build places a self-contained HTML file in `docs/`. The Three.js MIT license is embedded in the page. The `src/` directory contains the editable scene, text and interface.
+`docs/index.html` is the single-file, offline-capable GitHub Pages output. It embeds Three.js and its MIT notice, the E-101 inspection asset, Explora font plus its OFL, CSS, and bundled JavaScript. GitHub Pages uses `main/docs`.
 
-The E-101 model is authored by `tools/build-precooler.py`. Regenerate it with Blender, then embed it in the single-file site build:
+## Code organization
 
-```sh
-blender -b --python tools/build-precooler.py -- /tmp/e101-inspection.glb
-gzip -n -9 -c /tmp/e101-inspection.glb > src/assets/e101-inspection.glb.gz
-npm run build
-```
+| Area | Files |
+| --- | --- |
+| Desktop plant navigation, tours and application state | `src/main.js` |
+| Mobile navigation, menus, sheets and clean view | `src/mobile-ui.js` (callbacks to main; no duplicate plant state) |
+| Process scene, equipment and main routes | `src/plant.js`, `src/plant-geometry.js`, `src/plant-equipment.js` |
+| Cold-box and equipment detail | `src/coldbox-assembly.js`, `src/industrial-equipment.js`, `src/ultimate-detail.js` |
+| E-101 GLB / flow inspection | `src/precooler-inspection.js`, `src/precooler-flow.js`, `src/assets/e101-inspection.glb.gz` |
+| Country engineering calculations | `src/screening-model.js` (pure mathematical model), `src/screening.js` (UI/local state) |
+| Operating-profile schematic | `src/operating-match.js`, `src/storyboard.js` |
+| Ordered CSS cascade | `src/styles/scene.css` → `mobile.css` → `credits.css` → `src/screening.css` |
+| Build and HTML template | `build.mjs`, `src/template.html` |
 
-## GitHub Pages
+The CSS is split **without changing selector order**, preserving the approved desktop header and mobile 320/390px design. Keep scripts self-contained for offline operation.
 
-Open the repository’s **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, select **main** and **/docs**, and save. GitHub Pages will serve the committed build without a custom workflow.
+## Functional scope
 
-## Technical basis
+- Hydrogen: conditioned supply → K-101 → E-101 → R-101 (dedicated deep refrigeration with separate helium/H₂ paths) → LH₂ storage.
+- LNG: TK-201 → P-201 → E-101 → E-202 → gas send-out; independent bypass provides standalone send-out.
+- Exchanger E-101: separate LNG and H₂ passages, shell/cutaway/exploded/section views, and stream tracing through available pipes.
+- R-101: representative three exchanger stages, conceptual ortho–para conversion and helium expander branches; shell/cutaway/exploded views.
+- Mobile: dominant 3D viewport, reversible equipment/flow/camera/info sheets, and a clean immersive view. Desktop: guided tour, presentation mode, intro, trace stops, labels and camera controls.
 
-The conference presentation and its design review provide the process boundary and terminology. The geometry, exchanger temperature bound and normalized duty allocation serve as teaching examples. Site performance requires validated stream conditions, energy balances and operating data.
+## Source-supported numerical basis
 
-## Stage 1 — Advanced R-101 Cryogenic Cold Box
+The 12 November 2026 EPROM preliminary screening study uses **50 t LH₂/day**, **300 → 120 K** conceptual precooling and approximately **1.430 MWth** full precooling load. Usable LNG heat-uptake assumptions are **300/500/700 kJ/kg**. OAPEC January–September 2026 national LNG import data are **4.42 Mt Kuwait** and **10.53 Mt Egypt**, not site gas send-out measurements.
 
-Select **Deep refrigeration** in the 3D presentation. R-101 now provides **Shell**, **Cutaway**, and **Exploded** views, plus **Both / H₂ only / Helium only** controls. The cutaway depicts three separately tagged aluminium plate-fin stages (HX-201/202/203), two conceptual parallel helium expander branches (EX-201/202), a staged ortho–para catalyst vessel (OP-201), separated process passages, supply/return headers, a skid and service nozzles. Flow indications follow the individual paths. In the exploded view connected piping is intentionally hidden rather than falsely shown as disconnected.
+At a **hypothetical 1% national allocation** with 500 kJ/kg matched duty, the screening model estimates **65.5%** precooling coverage in Kuwait and **100% (capped)** in Egypt. The **6.30% / 9.62%** electrical reduction figures are *unvalidated scenario proxies*, not observed savings. The **48.5%** thermal-load offset is a different denominator and cannot be used to infer electricity savings. The hydrogen handoff temperature, minimum approach/pinch, thermal coverage, availability, true SEC, CAPEX/OPEX and safety isolation require actual LNG and hydrogen stream data plus a matched whole-cycle model.
 
-**Engineering boundary:** This is a conceptual helium reverse-Brayton-type cold-end arrangement and is not a supplier design, a detailed flow simulation, a thermal-duty validation, or a full hydrogen liquefaction process. External helium compression, heat rejection, and downstream LH₂ handling are outside R-101. Performance values in the Egypt/Kuwait calculators are unchanged.
+## Testing, assets and deployment
 
-**QA:** `node tools/test-coldbox.mjs` runs equipment, stream, view and flow checks. `npm run build` regenerates the self-contained offline site. E-101's previously approved geometry and the Egypt/Kuwait models are unchanged.
+`npm test` runs 18 country × uptake × electricity-scenario balance checks, numerical reference regressions, input validation and equipment/stream geometry tests. `node tools/qa-coldbox-browser.mjs` tests real Chrome WebGL and 320/390px mobile interactions, plus desktop visual QA. The unified `.github/workflows/ci.yml` workflow runs on maintenance branches and main; on passing main builds it updates deployable `docs/index.html`.
 
-## Stage 3 — Industrial Equipment Detailing (conceptual)
+Only `docs/linkedin-preview-*.jpg` are deliberately published preview images. Historical stage/mobile screenshots remain recoverable from Git history; new QA screenshot sets are stored as short-lived GitHub Actions artifacts instead of bloating the public site.
 
-The mechanical equipment is rebuilt as inspectable Three.js assemblies with preserved plant service nozzles:
-
-- **K-101 hydrogen compressor:** split barrel centrifugal-style compressor on anchored skid; axial hydrogen suction and upper discharge spool; bolted casing, coupling guard, finned motor, seal-gas / lubricant panel, local pressure instrumentation, automated block valve and pipe shoes.
-- **P-201 LNG pump:** vertical cryogenic-barrel pump with enclosed drive, motor cooling fins, inlet/outlet service flanges, actuated discharge isolation, pressure indications, vibration / service panel and bolted base.
-- **E-202 vaporizer:** finned vertical-tube ambient-air-style representative array, connected bottom LNG distribution and upper gas collection manifolds, valves, supports and measurement connections. The external auxiliary/trim heating duty is **not** simulated.
-- **TK-301 LH₂ storage:** horizontal vacuum-jacketed vessel with domed ends, saddle anchors, insulated liquid inlet, vacuum-service indication, level/pressure instrumentation and capped relief **interfaces**. No vent header sizing or pressure-relief design is represented.
-
-All four use **representative geometry**, *not mechanical detail engineering or vendor designs*. Ratings, dimensions, support loads, metallurgy, insulation performance, valve type and pressure-class selection need equipment-vendor confirmation. Added K-101 selection and equipment-specific close-up camera presets. The original E-101 pre-cooler, R-101 cooling module and Egypt/Kuwait screening mathematics are intentionally unchanged.
-
-Quality gate: `node tools/test-industrial.mjs` validates key equipment, connection coordinates and instruments; `node tools/qa-coldbox-browser.mjs` captures WebGL close-ups for each equipment and continues the mobile/desktop R-101 regressions. The Stage-3 workflow rebuilds `docs/index.html`, generating four screenshots named `stage3-*-closeup.png`.
-
-## Stage 5 — Full equipment-level 3D detailing (six equipment systems)
-
-Stage 5 builds upon the previously accepted Stage-1 R-101, Stage-3 K-101/P-201/E-202/TK-301, and the untouched E-101 precooler.
-
-- **K-101:** three named compression zones on the split barrel, **IC-101A/B** intercooler barrels, visibly continuous independent representative interstage H₂ spools, coupling and motor/cooling detail, instrument panel, supports and service indicators. These are *illustrative* compression stages; they do not establish actual pressure ratios or intercooler duties.
-- **P-201:** upper motor, electrical cable routing with terminating junction, lifting eyes, pump sleeve jacket/bolting, bracketed instrumentation and mechanical supports, without changing the LNG suction/discharge coordinates.
-- **E-202:** enhanced fin-array geometry, bottom LNG and upper gas headers, constrained expansion/bellows demonstration zones, accessible platform, supports and instrumentation.
-- **R-101:** higher-density exchanger fins, endplates and mounts, dedicated hydrogen vs helium header supports, expander bearing/bolt detailing. Shell / Cutaway / Exploded controls and fluid isolation are preserved.
-- **TK-301 LH₂ vessel:** **Tank shell / Vacuum cutaway** selectable modes reveal inner vessel, representative multilayer thermal shield, vacuum annulus spacers and insulated process inlet, plus unchanged safety-service interfaces. No certified relief/vent network or actual liquid level is represented.
-- **TK-201 LNG storage:** main tank roof/service penetrations, a mechanically capped BOG interface, roof access, vessel level indication, tank-wall retainers and main supply nozzle tied to the existing LNG transfer endpoint.
-- **Mobile UI:** equipment information starts minimized as a small, reversible info chip on narrow displays so it does not hide the equipment or prevent the LH₂ cutaway toggle. The inspector can expand/collapse without losing equipment selection.
-
-These are **well-detailed, optimized procedural Three.js representations**, not imported CAD/GLB vendor models or verified as-built equipment. The present reference assumptions and original screening calculations have not changed. They are for conference education, not fabrication, hazardous-area electrical design, process safety, pressure-vessel or thermal performance certification.
-
-Verification: `node tools/test-detailing.mjs` confirms all six equipment groups and TK-301 cutaway/port interfaces; `node tools/test-industrial.mjs`, `node tools/test-coldbox.mjs` and the headless 3D browser smoke test protect existing features. Stage 5 builds independent review screenshots under `docs/stage5-*.png`.
+**Engineering caution:** Cryogenic pressure classes, relief and vent routing, metallurgy, bypass isolation, HAZID/HAZOP, hourly duty matching and economic investment gates are outside the current conceptual geometry. Refer to the EPROM OAPEC presentation, November 2026 screening report and U.S. DOE Hydrogen Program Record 9013 for the stated basis.

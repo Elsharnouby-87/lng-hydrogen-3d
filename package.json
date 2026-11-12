@@ -1,1 +1,17 @@
-{"name":"lng-hydrogen-3d","version":"1.0.0","private":true,"type":"module","scripts":{"build":"node build.mjs","preview":"python3 -m http.server 4173 -d docs"},"dependencies":{"three":"0.180.0"},"devDependencies":{"esbuild":"0.25.11"}}
+{
+  "name": "lng-hydrogen-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test tools/test-screening.mjs && node tools/test-coldbox.mjs && node tools/test-industrial.mjs && node tools/test-detailing.mjs",
+    "preview": "python3 -m http.server 4173 -d docs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
+  }
+}

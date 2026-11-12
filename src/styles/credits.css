@@ -1,0 +1,62 @@
+/* Creator credit stays visible beside the mobile brand, retaining the OAPEC
+   warm copper and original handwritten signature treatment. No desktop change. */
+.mobile-header-credit{display:none}
+@media(max-width:800px){
+  .masthead .brand{flex:0 1 auto}
+  .masthead .brand strong{font-size:clamp(15px,4vw,18px);letter-spacing:-.75px}
+  .masthead .brand small{font-size:6.7px;letter-spacing:.065em}
+  .mobile-header-credit{
+    display:flex;flex:none;margin-left:auto;min-width:0;
+    flex-direction:row;align-items:baseline;justify-content:flex-end;
+    gap:5px;color:#dfa36c;white-space:nowrap;text-align:right;
+  }
+  .mobile-header-by{
+    font:700 8.5px/1.15 ui-monospace,SFMono-Regular,Consolas,monospace;
+    letter-spacing:.015em;color:#d6a77f;
+  }
+  .mobile-header-signature{
+    display:block;white-space:nowrap;line-height:1.12;
+    font-size:clamp(12px,3.55vw,14px);letter-spacing:-.055em;
+    -webkit-text-stroke:.18px currentColor;
+  }
+}
+@media(max-width:375px){
+  /* Narrow iPhones keep the complete By/ Eng. + signature on one shared
+     baseline underneath the title, never stacked as two separate lines. */
+  .masthead,.is-presenting .masthead{
+    display:grid;grid-template-columns:44px minmax(0,1fr);
+    grid-template-rows:44px 23px;column-gap:9px;row-gap:0;
+    height:79px;min-height:79px;padding:5px 12px 6px;
+    align-items:center;
+  }
+  .masthead .mobile-menu-toggle{grid-column:1;grid-row:1}
+  .masthead .brand{grid-column:2;grid-row:1}
+  .mobile-header-credit{
+    grid-column:1/-1;grid-row:2;flex-direction:row;
+    justify-content:flex-end;align-items:baseline;gap:7px;
+    width:100%;margin:0;
+  }
+  .mobile-header-signature{font-size:15px}
+}
+
+/* Author-credit alignment refinement:
+   desktop keeps all site actions in place while shifting the OAPEC credit
+   toward the visual center of the free header area; on phones the single-line
+   signature is inset from the right instead of hugging the screen edge. */
+@media(min-width:1450px){
+  .mobile-site-nav > .event{
+    margin-right:clamp(70px,5.5vw,112px);
+  }
+}
+@media(min-width:801px) and (max-width:1449px){
+  .mobile-site-nav > .event{transform:translateX(-20px)}
+}
+@media(max-width:800px) and (min-width:376px){
+  .mobile-header-credit{margin-right:24px}
+}
+@media(max-width:375px){
+  .mobile-header-credit{
+    width:calc(100% - 24px);
+    margin:0;
+  }
+}

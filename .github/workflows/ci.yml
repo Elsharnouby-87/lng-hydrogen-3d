@@ -1,0 +1,61 @@
+name: LNG Hydrogen - Engineering and 3D Quality Gates
+
+on:
+  push:
+    branches:
+      - main
+      - 'maintenance/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lng-hydrogen-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate screening calculations and 3D equipment
+        run: npm test
+      - name: Build self-contained GitHub Pages site
+        run: npm run build
+      - name: Verify deployable HTML
+        run: node tools/test-built-site.mjs
+      - name: Chrome / WebGL / 320 and 390px visual regression
+        run: node tools/qa-coldbox-browser.mjs
+      - name: Preserve QA captures outside deployed site
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oapec-visual-qa-${{ github.run_number }}
+          path: |
+            docs/r101-*.png
+            docs/stage3-*.png
+            docs/stage5-*.png
+            docs/mobile3d-*
+            docs/mobile-credit-*.jpg
+            docs/desktop-header-*.jpg
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish verified HTML after checks on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git add docs/index.html
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Build verified standalone Pages site [skip ci]"
+            git push
+          fi

@@ -59,6 +59,19 @@ const capacityAtDuty = (duty) => (duty / precoolDuty) * basis.referenceCapacity;
 export const supportedCapacity = (flow, uptake) => capacityAtDuty(coldDuty(flow, uptake));
 
 export function screen(market, share, uptake, power) {
+  // Prevent malformed saved/input scenarios from propagating NaN to engineering KPIs.
+  if (!market || !Number.isFinite(market.imports) || market.imports <= 0) {
+    throw new RangeError('A market with positive LNG imports is required.');
+  }
+  if (!Number.isFinite(share) || share < 0 || share > 100) {
+    throw new RangeError('Allocation must be a percentage between 0 and 100.');
+  }
+  if (!uptakeCases.includes(uptake)) {
+    throw new RangeError('Choose a supported 300/500/700 kJ/kg uptake case.');
+  }
+  if (!Object.hasOwn(powerCases, power)) {
+    throw new RangeError('Unknown electrical scenario.');
+  }
   const mean = importRate(market);
   const flow = (mean * share) / 100;
   const requiredFlow = (precoolDuty * 3600) / uptake;
