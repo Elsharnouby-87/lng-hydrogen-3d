@@ -108,13 +108,18 @@ try {
     const name='r101-stage1-'+view+'.png';
     await writeFile(new URL('../docs/'+name,import.meta.url),Buffer.from(image.data,'base64'));
     fileNames.push(name);
+    if(view==='cutaway'){
+      await writeFile(new URL('../docs/stage5-r101-detail.png',import.meta.url),
+        Buffer.from(image.data,'base64'));
+    }
   }
-  // Stage 3 engineering equipment close-up visual smoke tests.
+  // Stage 3 + Stage 5 engineering equipment close-up visual smoke tests.
   // These clicks exercise the actual navigation + original plant camera.
   for(const [id,tag,file] of [
     ['compressor','K-101','k101'],
     ['pump','P-201','p201'],
     ['trim','E-202','e202'],
+    ['lng','TK-201','lng-storage'],
     ['liquid','TK-301','tk301'],
   ]){
     const clicked=await evalJS("(() => { const b=document.querySelector('[data-equipment="+id+"]'); if(!b)return false; b.click(); return true; })()");
@@ -132,8 +137,22 @@ try {
     }
     const snap=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
     await writeFile(new URL('../docs/stage3-'+file+'-closeup.png',import.meta.url),Buffer.from(snap.data,'base64'));
+    await writeFile(new URL('../docs/stage5-'+file+'-detail.png',import.meta.url),Buffer.from(snap.data,'base64'));
+    if(id==='liquid'){
+      assert.equal(await evalJS("document.querySelector('#lh2-modes').hidden"),false,
+        'LH2 shell/cutaway control missing in storage close-up');
+      await evalJS("document.querySelector('[data-lh2=cutaway]').click()");
+      await sleep(1000);
+      const cut=await evalJS("({pressed:document.querySelector('[data-lh2=cutaway]').getAttribute('aria-pressed'),title:document.querySelector('#view-name').textContent})");
+      assert.equal(cut.pressed,'true','Tank cutaway toggle ineffective');
+      assert.ok(cut.title.includes('CUTAWAY'),'Cutaway title absent');
+      const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/stage5-lh2-cutaway.png',import.meta.url),Buffer.from(image.data,'base64'));
+      await evalJS("document.querySelector('[data-lh2=shell]').click()");
+      assert.equal(await evalJS("document.querySelector('[data-lh2=shell]').getAttribute('aria-pressed')"),'true');
+    }
   }
-  console.log('PASS: Stage 3 K-101 / P-201 / E-202 / TK-301 closeups and equipment labels');
+  console.log('PASS: Stage 5 K-101, P-201, E-202, LNG tank and LH2 shell/cutaway real WebGL screenshots');
     // Mobile regression: by default the information panel must not cover the
   // cryogenic equipment. It can still be opened and closed with a 40px target.
   for (const width of [390, 320]) {
@@ -190,7 +209,21 @@ try {
     }
     await evalJS("document.querySelector('#coldbox-info-toggle').click()");
     assert.equal(await evalJS("document.querySelector('#coldbox-info-details').hidden"),true);
-    console.log('PASS: mobile R-101 info compact/toggle at '+width+'px');
+    // The 320/390 px mobile viewport must keep the LH2 cutaway usable and
+    // hide the unrelated R-101 information overlay, as on desktop.
+    await evalJS("document.querySelector('[data-equipment=liquid]').click()");
+    await sleep(900);
+    assert.equal(await evalJS("document.querySelector('#lh2-modes').hidden"),false);
+    assert.equal(await evalJS("document.querySelector('#coldbox-note').hidden"),true);
+    await evalJS("document.querySelector('[data-lh2=cutaway]').click()");
+    assert.equal(await evalJS("document.querySelector('[data-lh2=cutaway]').getAttribute('aria-pressed')"),'true');
+    if(width===390){
+      const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      await writeFile(new URL('../docs/stage5-lh2-mobile.png',import.meta.url),Buffer.from(image.data,'base64'));
+    }
+    await evalJS("document.querySelector('[data-lh2=shell]').click()");
+    console.log('PASS: R-101 legend and LH2 vacuum cutaway on '+width+'px mobile');
+
   }
   if(runtimeErrors.length)console.warn('Runtime warnings:',runtimeErrors.slice(0,5));
   console.log('PASS: headless Chrome / '+renderer+'; screenshots '+fileNames.join(', '));
