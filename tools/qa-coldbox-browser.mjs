@@ -502,6 +502,25 @@ try {
     console.log('PASS: R-101 legend and LH2 vacuum cutaway on '+width+'px mobile');
 
   }
+  for (const country of ['kuwait', 'egypt']) {
+    await evalJS("location.hash = " + JSON.stringify(country));
+    let opened = false;
+    for (let i = 0; i < 24; i++) {
+      opened = await evalJS("!document.querySelector('#screening').hidden && document.querySelector('#plant-view').hidden");
+      if (opened) break;
+      await sleep(150);
+    }
+    assert.ok(opened, 'Country screening route did not open for ' + country);
+    assert.ok(await evalJS("document.querySelector('#screen-coverage').textContent.includes('%')"));
+  }
+  await evalJS("document.querySelector('#screen-show-plant').click()");
+  let dutyOpen = false;
+  for (let i = 0; i < 24; i++) {
+    dutyOpen = await evalJS("!document.querySelector('#plant-view').hidden && !document.querySelector('#screen-duty-overlay').hidden");
+    if (dutyOpen) break;
+    await sleep(150);
+  }
+  assert.ok(dutyOpen, 'Country duty did not return to the interactive plant');
   assert.deepEqual(shaderErrors, [], 'WebGL shader errors during camera or mobile tests');
   if(runtimeErrors.length)console.warn('Runtime warnings:',runtimeErrors.slice(0,5));
   console.log('PASS: headless Chrome / '+renderer+'; screenshots '+fileNames.join(', '));
