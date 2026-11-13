@@ -4,6 +4,7 @@ import { applySurfaceFinishes, machinedStainless, setDaylightEnvironment } from 
 import { softwareRenderer } from './software.js';
 import { addHarbor } from './harbor.js';
 import { detailBerth, detailCarrier } from './berth-details.js';
+import { detailProcessYard } from './yard-details.js';
 import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
@@ -137,6 +138,7 @@ function ground(scene){
     box(g,x,-.395,11.83,.37,.20,1.79,trim);
   }
   detailBerth(g);
+  detailProcessYard(g);
   rail(g,-21.2,-10.1,-7.5,-10.1,-.02);
   rail(g,-2.3,-10.1,21.2,-10.1,-.02);
   rail(g,-21.5,10,-5.8,10,-.02);

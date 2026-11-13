@@ -2,6 +2,7 @@ import * as T from 'three';
 import { bevelBox, box, boxes, cyl, group, material, mesh, rail } from './plant-geometry.js';
 
 import { quayConcrete, quayCoping, yardAsphalt } from './plant-finishes.js';
+import { detailServiceYard } from './yard-details.js';
 
 const bank = [
   [-1800, -590], [-124, -77], [-83, -45], [-52, -25], [-31, -16], [-22.5, -10.65],
@@ -102,5 +103,6 @@ export function addHarbor(scene) {
   for (const x of [1.2, 5.82]) cyl(gate, x, .28, .95, .061, .56, fenders, 'y', true);
   rail(shore, -20, -14.45, -11.5, -14.45, -.05);
   rail(shore, 1.2, -14.60, 19.0, -14.60, -.05);
+  detailServiceYard(shore);
 
 }
