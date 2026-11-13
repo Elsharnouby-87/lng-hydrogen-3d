@@ -88,7 +88,7 @@ export function addHarbor(scene, webgl) {
         gl_FragColor = vec4(color, 1.);
       }`,
   });
-  const sea = mesh(scene, new T.PlaneGeometry(390, 390), water, 0, -1.03, 0);
+  const sea = mesh(scene, new T.PlaneGeometry(900, 900), water, 0, -1.03, 0);
   sea.rotation.x = -Math.PI / 2;
   sea.receiveShadow = false;
   return water.uniforms.uTime;

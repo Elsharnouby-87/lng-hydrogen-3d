@@ -279,7 +279,7 @@ function createRenderer(scene) {
 
 export function createPlant(target, labelLayer, choose, reduced){
   const scene=new T.Scene();scene.background=new T.Color(harborSky);
-  const camera=new T.OrthographicCamera(-30,30,19,-19,.05,350);
+  const camera=new T.OrthographicCamera(-30,30,19,-19,.05,950);
   const { renderer, kind } = createRenderer(scene);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
   renderer.domElement.setAttribute('aria-label','Interactive 3D plant. Drag to orbit and scroll or pinch to zoom.');
