@@ -15,6 +15,7 @@ const vehiclePaint = material(0x9aaba5, .12, .58);
 const vehicleRubber = material(0x2e3539, 0, .91);
 const galvanised = material(0x919e9e, .39, .66);
 const paintedStructural = material(0x495d65, .21, .68);
+const hydrantRed = material(0x9b4b3f, .18, .63);
 
 function serviceBuilding(parent, x, z, width, depth) {
   const building = group(parent, x, 0, z);
@@ -74,6 +75,22 @@ function serviceVehicle(parent, x, z) {
   }
   box(vehicle, 0, .168, -.748, .63, .076, .063, trim);
   box(vehicle, 0, .163, .75, .65, .067, .055, trim);
+}
+
+function fireHydrant(parent, x, z, rotation = 0) {
+  const hydrant = group(parent, x, 0, z);
+  hydrant.rotation.y = rotation;
+  box(hydrant, 0, .028, 0, .48, .085, .48, concrete);
+  cyl(hydrant, 0, .34, 0, .115, .58, hydrantRed, 'y', true);
+  cyl(hydrant, 0, .65, 0, .16, .08, hydrantRed, 'y', true);
+  cyl(hydrant, 0, .71, 0, .11, .075, trim, 'y', true);
+  cyl(hydrant, -.15, .47, 0, .085, .30, hydrantRed, 'x', true);
+  cyl(hydrant, -.31, .47, 0, .105, .055, trim, 'x', true);
+  cyl(hydrant, .15, .47, 0, .085, .30, hydrantRed, 'x', true);
+  cyl(hydrant, .31, .47, 0, .105, .055, trim, 'x', true);
+  for (const side of [-1, 1]) {
+    cyl(hydrant, side * .32, .22, .29, .038, .43, yellow, 'y', true);
+  }
 }
 
 export function detailServiceYard(shore) {
@@ -139,4 +156,8 @@ export function detailProcessYard(plant) {
     box(plant, x + .087, .37, z + .229, .026, .12, .022, dark);
     box(plant, x, .72, z, .67, .06, .48, trim);
   }
+  for (const [x, z, rotation] of [
+    [-20.25, -8.82, 0], [-7.25, 8.82, Math.PI],
+    [8.65, -8.82, 0], [20.15, 8.82, Math.PI],
+  ]) fireHydrant(plant, x, z, rotation);
 }
