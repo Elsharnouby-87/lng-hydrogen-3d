@@ -294,6 +294,12 @@ const views={
   pump:{look:[10.70,1.57,5.78],offset:[8.2,8.4,17.5],scale:4.04},
   liquid:{look:[17.3,1.38,-4.95],offset:[6.7,6.7,17.5],scale:4.25},
 };
+const portraitBerth = {
+  lng: { look: [11.3, 1.50, 10.80], fit: 1.30 },
+  dock: { look: [11.3, 1.25, 12.25], fit: 1.29 },
+  openingApproach: { look: [10.1, 1.10, 10.90], fit: 1.10 },
+  openingDock: { look: [11.2, 1.15, 11.10], fit: 1.30 },
+};
 const anchor={
   feed:v(-17.9,2.24,-4.95),compressor:v(-11.7,2.91,-4.95),lng:v(17.35,5.0,5.76),pump:v(10.7,3.24,5.76),
   exchange:v(0,3.2,0),trim:v(-11.55,3.33,5.78),deep:v(8.8,3.95,-4.95),
@@ -505,17 +511,18 @@ export function createPlant(target, labelLayer, choose, reduced){
     const view=views[active];
     frameViewport();
     const exploded=active==='exchange'&&coreView==='exploded';
-    const look=v(...view.look);
+    const fit=dimensions.width/dimensions.height;
+    const portrait=compact&&fit<.84&&cameraView!=='plan';
+    const berth=portrait?portraitBerth[active]:null;
+    const look=v(...(berth?.look ?? view.look));
     if(exploded&&cameraView!=='plan')look.y=compact?3.29:3.09;
     if(active==='deep'&&deepView==='exploded'&&cameraView!=='plan')look.y=2.05;
     const offset=cameraView==='plan'?v(.02,40,.21):v(...view.offset);
     const angles = new T.Spherical().setFromVector3(offset);
-    const fit=dimensions.width/dimensions.height;
     const shotScale=active==='deep'&&deepView==='exploded'?(compact?3.55:4.65):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
     // Keep the entire terminal in the overview on narrow screens.
-    const portrait=compact&&fit<.84&&cameraView!=='plan';
     const fitDivisor=portrait
-      ? (active==='overview'?1.66:active==='exchange'?1.18:active==='dispatch'?.70:.80)
+      ? (berth?.fit ?? (active==='overview'?1.66:active==='exchange'?1.18:active==='dispatch'?.70:.80))
       : (active==='overview'?1.62:active==='dispatch'?1.54:1.10);
     const zoom=shotScale*Math.min(1,fit/fitDivisor);
     updateVisibility();

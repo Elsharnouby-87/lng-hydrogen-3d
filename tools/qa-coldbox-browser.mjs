@@ -316,6 +316,20 @@ try {
     assert.ok(mobileLabels.every(label => label.inside), 'Mobile label clipped: ' + JSON.stringify(mobileLabels));
     if (width === 390) {
       await captureHarbor('mobile');
+      await evalJS(`(() => {
+        const chapter = document.querySelector('#mobile-chapter');
+        chapter.value = '1';
+        chapter.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`);
+      assert.equal(await evalJS("document.querySelector('#chapter-index').textContent"), '02');
+      await sleep(1400);
+      await captureHarbor('mobile-receiving');
+      await evalJS("document.querySelector('[data-mobile-panel=equipment]').click()");
+      await evalJS("document.querySelector('[data-mobile-equip=dock]').click()");
+      assert.equal(await evalJS("document.querySelector('#equipment-code').textContent"), 'JETTY');
+      await sleep(1400);
+      await captureHarbor('mobile-berth');
+      await evalJS("document.querySelector('#chapters button').click()");
       await evalJS("document.querySelector('[data-equipment=exchange]').click()");
       await sleep(1050);
       const location = await evalJS("(() => { const info=document.querySelector('#equipment-card').getBoundingClientRect(); const stage=document.querySelector('#stage').getBoundingClientRect(); return (info.bottom-stage.top)/stage.height; })()");

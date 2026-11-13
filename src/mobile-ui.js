@@ -40,7 +40,8 @@ const mobileEquipment = [
   ['compressor','K-101','H₂ Compressor'],['exchange','E-101','Precooler'],
   ['cryo','R-101','Cold Box'],['pump','P-201','LNG Pump'],
   ['trim','E-202','Vaporizer'],['liquid','TK-301','LH₂ Storage'],
-  ['lng','TK-201','LNG Storage'],['feed','H₂','Hydrogen Feed'],
+  ['dock','JETTY','Marine Unloading'],['lng','TK-201','LNG Storage'],
+  ['feed','H₂','Hydrogen Feed'],
   ['grid','NG','Gas Send-out'],
 ].filter(([id])=>Boolean(equipment[id]));
 
