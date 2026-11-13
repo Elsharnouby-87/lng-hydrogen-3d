@@ -187,7 +187,6 @@ function inspect(id) {
     if (plan) setPlan(false);
     setCoreView('cutaway');
     setStream('both');
-    if (!flow) el('flow').click();
   }
   const focus = id === 'grid' ? 'trim' : ['cryo', 'catalyst', 'separator'].includes(id) ? 'deep' : id;
   plant?.focus(exchangeFocus(focus));

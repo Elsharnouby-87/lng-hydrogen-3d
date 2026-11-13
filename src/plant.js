@@ -327,6 +327,20 @@ export function createPlant(target, labelLayer, choose, reduced){
     pick(g,'grid',-18.2,.8,5.78,4.1,1.6,2.8),
   ];
   batchStaticMeshes(scene);
+  // Reveal the top hydrogen layer and the LNG layer beneath it in the same view.
+  const topLayer = stack.at(-1).layer;
+  const cutPlane = new T.Plane(v(0, 0, -1), .02);
+  const cutMaterials = new Map();
+  if (shadows) topLayer.traverse(node => {
+    if (!node.isMesh) return;
+    const original = node.material;
+    if (!cutMaterials.has(original)) {
+      const material = original.clone();
+      material.clipShadows = true;
+      cutMaterials.set(original, material);
+    }
+    node.material = cutMaterials.get(original);
+  });
   const subdued = new Map();
   const scenery = [];
   const dockParts = new Set([...dockFlow.pipes, dockFlow.glow, dockFlow.arrows]);
@@ -360,7 +374,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
   const ray=new T.Raycaster(), mouse=new T.Vector2();let down=null;
-  let shadowState, isolated;
+  let shadowState, isolated, steppedCut;
   function updateVisibility(){
     redraw = true;
     const isolate = ['exchange', 'section', 'flange'].includes(active);
@@ -373,6 +387,15 @@ export function createPlant(target, labelLayer, choose, reduced){
     const opened=active==='exchange'&&coreView!=='shell'&&mode==='integrated';
     const live=mode==='integrated'&&available>0;
     const passageFocus=trace==='both'?stream:trace;
+    const cut = opened && coreView === 'cutaway' ? passageFocus : null;
+    if (cut !== steppedCut) {
+      steppedCut = cut;
+      cutPlane.constant = cut === 'lng' ? -2 : .02;
+      for (const material of cutMaterials.values()) {
+        material.clippingPlanes = cut === 'both' || cut === 'lng' ? [cutPlane] : null;
+        material.needsUpdate = true;
+      }
+    }
     casing.visible=!opened&&shot!=='section'&&!(shot&&inspection.loaded);
     core.visible=opened||(shot==='section'&&!inspection.loaded);
     headers.visible=!(shot&&inspection.loaded);
@@ -384,7 +407,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     refrigeration.setFlow(flow && trace !== 'lng');
     refrigeration.inside.visible=active==='deep' && deepView!=='shell';
     refrigeration.shell.visible=!refrigeration.inside.visible;
-    const nextShadowState = `${opened}/${deepView}/${deepStream}/${refrigeration.inside.visible}/${mode}/${shot}/${inspection?.loaded}`;
+    const nextShadowState = `${opened}/${deepView}/${deepStream}/${refrigeration.inside.visible}/${mode}/${shot}/${inspection?.loaded}/${steppedCut}`;
     if (shadows && shadowState !== nextShadowState) {
       shadows.needsUpdate = true;
       shadowState = nextShadowState;
