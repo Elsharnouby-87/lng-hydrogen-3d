@@ -5,6 +5,7 @@ import { softwareRenderer } from './software.js';
 import { addHarbor } from './harbor.js';
 import { detailBerth, detailCarrier } from './berth-details.js';
 import { detailProcessYard } from './yard-details.js';
+import { addQuayWeathering } from './quay-weathering.js';
 import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
@@ -98,7 +99,7 @@ function lights(g){
     box(g,x,3.32,z,.58,.10,.19,steel);box(g,x,3.27,z,.39,.045,.12,new T.MeshBasicMaterial({color:0xffe5b1}));
   }
 }
-function ground(scene){
+function ground(scene, webgl){
   const g=group(scene);
   box(g,0,-.9,0,45,1.34,21.7,seaWall).renderOrder=4;
   box(g,0,-.22,0,45.1,.28,21.76,slab).renderOrder=3;
@@ -138,6 +139,7 @@ function ground(scene){
     box(g,x,-.395,11.83,.37,.20,1.79,trim);
   }
   detailBerth(g);
+  if (webgl) addQuayWeathering(g);
   detailProcessYard(g);
   rail(g,-21.2,-10.1,-7.5,-10.1,-.02);
   rail(g,-2.3,-10.1,21.2,-10.1,-.02);
@@ -161,8 +163,8 @@ function shadow(g,x,z,w,d){
   plane.rotation.x=-Math.PI/2;
   plane.receiveShadow=false;
 }
-function terminal(scene){
-  const g=ground(scene);
+function terminal(scene, webgl){
+  const g=ground(scene, webgl);
   g.traverse(node => node.layers.enable(reflectionLayer));
   for(const [x,z,w,d] of [[-12,-4,6,4],[-10,5.8,7,5],[0,0,10,8],[9,-4,9,6],[17,5,9,7],[17,-4,7,5]])shadow(g,x,z,w,d);
   pad(g,16.5,5.86,9,6.3);
@@ -352,7 +354,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     key.shadow.radius = 2;
   }
   addHarbor(scene);
-  const {g,refrigeration,dockFlow,storage,lh2,carrier,arm}=terminal(scene);
+  const {g,refrigeration,dockFlow,storage,lh2,carrier,arm}=terminal(scene, kind === 'webgl');
   const precooler=group(scene);
   const equipment=exchanger(precooler);
   const {casing,core,stack,headers,risers}=equipment;
