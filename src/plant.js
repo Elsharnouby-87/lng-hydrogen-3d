@@ -441,8 +441,12 @@ export function createPlant(target, labelLayer, choose, reduced){
     if(exploded&&cameraView!=='plan')look.y=compact?3.29:3.09;
     if(active==='deep'&&deepView==='exploded'&&cameraView!=='plan')look.y=2.05;
     const offset=cameraView==='plan'?v(.02,40,.21):v(...view.offset);
-    const position=look.clone().add(offset);
     const fit=dimensions.width/dimensions.height;
+    // Keep the orthographic near plane above the waterfront without changing the view angle.
+    if (cameraView !== 'plan' && ['overview', 'dispatch'].includes(active)) {
+      offset.setLength(Math.max(offset.length(), 88 / Math.min(1, fit)));
+    }
+    const position=look.clone().add(offset);
     const shotScale=active==='deep'&&deepView==='exploded'?(compact?3.55:4.65):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
     // Keep the entire terminal in the overview on narrow screens.
     const portrait=compact&&fit<.84&&cameraView!=='plan';
