@@ -6,6 +6,7 @@ import { addHarbor } from './harbor.js';
 import { detailBerth, detailCarrier } from './berth-details.js';
 import { detailProcessYard } from './yard-details.js';
 import { addQuayWeathering } from './quay-weathering.js';
+import { finishCarrier } from './carrier-finish.js';
 import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
@@ -21,7 +22,7 @@ function pick(g,id,x,y,z,w,h,d){
   o.userData.equipment=id;
   return o;
 }
-function ship(g){
+function ship(g, webgl){
   const k=group(g,11.3,-.34,14.95);
   const hullPaint = material(0x1c3345, .10, .47);
   const antifouling = material(0x8e3c33, .04, .67);
@@ -33,9 +34,10 @@ function ship(g){
   hull.quadraticCurveTo(8.32,1.17,5.9,1.37);hull.lineTo(-8.7,1.37);hull.quadraticCurveTo(-9.3,1.05,-9.32,0);hull.quadraticCurveTo(-9.3,-1.05,-8.7,-1.37);
   const lower=mesh(k,new T.ExtrudeGeometry(hull,{depth:.52,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.065,bevelThickness:.06,curveSegments:18}),antifouling,0,-.81,0);
   lower.rotation.x=-Math.PI/2;
-  const h=mesh(k,new T.ExtrudeGeometry(hull,{depth:1.0,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.10,bevelThickness:.11,curveSegments:18}),hullPaint,0,-.34,0);
+  const h=mesh(k,new T.ExtrudeGeometry(hull,{depth:1.0,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.10,bevelThickness:.11,curveSegments:18}),hullPaint.clone(),0,-.34,0);
   h.rotation.x=-Math.PI/2;h.renderOrder=1;h.castShadow=true;
-  const deck=mesh(k,new T.ShapeGeometry(hull,18),deckPaint,0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
+  const deck=mesh(k,new T.ShapeGeometry(hull,18),deckPaint.clone(),0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
+  if (webgl) finishCarrier(h, deck);
   bevelBox(k,-7.12,1.40,0,2.38,1.23,2.36,.07,offWhite);
   bevelBox(k,-7.08,2.15,0,2.48,.28,2.56,.065,offWhite);
   box(k,-5.861,2.12,0,.035,.135,2.14,bridgeGlass);
@@ -193,7 +195,7 @@ function terminal(scene, webgl){
     for(const z of [-3.45,3.65]){box(g,x,.48,z,.11,.95,.11,steel);box(g,x,.08,z,.34,.17,.38,trim);}
     box(g,x,.93,.10,.12,.12,7.22,trim);
   }
-  const carrier = ship(g);
+  const carrier = ship(g, webgl);
   const arm=group(g,14.4,0,10.82);
   const armPoints=[v(0,.32,0),v(0,3.25,0),v(0,4.23,.84),v(0,3.15,2.26),v(0,1.76,2.78)];
   loadingArm(arm, armPoints);
@@ -276,7 +278,7 @@ const views={
   overview:{look:[.2,.24,1.7],offset:[22,31,38],scale:1.15},
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
   lng:{look:[12.9,1.77,9.05],offset:[13,17.5,28],scale:2.27},
-  dock:{look:[11.55,1.22,12.05],offset:[12.1,13.3,26],scale:2.34},
+  dock:{look:[12.55,1.21,12.03],offset:[12.1,13.3,26],scale:2.21},
   openingDock:{look:[10.75,1.17,11.5],offset:[11.6,12.5,26.7],scale:2.12},
   openingExchange:{look:[.15,1.76,.12],offset:[9.2,12,18.8],scale:3.75},
   mechanical:{look:[-.2,.82,-7.08],offset:[9.6,14,25],scale:2.44},
@@ -434,6 +436,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
+  const labelWidths = new Map();
   const ray=new T.Raycaster(), mouse=new T.Vector2();let down=null;
   let shadowState, isolated, steppedCut;
   function updateVisibility(){
@@ -543,6 +546,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     if(!width || !height || (width===dimensions.width && height===dimensions.height))return;
     const first=dimensions.width===1;
     dimensions={width,height};compact=width<620;
+    labelWidths.clear();
     frameViewport();renderer.setSize(width,height,false);
     water?.resize(width,height);
     if(first||!tween)focus(active,true);
@@ -577,19 +581,38 @@ export function createPlant(target, labelLayer, choose, reduced){
     }
     f.glow.instanceMatrix.needsUpdate=true;
   }
-  function placeLabels(){
-    const set=visibleLabels[active];const bounds=[];
-    const order=[...set,...Object.keys(anchor).filter(k=>!set.includes(k))];
-    for(const id of order){
-      const b=buttons.get(id), p=anchor[id];if(!b)continue;
-      const covered=(active==='deep'&&deepView==='shell'&&['cryo','catalyst','separator'].includes(id))||(active==='exchange'&&id==='exchange'&&coreView!=='shell'&&mode==='integrated');
-      const exploded=active==='exchange'&&coreView==='exploded'&&id==='exchange';
-      if(!labels||!set.includes(id)||covered||exploded||(compact&&active==='overview'&&!['exchange','lng','liquid'].includes(id))){b.hidden=true;continue;}
-      projected.copy(p).project(camera);
-      const x=(projected.x+1)*.5*dimensions.width, y=(1-projected.y)*.5*dimensions.height;
-      const width=compact?92:135;
-      if(x<width*.44||x>dimensions.width-width*.44||y<70||y>dimensions.height-46||bounds.some(q=>Math.abs(q.x-x)<width&&Math.abs(q.y-y)<24)){b.hidden=true;continue;}
-      bounds.push({x,y});b.hidden=false;b.style.left=x+'px';b.style.top=y+'px';
+  function placeLabels() {
+    const visible = new Set(visibleLabels[active]);
+    const bounds = [];
+    for (const [id, button] of buttons) {
+      if (!visible.has(id) || !labels) button.hidden = true;
+    }
+    for (const id of visible) {
+      const button = buttons.get(id);
+      if (!button || !labels ||
+        (active === 'deep' && deepView === 'shell' && ['cryo', 'catalyst', 'separator'].includes(id)) ||
+        (active === 'exchange' && coreView !== 'shell' && mode === 'integrated') ||
+        (compact && active === 'overview' && !['exchange', 'lng', 'liquid'].includes(id))) {
+        if (button) button.hidden = true;
+        continue;
+      }
+      projected.copy(anchor[id]).project(camera);
+      const x = (projected.x + 1) * .5 * dimensions.width;
+      const y = (1 - projected.y) * .5 * dimensions.height;
+      if (!labelWidths.has(id)) {
+        button.hidden = false;
+        labelWidths.set(id, button.offsetWidth / 2 + 5);
+      }
+      const half = labelWidths.get(id);
+      if (x < half || x > dimensions.width - half || y < 70 || y > dimensions.height - 46 ||
+        bounds.some(other => Math.abs(other.x - x) < other.half + half && Math.abs(other.y - y) < 25)) {
+        button.hidden = true;
+        continue;
+      }
+      bounds.push({ x, y, half });
+      button.hidden = false;
+      button.style.left = x + 'px';
+      button.style.top = y + 'px';
     }
   }
   function animate(now){

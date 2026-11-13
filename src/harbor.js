@@ -28,6 +28,8 @@ export function addHarbor(scene) {
   const markings = material(0xd6d7cc, 0, .94);
   const paving = material(0x9aa6a7, 0, .93);
   const fenders = material(0x52666f, 0, .88);
+  const gravel = material(0x93897a, 0, .99);
+  const compactedSand = material(0xb4aa94, 0, .99);
 
   surface(shore, bank, -.73, embankment);
   surface(shore, bank.map(([x, z]) => [x, z - .8]), -.41, quayConcrete);
@@ -35,6 +37,10 @@ export function addHarbor(scene) {
   box(shore, 0, -.30, -12.9, 45.12, .45, 4.50, quayCoping).castShadow = false;
   surface(shore, [[-7.45,-10.68],[-2.35,-10.68],[-2.35,-41.2],[-7.45,-41.2]], -.02, yardAsphalt);
   surface(shore, [[-30.5,-19.1],[24.5,-19.1],[24.5,-23.7],[-30.5,-23.7]], -.033, yardAsphalt);
+  surface(shore, [[-31.2, -23.7], [25.4, -23.7], [25.9, -24.42], [-31.75, -24.39]], -.16, gravel);
+  surface(shore, [[-31.7, -18.34], [25.6, -18.41], [25, -19.10], [-31.2, -19.10]], -.16, gravel);
+  surface(shore, [[-32.4, -25.2], [-25.3, -24.38], [-22.6, -33.8], [-26.2, -35.1], [-33.1, -30.2]], -.22, compactedSand);
+  surface(shore, [[20.8, -31.6], [25.1, -31.5], [30.6, -25.1], [33.9, -27.0], [30.1, -36.8], [22.1, -36.2]], -.22, compactedSand);
   boxes(shore, markings, Array.from({ length: 20 }, (_, i) =>
     [i * 2.66 - 28, -.019, -21.4, 1.19, .012, .064]));
   boxes(shore, markings, [-12.9, -15, -17.1, -25, -27.1, -29.2, -31.3, -33.4].map(z =>
@@ -76,7 +82,7 @@ export function addHarbor(scene) {
         const seed = i * 2 + row;
         pieces[seed % pieces.length].push([
           a[0] + t * edge.x + Math.sin(seed * 4.31) * .22,
-          -.82 + row * .24 + Math.cos(seed * 5.16) * .10,
+          -.85 + row * .29 + Math.cos(seed * 5.16) * .10,
           a[1] + t * edge.y - row * .34 + Math.sin(seed * 6.12) * .28,
           seed,
         ]);
@@ -89,12 +95,30 @@ export function addHarbor(scene) {
     for (const [i, [x, y, z, seed]] of positions.entries()) {
       transform.position.set(x, y, z);
       transform.rotation.set(.4 + Math.sin(seed), seed * 2.4, Math.cos(seed));
-      transform.scale.set(.45 + .10 * Math.sin(seed), .31, .38 + .07 * Math.cos(seed));
+      transform.scale.set(.43 + .15 * Math.sin(seed * 2.1), .27 + .085 * Math.cos(seed * 2.9), .39 + .12 * Math.cos(seed));
       transform.updateMatrix();
       stones.setMatrixAt(i, transform.matrix);
     }
     shore.add(stones);
   }
+  const verge = [
+    [-30.7, -24.9], [-29.1, -25.4], [-26.9, -29.2], [-25.7, -32.9],
+    [24.6, -33.2], [26.1, -33.5], [28.9, -31.7], [28.4, -27.0],
+  ];
+  const scrub = new T.InstancedMesh(rock, material(0x73775b, 0, 1), verge.length * 3);
+  for (const [index, [x, z]] of verge.entries()) {
+    for (let clump = 0; clump < 3; clump++) {
+      const seed = index * 3 + clump;
+      transform.position.set(x + (clump - 1) * .19, -.14, z + Math.sin(seed * 3.71) * .19);
+      transform.rotation.set(.17, seed * 1.82, -.15);
+      transform.scale.set(.21 + .07 * Math.cos(seed), .16 + .07 * Math.sin(seed), .20);
+      transform.updateMatrix();
+      scrub.setMatrixAt(seed, transform.matrix);
+    }
+  }
+  scrub.receiveShadow = true;
+  shore.add(scrub);
+
   const gate = group(shore, -8.4, 0, -13.9);
   bevelBox(gate, 0, .51, 0, 1.25, 1.12, 1.42, .035, walls);
   box(gate, 0, 1.11, 0, 1.50, .11, 1.63, roofs);
