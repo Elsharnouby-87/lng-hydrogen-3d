@@ -109,6 +109,11 @@ try {
   assert.equal(await evalJS("document.querySelector('#model').dataset.renderer"),'webgl',
     'Daylight and physical materials need to pass the WebGL renderer');
   await captureHarbor('overview');
+  await evalJS("document.querySelector('[data-equipment=dock]').click()");
+  await sleep(1150);
+  await captureHarbor('calm-berth');
+  await evalJS("document.querySelector('#chapters button').click()");
+  await sleep(1100);
   const location = "JSON.stringify(['lng','exchange'].map(id=>{const {left,top}=document.querySelector('[data-equipment='+id+']').style;return [left,top]}))";
   const initialLocation = await evalJS(location);
   await evalJS("document.querySelector('[data-mode=standalone]').click()");

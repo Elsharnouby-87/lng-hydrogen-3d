@@ -2,7 +2,8 @@ import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { applySurfaceFinishes, machinedStainless, setDaylightEnvironment } from './plant-finishes.js';
 import { softwareRenderer } from './software.js';
-import { addHarbor, harborSky } from './harbor.js';
+import { addHarbor } from './harbor.js';
+import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
 import {
@@ -83,8 +84,10 @@ function ship(g){
     }
   }
   for(const x of [-8.28,7.05]){
-    segment(g,v(11.3+x,.62,13.78),v(11.3+x+(x<0?-1.04:1.12),.15,12.37),.023,dark);
+    segment(g,v(11.3+x,.62,13.78),v(11.3+x+(x<0?-1.04:1.12),.15,12.37),.023,dark)
+      .layers.enable(reflectionLayer);
   }
+  return k;
 }
 function lights(g){
   for(const [x,z] of [[-20,-8],[0,-8],[20,-8],[-20,9],[20,9]]){
@@ -155,6 +158,7 @@ function shadow(g,x,z,w,d){
 }
 function terminal(scene){
   const g=ground(scene);
+  g.traverse(node => node.layers.enable(reflectionLayer));
   for(const [x,z,w,d] of [[-12,-4,6,4],[-10,5.8,7,5],[0,0,10,8],[9,-4,9,6],[17,5,9,7],[17,-4,7,5]])shadow(g,x,z,w,d);
   pad(g,16.5,5.86,9,6.3);
   const storage = tank(g,17.35,5.76,2.45,3.28,mint,'TK-201 / LNG STORAGE');
@@ -182,7 +186,7 @@ function terminal(scene){
     for(const z of [-3.45,3.65]){box(g,x,.48,z,.11,.95,.11,steel);box(g,x,.08,z,.34,.17,.38,trim);}
     box(g,x,.93,.10,.12,.12,7.22,trim);
   }
-  ship(g);
+  const carrier = ship(g);
   const arm=group(g,14.4,0,10.82);
   const armPoints=[v(0,.32,0),v(0,3.25,0),v(0,4.23,.84),v(0,3.15,2.26),v(0,1.76,2.78)];
   loadingArm(arm, armPoints);
@@ -200,7 +204,7 @@ function terminal(scene){
   for(const x of [-.93,-.39,.21])box(utility,x,1.01,.834,.40,.29,.03,slab);
   box(utility,1.03,.61,.835,.49,.85,.035,steel);
   for(const x of [-1.1,1.02])cyl(utility,x,1.5,-.35,.115,.28,steel,'y',true);
-  return {g,refrigeration,dockFlow,storage,lh2};
+  return {g,refrigeration,dockFlow,storage,lh2,carrier,arm};
 }
 const markerUp = v(0, 1, 0);
 const markerTransform = new T.Object3D();
@@ -325,8 +329,9 @@ export function createPlant(target, labelLayer, choose, reduced){
   const key=new T.DirectionalLight(0xffeedb,2.35);key.position.set(-26,31,15);scene.add(key);
   const fill=new T.DirectionalLight(0xcbdff1,.50);fill.position.set(10,13,-26);scene.add(fill);
   const shadows = kind === 'webgl' ? renderer.shadowMap : null;
+  const water = shadows ? addHarborWater(scene) : null;
   if (shadows) {
-    applySurfaceFinishes(renderer, () => { redraw = true; });
+    applySurfaceFinishes(renderer, () => { redraw = true; water.invalidate(); });
     renderer.localClippingEnabled = true;
     shadows.enabled = true;
     shadows.autoUpdate = false;
@@ -339,8 +344,8 @@ export function createPlant(target, labelLayer, choose, reduced){
     key.shadow.bias = -.00014;
     key.shadow.radius = 2;
   }
-  const waterTime=addHarbor(scene, kind==='webgl');
-  const {g,refrigeration,dockFlow,storage,lh2}=terminal(scene);
+  addHarbor(scene);
+  const {g,refrigeration,dockFlow,storage,lh2,carrier,arm}=terminal(scene);
   const precooler=group(scene);
   const equipment=exchanger(precooler);
   const {casing,core,stack,headers,risers}=equipment;
@@ -364,6 +369,9 @@ export function createPlant(target, labelLayer, choose, reduced){
     pick(g,'grid',-18.2,.8,5.78,4.1,1.6,2.8),
   ];
   batchStaticMeshes(scene);
+  for (const object of [carrier, arm, ambient, key, fill]) {
+    object.traverse(node => node.layers.enable(reflectionLayer));
+  }
   // Reveal the top hydrogen layer and the LNG layer beneath it in the same view.
   const topLayer = stack.at(-1).layer;
   const cutPlane = new T.Plane(v(0, 0, -1), .02);
@@ -424,6 +432,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     const isolate = ['exchange', 'section', 'flange'].includes(active);
     if (isolated !== isolate) {
       isolated = isolate;
+      water?.invalidate();
       for (const {node, finish, soft} of scenery) node.material = isolate ? soft : finish;
     }
     const comparing = compareUntil > 0;
@@ -525,6 +534,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     const first=dimensions.width===1;
     dimensions={width,height};compact=width<620;
     frameViewport();renderer.setSize(width,height,false);
+    water?.resize(width,height);
     if(first||!tween)focus(active,true);
   }
   const surface = renderer.domElement;
@@ -599,8 +609,10 @@ export function createPlant(target, labelLayer, choose, reduced){
       compareUntil = 0;
       updateVisibility();
     }
-    if (!redraw && (!flow || reduced)) return;
-    if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;if(waterTime)waterTime.value+=delta;}
+    const animateWater = water && !reduced;
+    if (!redraw && (!flow || reduced) && !animateWater) return;
+    if (animateWater) water.time.value += delta;
+    if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;}
     if(flow){
       inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
@@ -612,6 +624,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       for(const f of mode==='integrated'?routes.a:routes.s)if(f.glow.visible)drawFlow(f,travel);
     }
     placeLabels();
+    water?.updateReflection(renderer,camera,now);
     redraw = renderer.render(scene,camera) === false;
   }
   renderer.setAnimationLoop(animate);

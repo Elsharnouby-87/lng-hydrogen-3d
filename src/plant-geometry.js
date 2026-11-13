@@ -78,7 +78,7 @@ export function batchStaticMeshes(root) {
   for (const child of root.children) {
     if (!child.isMesh || child.isInstancedMesh || child.children.length || child.userData.equipment) continue;
     if (![unitBox, cylinder, tinyCylinder, ball].includes(child.geometry)) continue;
-    const key = `${child.geometry.id}/${child.material.id}/${child.renderOrder}/${child.castShadow}`;
+    const key = `${child.geometry.id}/${child.material.id}/${child.renderOrder}/${child.castShadow}/${child.layers.mask}`;
     if (!batches.has(key)) batches.set(key, []);
     batches.get(key).push(child);
   }
@@ -89,6 +89,7 @@ export function batchStaticMeshes(root) {
     instances.castShadow = first.castShadow;
     instances.receiveShadow = first.receiveShadow;
     instances.renderOrder = first.renderOrder;
+    instances.layers.mask = first.layers.mask;
     for (const [index, part] of parts.entries()) {
       part.updateMatrix();
       instances.setMatrixAt(index, part.matrix);
