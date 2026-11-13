@@ -51,6 +51,8 @@ export function detailBerth(apron) {
       for (const y of [-.46, -.19]) cyl(apron, x + offset, y, 13.126, .031, .020, steel, 'z', true);
     }
     box(apron, x, .081, 12.46, .47, .013, .42, safetyPaint);
+    cyl(apron, x, .105, 12.47, .143, .061, castIron, 'y', true);
+    for (const dx of [-.155, .155]) box(apron, x + dx, .095, 12.46, .046, .018, .26, castIron);
     box(apron, x, .081, 12.15, .50, .013, .038, white);
   }
   const grates = [4.62, 7.42, 9.02, 12.03, 16.89, 17.72];

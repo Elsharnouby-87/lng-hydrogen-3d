@@ -229,26 +229,52 @@ export function exchanger(g) {
 
 export function loadingArm(g, points) {
   const armPaint = material(0x52636e, .10, .55);
+  const [base, shoulder, crown, elbow, end] = points;
   bevelBox(g, 0, .15, 0, 1.10, .29, 1.08, .035, trim);
-  for (const x of [-.42,.42]) for (const z of [-.40,.40]) {
-    cyl(g,x,.313,z,.058,.044,machinedStainless,'y',true);
+  box(g, 0, .035, 0, 1.27, .065, 1.21, slab);
+  for (const x of [-.42, .42]) {
+    for (const z of [-.40, .40]) {
+      cyl(g, x, .313, z, .058, .044, machinedStainless, 'y', true);
+    }
   }
   cyl(g, 0, .34, 0, .31, .37, steel);
   flange(g, 0, .45, 0, .35, 'y', steel, 10);
   for (let index = 1; index < points.length; index++) {
     segment(g, points[index - 1], points[index], .091, machinedStainless);
   }
-  for (const p of points.slice(1, -1)) {
-    cyl(g, p.x, p.y, p.z, .193, .26, gold, 'x');
-    flange(g, p.x + .132, p.y, p.z, .144, 'x', steel, 6);
+  for (const pivot of [shoulder, crown, elbow]) {
+    cyl(g, pivot.x, pivot.y, pivot.z, .193, .26, gold, 'x');
+    flange(g, pivot.x + .132, pivot.y, pivot.z, .144, 'x', steel, 6);
+    cyl(g, pivot.x - .145, pivot.y, pivot.z, .116, .039, armPaint, 'x', true);
   }
-  const p = points[1], crown = points[2];
-  segment(g, v(.27, 1.67, 0), v(.27, crown.y - .36, crown.z - .12), .055, steel);
-  segment(g, v(.27, p.y, p.z), v(.27, crown.y, -.64), .071, trim);
+
+  const cylinderBase = v(.26, base.y + .77, -.20);
+  const rodEnd = v(.26, crown.y - .35, crown.z - .13);
+  const cylinderHead = cylinderBase.clone().lerp(rodEnd, .60);
+  segment(g, cylinderBase, cylinderHead, .10, armPaint);
+  segment(g, cylinderHead, rodEnd, .042, machinedStainless);
+  const collar = cylinderHead.clone().lerp(cylinderBase, .055);
+  segment(g, cylinderHead, collar, .115, steel);
+  for (const bearing of [cylinderBase, rodEnd]) {
+    cyl(g, bearing.x, bearing.y, bearing.z, .13, .15, armPaint, 'x', true);
+    cyl(g, bearing.x + .085, bearing.y, bearing.z, .064, .037, steel, 'x', true);
+  }
+
+  segment(g, v(.27, shoulder.y, shoulder.z), v(.27, crown.y, -.64), .071, trim);
   bevelBox(g, .27, crown.y - .03, -.62, .32, .34, .45, .042, armPaint);
-  box(g, .32, 1.24, -.33, .36, .46, .27, armPaint);
-  segment(g, v(-.19,.60,-.14),v(-.19,2.61,-.14),.026,dark);
-  segment(g, v(-.19,2.61,-.14),v(-.15,3.22,.02),.026,dark);
-  for (const y of [.92,1.35,1.78,2.22,2.63]) box(g,-.105,y,-.075,.18,.049,.22,trim);
-  nozzle(g, 0, points.at(-1).y, points.at(-1).z, .158, .21, 'z', mint);
+  bevelBox(g, .32, 1.24, -.33, .36, .46, .27, .022, armPaint);
+  box(g, .51, 1.31, -.33, .028, .14, .16, trim);
+  cyl(g, .53, 1.31, -.34, .027, .031, serviceYellow, 'x', true);
+  segment(g, v(-.19, .60, -.14), v(-.19, 2.61, -.14), .026, dark);
+  segment(g, v(-.19, 2.61, -.14), v(-.15, 3.22, .02), .026, dark);
+  for (const y of [.92, 1.35, 1.78, 2.22, 2.63]) box(g, -.105, y, -.075, .18, .049, .22, trim);
+
+  const balance = [v(-.19, shoulder.y, -.10), v(-.19, crown.y + .04, crown.z - .07),
+    v(-.19, elbow.y + .04, elbow.z - .04)];
+  for (let i = 1; i < balance.length; i++) segment(g, balance[i - 1], balance[i], .039, armPaint);
+  for (const attachment of balance) {
+    cyl(g, attachment.x + .10, attachment.y, attachment.z, .052, .24, trim, 'x', true);
+  }
+  nozzle(g, 0, end.y, end.z, .158, .21, 'z', mint);
+  flange(g, 0, end.y, end.z + .106, .131, 'z', steel, 6);
 }
