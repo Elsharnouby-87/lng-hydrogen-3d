@@ -258,6 +258,9 @@ function stageRoutes(scene, storage){
   ];
   return {assisted,standalone,a,s,c};
 }
+// Orthographic magnification comes from zoom. A fixed orbit radius keeps
+// the near plane outside the harbor even when inspecting an individual part.
+const orbitRadius = 560;
 const views={
   overview:{look:[.15,.22,2.15],offset:[19,26,36],scale:1.13},
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
@@ -313,7 +316,7 @@ function createRenderer(scene) {
 
 export function createPlant(target, labelLayer, choose, reduced){
   const scene=new T.Scene();scene.background=new T.Color(harborSky);
-  const camera=new T.OrthographicCamera(-30,30,19,-19,.05,950);
+  const camera=new T.OrthographicCamera(-30,30,19,-19,.1,2200);
   const { renderer, kind } = createRenderer(scene);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
   renderer.domElement.setAttribute('aria-label','Interactive 3D plant. Drag to orbit and scroll or pinch to zoom.');
@@ -399,8 +402,15 @@ export function createPlant(target, labelLayer, choose, reduced){
   scene.updateMatrixWorld(true);
 
   const controls=new OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=!reduced;controls.dampingFactor=.12;controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.47;
+  controls.enableDamping=!reduced;controls.dampingFactor=.12;
+  controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.43;
+  controls.minDistance=controls.maxDistance=orbitRadius;
+  controls.screenSpacePanning=false;
+  controls.maxTargetRadius=48;
   controls.minZoom=.23;controls.maxZoom=8;
+  const orbit = new T.Spherical(orbitRadius);
+  const orbitOffset = new T.Vector3();
+  const orbitAngles = new T.Spherical();
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null, redraw=true, compareUntil=0;
@@ -475,12 +485,8 @@ export function createPlant(target, labelLayer, choose, reduced){
     if(exploded&&cameraView!=='plan')look.y=compact?3.29:3.09;
     if(active==='deep'&&deepView==='exploded'&&cameraView!=='plan')look.y=2.05;
     const offset=cameraView==='plan'?v(.02,40,.21):v(...view.offset);
+    const angles = new T.Spherical().setFromVector3(offset);
     const fit=dimensions.width/dimensions.height;
-    // Keep the orthographic near plane above the waterfront without changing the view angle.
-    if (cameraView !== 'plan' && ['overview', 'dispatch'].includes(active)) {
-      offset.setLength(Math.max(offset.length(), 88 / Math.min(1, fit)));
-    }
-    const position=look.clone().add(offset);
     const shotScale=active==='deep'&&deepView==='exploded'?(compact?3.55:4.65):compact&&active==='section'?3.5:exploded?(compact?2.75:3.20):view.scale;
     // Keep the entire terminal in the overview on narrow screens.
     const portrait=compact&&fit<.84&&cameraView!=='plan';
@@ -489,8 +495,22 @@ export function createPlant(target, labelLayer, choose, reduced){
       : (active==='overview'?1.62:active==='dispatch'?1.54:1.10);
     const zoom=shotScale*Math.min(1,fit/fitDivisor);
     updateVisibility();
-    if(immediate || reduced){camera.position.copy(position);controls.target.copy(look);camera.zoom=zoom;camera.updateProjectionMatrix();controls.update();tween=null;}
-    else{tween={position,look,zoom,duration,start:performance.now(),from:camera.position.clone(),target:controls.target.clone(),fromZoom:camera.zoom};}
+    controls.cursor.copy(look);
+    if (immediate || reduced) {
+      controls.target.copy(look);
+      camera.position.copy(offset.setLength(orbitRadius)).add(look);
+      camera.zoom=zoom;
+      camera.updateProjectionMatrix();
+      controls.update();
+      tween=null;
+      return;
+    }
+    orbitAngles.setFromVector3(orbitOffset.copy(camera.position).sub(controls.target));
+    const turn = T.MathUtils.euclideanModulo(angles.theta - orbitAngles.theta + Math.PI, Math.PI * 2) - Math.PI;
+    tween = {
+      look, zoom, duration, start: performance.now(), target: controls.target.clone(), fromZoom: camera.zoom,
+      phi: orbitAngles.phi, nextPhi: angles.phi, theta: orbitAngles.theta, turn,
+    };
   }
   function frameViewport(){
     redraw = true;
@@ -567,7 +587,10 @@ export function createPlant(target, labelLayer, choose, reduced){
     if(tween){
       redraw = true;
       const t=Math.min(1,(now-tween.start)/tween.duration),f=1-(1-t)**3;
-      camera.position.lerpVectors(tween.from,tween.position,f);controls.target.lerpVectors(tween.target,tween.look,f);
+      controls.target.lerpVectors(tween.target,tween.look,f);
+      orbit.phi = T.MathUtils.lerp(tween.phi, tween.nextPhi, f);
+      orbit.theta = tween.theta + tween.turn * f;
+      camera.position.copy(orbitOffset.setFromSpherical(orbit)).add(controls.target);
       camera.zoom=T.MathUtils.lerp(tween.fromZoom,tween.zoom,f);camera.updateProjectionMatrix();
       if(t===1)tween=null;
     }

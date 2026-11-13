@@ -121,6 +121,50 @@ try {
   assert.equal(await evalJS("document.querySelector('#view-name').textContent"),'E-101 CUTAWAY');
   assert.equal(await evalJS("document.querySelector('[data-stream=both]').getAttribute('aria-pressed')"),'true');
   await captureHarbor('precooler');
+  await evalJS("document.querySelector('[data-core=exploded]').click(); document.querySelector('#present').click()");
+  await sleep(1250);
+  const bounds = await evalJS("document.querySelector('#model canvas').getBoundingClientRect().toJSON()");
+  const x = Math.round(bounds.left + bounds.width * .65);
+  const y = Math.round(bounds.top + bounds.height * .55);
+  const mouse = (type, props) => send('Input.dispatchMouseEvent', {type,x,y,...props});
+  await mouse('mouseMoved', {});
+  await mouse('mousePressed', {button:'left',buttons:1,clickCount:1});
+  await mouse('mouseMoved', {x:x-145,y:y-210,buttons:1});
+  await mouse('mouseReleased', {x:x-145,y:y-210,button:'left',clickCount:1});
+  await mouse('mouseWheel', {deltaY:430,deltaX:0});
+  await sleep(1000);
+  const lowOrbit = await send('Page.captureScreenshot', {format:'png',captureBeyondViewport:false});
+  await writeFile(new URL('../docs/stage5-harbor-orbit.png', import.meta.url), Buffer.from(lowOrbit.data,'base64'));
+  const exposedBackdrop = await evalJS(`(async () => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,${lowOrbit.data}';
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image,0,0);
+    const area = ${JSON.stringify(bounds)};
+    const left = Math.floor(area.left + area.width * .28);
+    const top = Math.floor(area.top + area.height * .33);
+    const width = Math.floor(area.width * .69);
+    const height = Math.floor(area.height * .56);
+    const pixels = context.getImageData(left,top,width,height).data;
+    let longest = 0;
+    for (let row = 0; row < height; row += 4) {
+      let run = 0;
+      for (let column = 0; column < width; column += 2) {
+        const i = (row * width + column) * 4;
+        const background = pixels[i] === 142 && pixels[i+1] === 175 && pixels[i+2] === 190;
+        run = background ? run + 2 : 0;
+        longest = Math.max(longest,run);
+      }
+    }
+    return longest;
+  })()`);
+  assert.ok(exposedBackdrop < 90, 'Camera exposed a flat background band of ' + exposedBackdrop + ' pixels while orbiting');
+  await evalJS("document.querySelector('#present').click(); document.querySelector('[data-core=cutaway]').click()");
+  await sleep(350);
   await evalJS("document.querySelector('#e101-tour').click(); document.querySelector('#walk-next').click()");
   for (let i = 0; i < 30; i++) {
     if (await evalJS("document.querySelector('#model').dataset.inspectionModel === 'glb'")) break;

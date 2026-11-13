@@ -6,9 +6,9 @@ import { quayConcrete, quayCoping, yardAsphalt } from './plant-finishes.js';
 export const harborSky = 0x8eafbe;
 
 const bank = [
-  [-124, -77], [-83, -45], [-52, -25], [-31, -16], [-22.5, -10.65],
-  [22.5, -10.65], [32, -14], [53, -22], [89, -36], [125, -50],
-  [125, -154], [-124, -154],
+  [-1800, -590], [-124, -77], [-83, -45], [-52, -25], [-31, -16], [-22.5, -10.65],
+  [22.5, -10.65], [32, -14], [53, -22], [89, -36], [125, -50], [1800, -525],
+  [1800, -1800], [-1800, -1800],
 ];
 
 function surface(parent, outline, height, finish) {
@@ -64,7 +64,11 @@ export function addHarbor(scene, webgl) {
   const rock = new T.DodecahedronGeometry(1, 0);
   const transform = new T.Object3D();
   const pieces = stoneFinishes.map(() => []);
-  for (const [a, b] of [[bank[2], bank[3]], [bank[3], bank[4]], [bank[5], bank[6]], [bank[6], bank[7]]]) {
+  const rockEdges = [
+    [[-52, -25], [-31, -16]], [[-31, -16], [-22.5, -10.65]],
+    [[22.5, -10.65], [32, -14]], [[32, -14], [53, -22]],
+  ];
+  for (const [a, b] of rockEdges) {
     const edge = new T.Vector2(b[0] - a[0], b[1] - a[1]);
     const count = Math.round(edge.length() * 2.4);
     for (let i = 0; i < count; i++) {
@@ -136,7 +140,7 @@ export function addHarbor(scene, webgl) {
         gl_FragColor = vec4(color, 1.);
       }`,
   });
-  const sea = mesh(scene, new T.PlaneGeometry(900, 900), water, 0, -1.03, 0);
+  const sea = mesh(scene, new T.PlaneGeometry(4400, 4400), water, 0, -1.03, 0);
   sea.rotation.x = -Math.PI / 2;
   sea.receiveShadow = false;
   return water.uniforms.uTime;
