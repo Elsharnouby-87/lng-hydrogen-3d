@@ -528,7 +528,8 @@ function showOpeningFrame(i) {
   el('opener-text').textContent = shot.text;
   for (const [index, mark] of [...el('opener-progress').children].entries())
     mark.classList.toggle('current', i >= index);
-  plant?.focus(shot.view, false, i === 0 ? 1800 : 2100);
+  if (i === 0) plant?.focus('openingApproach', true);
+  plant?.focus(shot.view, false, i === 0 ? 2700 : 2100);
   openingTimer = setTimeout(() => showOpeningFrame(i + 1), shot.time);
 }
 async function startOpening() {

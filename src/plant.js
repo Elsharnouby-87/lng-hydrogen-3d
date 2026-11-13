@@ -279,6 +279,7 @@ const views={
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
   lng:{look:[12.9,1.77,9.05],offset:[13,17.5,28],scale:2.27},
   dock:{look:[12.55,1.21,12.03],offset:[12.1,13.3,26],scale:2.21},
+  openingApproach:{look:[8.9,1.05,10.1],offset:[15.3,18.2,28.0],scale:1.79},
   openingDock:{look:[10.75,1.17,11.5],offset:[11.6,12.5,26.7],scale:2.12},
   openingExchange:{look:[.15,1.76,.12],offset:[9.2,12,18.8],scale:3.75},
   mechanical:{look:[-.2,.82,-7.08],offset:[9.6,14,25],scale:2.44},
@@ -304,7 +305,7 @@ const visibleLabels={
   dispatch:['feed','lng','exchange','trim','deep','liquid'],
   lng:['dock','lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
   feed:['feed'],compressor:['compressor'],trim:['trim','grid'],pump:['pump'],liquid:['liquid'],
-  flange:[],section:[],dock:['dock','lng'],openingDock:[],openingExchange:[],mechanical:['feed','deep'],bypass:['trim','pump'],
+  flange:[],section:[],dock:['dock','lng'],openingApproach:[],openingDock:[],openingExchange:[],mechanical:['feed','deep'],bypass:['trim','pump'],
 };
 
 function createRenderer(scene) {
@@ -490,7 +491,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       const focused=trace==='both'||trace===circuit.fluid;
       const shared=routes.c.includes(circuit)||circuit===dockFlow;
       const highlighted=focused&&(!comparing||!shared);
-      const unloading=circuit!==dockFlow||active==='dock'||active==='openingDock';
+      const unloading=circuit!==dockFlow||active==='dock'||active==='openingApproach'||active==='openingDock';
       const starved=available<=0&&circuit.fluid==='lng'&&routes.a.includes(circuit);
       circuit.glow.visible=flow&&highlighted&&unloading&&!starved;
       circuit.arrows.visible=circuit.glow.visible;
