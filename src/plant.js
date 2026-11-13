@@ -6,6 +6,7 @@ import { addHarbor } from './harbor.js';
 import { detailBerth, detailCarrier } from './berth-details.js';
 import { detailProcessYard } from './yard-details.js';
 import { addQuayWeathering } from './quay-weathering.js';
+import { finishCarrier } from './carrier-finish.js';
 import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
@@ -21,7 +22,7 @@ function pick(g,id,x,y,z,w,h,d){
   o.userData.equipment=id;
   return o;
 }
-function ship(g){
+function ship(g, webgl){
   const k=group(g,11.3,-.34,14.95);
   const hullPaint = material(0x1c3345, .10, .47);
   const antifouling = material(0x8e3c33, .04, .67);
@@ -33,9 +34,10 @@ function ship(g){
   hull.quadraticCurveTo(8.32,1.17,5.9,1.37);hull.lineTo(-8.7,1.37);hull.quadraticCurveTo(-9.3,1.05,-9.32,0);hull.quadraticCurveTo(-9.3,-1.05,-8.7,-1.37);
   const lower=mesh(k,new T.ExtrudeGeometry(hull,{depth:.52,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.065,bevelThickness:.06,curveSegments:18}),antifouling,0,-.81,0);
   lower.rotation.x=-Math.PI/2;
-  const h=mesh(k,new T.ExtrudeGeometry(hull,{depth:1.0,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.10,bevelThickness:.11,curveSegments:18}),hullPaint,0,-.34,0);
+  const h=mesh(k,new T.ExtrudeGeometry(hull,{depth:1.0,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.10,bevelThickness:.11,curveSegments:18}),hullPaint.clone(),0,-.34,0);
   h.rotation.x=-Math.PI/2;h.renderOrder=1;h.castShadow=true;
-  const deck=mesh(k,new T.ShapeGeometry(hull,18),deckPaint,0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
+  const deck=mesh(k,new T.ShapeGeometry(hull,18),deckPaint.clone(),0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
+  if (webgl) finishCarrier(h, deck);
   bevelBox(k,-7.12,1.40,0,2.38,1.23,2.36,.07,offWhite);
   bevelBox(k,-7.08,2.15,0,2.48,.28,2.56,.065,offWhite);
   box(k,-5.861,2.12,0,.035,.135,2.14,bridgeGlass);
@@ -193,7 +195,7 @@ function terminal(scene, webgl){
     for(const z of [-3.45,3.65]){box(g,x,.48,z,.11,.95,.11,steel);box(g,x,.08,z,.34,.17,.38,trim);}
     box(g,x,.93,.10,.12,.12,7.22,trim);
   }
-  const carrier = ship(g);
+  const carrier = ship(g, webgl);
   const arm=group(g,14.4,0,10.82);
   const armPoints=[v(0,.32,0),v(0,3.25,0),v(0,4.23,.84),v(0,3.15,2.26),v(0,1.76,2.78)];
   loadingArm(arm, armPoints);
