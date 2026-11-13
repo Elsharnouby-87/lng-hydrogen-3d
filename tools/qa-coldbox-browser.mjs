@@ -121,7 +121,13 @@ try {
     if (berthVisible) break;
     await sleep(250);
   }
-  assert.ok(berthVisible, 'The LNG chapter needs a visible berth hotspot');
+  const berthState = await evalJS(`(() => {
+    const button = document.querySelector('[data-equipment=dock]');
+    return { chapter: document.querySelector('#chapters [aria-current]')?.dataset.chapter,
+      renderer: document.querySelector('#model').dataset.renderer, left: button.style.left, top: button.style.top,
+      visibleLabels: [...document.querySelectorAll('.hotspot:not([hidden])')].map(label => label.dataset.equipment) };
+  })()`);
+  assert.ok(berthVisible, 'The LNG chapter needs a visible berth hotspot: ' + JSON.stringify(berthState));
   await captureHarbor('receiving');
   await evalJS("document.querySelector('[data-equipment=dock]').click()");
   await sleep(1150);

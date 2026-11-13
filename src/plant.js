@@ -651,7 +651,10 @@ export function createPlant(target, labelLayer, choose, reduced){
     // camera gestures and control changes still paint at the next frame.
     if (compact && !redraw && now - lastPaint < 30) return;
     lastPaint = now;
-    if (redraw) placeLabels();
+    if (redraw) {
+      camera.updateMatrixWorld();
+      placeLabels();
+    }
     if(flow){
       inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
