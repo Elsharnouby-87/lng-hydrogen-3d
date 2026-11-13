@@ -1,5 +1,7 @@
 import * as T from 'three';
-import { box, boxes, group, material, mesh } from './plant-geometry.js';
+import { bevelBox, box, boxes, cyl, group, material, mesh, rail } from './plant-geometry.js';
+
+import { quayConcrete, quayCoping, yardAsphalt } from './plant-finishes.js';
 
 export const harborSky = 0x8eafbe;
 
@@ -11,7 +13,11 @@ const bank = [
 
 function surface(parent, outline, height, finish) {
   const shape = new T.Shape(outline.map(([x, z]) => new T.Vector2(x, -z)));
-  const surface = mesh(parent, new T.ShapeGeometry(shape), finish, 0, height, 0);
+  const geometry = new T.ShapeGeometry(shape);
+  const position = geometry.attributes.position;
+  const uv = geometry.attributes.uv;
+  for (let i = 0; i < position.count; i++) uv.setXY(i, position.getX(i), position.getY(i));
+  const surface = mesh(parent, geometry, finish, 0, height, 0);
   surface.rotation.x = -Math.PI / 2;
   return surface;
 }
@@ -19,18 +25,17 @@ function surface(parent, outline, height, finish) {
 export function addHarbor(scene, webgl) {
   const shore = group(scene);
   const embankment = material(0x9fa5a0, 0, 1);
-  const concrete = material(0xaeb4b1, 0, .96);
-  const asphalt = material(0x747f83, 0, .97);
+
   const markings = material(0xd6d7cc, 0, .94);
   const paving = material(0x9aa6a7, 0, .93);
   const fenders = material(0x52666f, 0, .88);
 
   surface(shore, bank, -.73, embankment);
-  surface(shore, bank.map(([x, z]) => [x, z - .8]), -.41, concrete);
-  surface(shore, bank.map(([x, z]) => [x, z - 1.7]), -.24, concrete);
-  box(shore, 0, -.30, -12.9, 45.12, .45, 4.50, concrete).castShadow = false;
-  box(shore, -4.9, -.095, -26, 5.1, .15, 30.4, asphalt).castShadow = false;
-  box(shore, -3, -.108, -21.4, 55, .16, 4.6, asphalt).castShadow = false;
+  surface(shore, bank.map(([x, z]) => [x, z - .8]), -.41, quayConcrete);
+  surface(shore, bank.map(([x, z]) => [x, z - 1.7]), -.24, quayConcrete);
+  box(shore, 0, -.30, -12.9, 45.12, .45, 4.50, quayCoping).castShadow = false;
+  surface(shore, [[-7.45,-10.68],[-2.35,-10.68],[-2.35,-41.2],[-7.45,-41.2]], -.02, yardAsphalt);
+  surface(shore, [[-30.5,-19.1],[24.5,-19.1],[24.5,-23.7],[-30.5,-23.7]], -.033, yardAsphalt);
   boxes(shore, markings, Array.from({ length: 20 }, (_, i) =>
     [i * 2.66 - 28, -.019, -21.4, 1.19, .012, .064]));
   boxes(shore, markings, [-12.9, -15, -17.1, -25, -27.1, -29.2, -31.3, -33.4].map(z =>
@@ -54,6 +59,47 @@ export function addHarbor(scene, webgl) {
     box(shore, x, 1.06, z, width + .26, .16, depth + .24, roofs);
     box(shore, x + width * .27, .35, z + depth / 2, .83, .75, .052, fenders);
   }
+
+  const stoneFinishes = [0x9c9787, 0xaaa394, 0x888979, 0xb1a896].map(color => material(color, 0, .98));
+  const rock = new T.DodecahedronGeometry(1, 0);
+  const transform = new T.Object3D();
+  const pieces = stoneFinishes.map(() => []);
+  for (const [a, b] of [[bank[2], bank[3]], [bank[3], bank[4]], [bank[5], bank[6]], [bank[6], bank[7]]]) {
+    const edge = new T.Vector2(b[0] - a[0], b[1] - a[1]);
+    const count = Math.round(edge.length() * 2.4);
+    for (let i = 0; i < count; i++) {
+      const t = i / count;
+      for (let row = 0; row < 2; row++) {
+        const seed = i * 2 + row;
+        pieces[seed % pieces.length].push([
+          a[0] + t * edge.x + Math.sin(seed * 4.31) * .22,
+          -.82 + row * .24 + Math.cos(seed * 5.16) * .10,
+          a[1] + t * edge.y - row * .34 + Math.sin(seed * 6.12) * .28,
+          seed,
+        ]);
+      }
+    }
+  }
+  for (const [index, positions] of pieces.entries()) {
+    const stones = new T.InstancedMesh(rock, stoneFinishes[index], positions.length);
+    stones.receiveShadow = true;
+    for (const [i, [x, y, z, seed]] of positions.entries()) {
+      transform.position.set(x, y, z);
+      transform.rotation.set(.4 + Math.sin(seed), seed * 2.4, Math.cos(seed));
+      transform.scale.set(.45 + .10 * Math.sin(seed), .31, .38 + .07 * Math.cos(seed));
+      transform.updateMatrix();
+      stones.setMatrixAt(i, transform.matrix);
+    }
+    shore.add(stones);
+  }
+  const gate = group(shore, -8.4, 0, -13.9);
+  bevelBox(gate, 0, .51, 0, 1.25, 1.12, 1.42, .035, walls);
+  box(gate, 0, 1.11, 0, 1.50, .11, 1.63, roofs);
+  box(gate, .635, .75, 0, .045, .40, .94, fenders);
+  box(gate, 0, .72, .721, .89, .37, .03, fenders);
+  for (const x of [1.2, 5.82]) cyl(gate, x, .28, .95, .061, .56, fenders, 'y', true);
+  rail(shore, -20, -14.45, -11.5, -14.45, -.05);
+  rail(shore, 1.2, -14.60, 19.0, -14.60, -.05);
 
   if (!webgl) return null;
   const water = new T.ShaderMaterial({
@@ -82,9 +128,11 @@ export function addHarbor(scene, webgl) {
         vec2 berth = max(abs(p - vec2(11.35, 14.95)) - vec2(8.9, 1.1), 0.);
         float hull = exp(-length(berth) * 1.5);
         float variation = .5 + .5 * sin(p.x * .069 + p.y * .105 + .64 * swell);
-        vec3 color = mix(vec3(.303, .461, .552), vec3(.558, .686, .730), .15 + sky * .62 + variation * .17);
-        color += (swell * .013 + crosswave * .009 + capillary * .003 + sheen * .09) * vec3(.70, .90, 1.);
-        color = mix(color, vec3(.298, .413, .463), quay * .36 + hull * .32);
+        vec3 color = mix(vec3(.233, .405, .469), vec3(.565, .701, .737), .16 + sky * .58 + variation * .14);
+        color += (swell * .016 + crosswave * .009 + capillary * .004 + sheen * .14) * vec3(.70, .90, 1.);
+        color = mix(color, vec3(.234, .343, .368), quay * .34 + hull * .45);
+        float shoreline = exp(-abs(p.y - 10.88 + swell * .07) * 8.) * (1. - smoothstep(22., 22.6, abs(p.x)));
+        color += shoreline * (.023 + .013 * crosswave);
         gl_FragColor = vec4(color, 1.);
       }`,
   });

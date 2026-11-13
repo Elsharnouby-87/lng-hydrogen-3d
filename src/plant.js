@@ -1,12 +1,12 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { applySurfaceFinishes, machinedStainless, setDaylightEnvironment } from './plant-finishes.js';
 import { softwareRenderer } from './software.js';
 import { addHarbor, harborSky } from './harbor.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
 import {
-  BLUE, MINT, applySurfaceFinishes, batchStaticMeshes, blue, box, boxes, cyl, dark, flange, gold,
+  BLUE, MINT, batchStaticMeshes, bevelBox, blue, box, boxes, cyl, dark, flange, gold,
   group, ice, material, mesh, mint, mutedPipe, pad, pipeBlue, pipeMint, pipePath,
   pipeTube, rail, road, seaWall, segment, slab, sphere, steel, trim, v, white,
 } from './plant-geometry.js';
@@ -19,26 +19,46 @@ function pick(g,id,x,y,z,w,h,d){
 }
 function ship(g){
   const k=group(g,11.3,-.34,14.95);
+  const hullPaint = material(0x1c3345, .10, .47);
+  const antifouling = material(0x8e3c33, .04, .67);
+  const deckPaint = material(0x53635b, .06, .80);
+  const bridgeGlass = material(0x284c5b, .26, .25);
+  const offWhite = material(0xe0ded0, .05, .52);
   const hull=new T.Shape();
   hull.moveTo(-8.7,-1.37);hull.lineTo(5.9,-1.37);hull.quadraticCurveTo(8.3,-1.17,9.55,0);
   hull.quadraticCurveTo(8.32,1.17,5.9,1.37);hull.lineTo(-8.7,1.37);hull.quadraticCurveTo(-9.3,1.05,-9.32,0);hull.quadraticCurveTo(-9.3,-1.05,-8.7,-1.37);
-  const lower=mesh(k,new T.ExtrudeGeometry(hull,{depth:.52,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.065,bevelThickness:.06,curveSegments:18}),material(0x783c35,.26,.58),0,-.81,0);
+  const lower=mesh(k,new T.ExtrudeGeometry(hull,{depth:.52,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.065,bevelThickness:.06,curveSegments:18}),antifouling,0,-.81,0);
   lower.rotation.x=-Math.PI/2;
-  const h=mesh(k,new T.ExtrudeGeometry(hull,{depth:1.0,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.10,bevelThickness:.11,curveSegments:18}),material(0x22374b,.35,.49),0,-.34,0);
+  const h=mesh(k,new T.ExtrudeGeometry(hull,{depth:1.0,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.10,bevelThickness:.11,curveSegments:18}),hullPaint,0,-.34,0);
   h.rotation.x=-Math.PI/2;h.renderOrder=1;h.castShadow=true;
-  const deck=mesh(k,new T.ShapeGeometry(hull,18),material(0x536b62,.15,.72),0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
-  box(k,-7.12,1.42,0,2.35,1.24,2.38,ice);box(k,-7.15,2.17,0,2.45,.30,2.52,ice);box(k,-6.03,2.16,0,.055,.16,2.23,trim);
+  const deck=mesh(k,new T.ShapeGeometry(hull,18),deckPaint,0,.78,0);deck.rotation.x=-Math.PI/2;deck.renderOrder=1;
+  bevelBox(k,-7.12,1.40,0,2.38,1.23,2.36,.07,offWhite);
+  bevelBox(k,-7.08,2.15,0,2.48,.28,2.56,.065,offWhite);
+  box(k,-5.861,2.12,0,.035,.135,2.14,bridgeGlass);
+  for (const z of [-.82,-.55,-.27,0,.27,.55,.82]) box(k,-5.84,2.12,z,.025,.137,.028,offWhite);
+  for (const z of [-1.16,1.16]) {
+    for (const y of [1.24,1.53]) {
+      boxes(k, bridgeGlass, [-7.77,-7.43,-7.09,-6.75,-6.41].map(x => [x,y,z,.17,.115,.034]));
+    }
+  }
   for(const z of [-1.204,1.204]){
     box(k,-7.16,1.83,z,1.74,.19,.045,trim);
     for(const x of [-7.68,-7.27,-6.86,-6.45])box(k,x,1.83,z,.045,.16,.050,steel);
   }
-  box(k,-7.93,2.43,0,.36,.36,.44,trim);
+  bevelBox(k,-8.08,2.49,0,.44,.54,.61,.064,hullPaint);
+  box(k,-8.08,2.79,0,.45,.058,.63,trim);
+  for (const z of [-.14,.14]) cyl(k,-8.06,2.87,z,.062,.15,dark,'y',true);
+  box(k,-7.23,2.34,-.71,.65,.09,.48,deckPaint);
   box(k,-7.92,2.62,0,.40,.065,.49,steel);
   cyl(k,-7.3,2.77,0,.057,1,steel);box(k,-7.28,3.21,0,.74,.06,.09,ice);
   for(const x of [-4.5,-1.2,2.1,5.4]){
     cyl(k,x,.92,0,1.22,.3,trim);sphere(k,x,1.04,0,1.13,1.00,1.13,ice);
     cyl(k,x,1.07,0,1.146,.042,steel);cyl(k,x,2.07,0,.11,.19,trim);
     for(const z of [-.97,.97])box(k,x,.84,z,.53,.068,.29,steel);
+    for (const z of [-1.09,1.09]) {
+      box(k,x-.12,1.04,z,.50,.068,.20,trim);
+      cyl(k,x+.22,1.07,z,.067,.37,machinedStainless,'x',true);
+    }
   }
   for(const z of [-1.26,1.26]){
     rail(k,-8,z,6.9,z,.82);
@@ -51,6 +71,17 @@ function ship(g){
   box(k,3.09,.99,-1.04,1.18,.31,.31,steel);
   for(const x of [2.75,3.18,3.54])cyl(k,x,1.19,-1.04,.083,.14,mint,'y',true);
   for(const x of [-8.5,7.2])cyl(k,x,.92,0,.13,.3,trim);
+  for (const z of [-.67,.67]) {
+    cyl(k,7.83,.96,z,.155,.20,machinedStainless,'y',true);
+    cyl(k,7.83,1.09,z,.188,.075,trim,'y',true);
+    segment(k,v(7.83,.91,z),v(8.84,.72,z*.69),.028,dark);
+    cyl(k,-5.40,1.00,z*1.33,.103,.32,offWhite,'x',true);
+  }
+  for (const z of [-1.10,1.10]) {
+    for (const x of [-5.60,-2.42,.86,4.16,6.64]) {
+      box(k,x,.845,z,.54,.016,.034,white);
+    }
+  }
   for(const x of [-8.28,7.05]){
     segment(g,v(11.3+x,.62,13.78),v(11.3+x+(x<0?-1.04:1.12),.15,12.37),.023,dark);
   }
@@ -76,19 +107,30 @@ function ground(scene){
   }
   for(const x of [-21.8,21.8])box(g,x,-.025,0,.047,.026,19,white);
   for(let x=-21.7;x<=21.7;x+=1.4){
-    box(g,x,-.14,10.96,.28,.25,.30,trim);
-    box(g,x,-.92,10.94,.38,.80,.31,trim);
+    box(g,x,-.17,10.96,.23,.19,.27,steel);
+    box(g,x,-.74,10.97,.36,.70,.26,dark);
+    box(g,x,-.65,11.13,.42,.45,.095,trim);
   }
+  for (let x = -21.6; x <= 21.6; x += 2.4) {
+    box(g,x,-.71,10.862,.035,.79,.023,seaWall);
+  }
+  box(g,0,-.075,10.74,44.7,.18,.27,slab);
+  box(g,0,-.97,10.865,44.7,.055,.045,seaWall);
   box(g,10.4,-.13,11.83,16.8,.41,1.88,slab).renderOrder=2;
   for(const x of [3.3,6.8,11.2,15.5,18.1]){
     box(g,x,-.38,12.83,.46,.68,.19,dark);
-    cyl(g,x,.14,12.47,.10,.19,gold,'y',true);
+    cyl(g,x,.14,12.47,.105,.19,trim,'y',true);
+    cyl(g,x,.235,12.47,.148,.067,gold,'y',true);
+    box(g,x,-.57,12.96,.38,.31,.11,dark);
   }
   for(const x of [5.0,9.4,13.7,17.8]){
     box(g,x,.085,11.87,1.24,.032,.15,white);
     box(g,x,.124,12.22,.26,.13,.23,trim);
   }
-  for(const x of [3.2,7,11,15,18])cyl(g,x,-.89,12.35,.14,1.1,trim,'y',true);
+  for(const x of [3.2,7,11,15,18]){
+    for (const z of [11.28,12.42]) cyl(g,x,-.86,z,.15,1.15,seaWall,'y',true);
+    box(g,x,-.395,11.83,.37,.20,1.79,trim);
+  }
   rail(g,-21.2,-10.1,-7.5,-10.1,-.02);
   rail(g,-2.3,-10.1,21.2,-10.1,-.02);
   rail(g,-21.5,10,-5.8,10,-.02);
@@ -258,16 +300,8 @@ function createRenderer(scene) {
       renderer = new T.WebGLRenderer({ canvas, context, antialias: true });
       renderer.outputColorSpace = T.SRGBColorSpace;
       renderer.toneMapping = T.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.12;
-      const environment = new RoomEnvironment();
-      const pmrem = new T.PMREMGenerator(renderer);
-      try {
-        scene.environment = pmrem.fromScene(environment, .06).texture;
-        scene.environmentIntensity = .76;
-      } finally {
-        environment.dispose();
-        pmrem.dispose();
-      }
+      renderer.toneMappingExposure = 1.04;
+      setDaylightEnvironment(scene, renderer);
       return { renderer, kind: 'webgl' };
     }
   } catch (error) {
@@ -284,16 +318,16 @@ export function createPlant(target, labelLayer, choose, reduced){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
   renderer.domElement.setAttribute('aria-label','Interactive 3D plant. Drag to orbit and scroll or pinch to zoom.');
   target.appendChild(renderer.domElement);
-  const ambient=new T.HemisphereLight(0xe6f2ff,0x6f7e87,1.26);scene.add(ambient);
-  const key=new T.DirectionalLight(0xffead4,2.65);key.position.set(-23,32,14);scene.add(key);
-  const fill=new T.DirectionalLight(0xaad9ff,1.19);fill.position.set(10,13,-26);scene.add(fill);
+  const ambient=new T.HemisphereLight(0xe5eef8,0x867c6e,.88);scene.add(ambient);
+  const key=new T.DirectionalLight(0xffeedb,2.35);key.position.set(-26,31,15);scene.add(key);
+  const fill=new T.DirectionalLight(0xcbdff1,.50);fill.position.set(10,13,-26);scene.add(fill);
   const shadows = kind === 'webgl' ? renderer.shadowMap : null;
   if (shadows) {
-    applySurfaceFinishes();
+    applySurfaceFinishes(renderer, () => { redraw = true; });
     renderer.localClippingEnabled = true;
     shadows.enabled = true;
     shadows.autoUpdate = false;
-    shadows.type = T.PCFShadowMap;
+    shadows.type = T.PCFSoftShadowMap;
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
     Object.assign(key.shadow.camera, { left: -29, right: 29, top: 23, bottom: -23, near: 4, far: 85 });

@@ -1,3 +1,4 @@
+import { brushedAluminium, insulatedCladding, machinedStainless, paintedEnclosure } from './plant-finishes.js';
 import { addLNGTankDetail } from './ultimate-detail.js';
 import { createAdvancedColdBox } from './coldbox-assembly.js';
 import {
@@ -15,12 +16,12 @@ import {
 import layout from './precooler-layout.json';
 import { addPrecoolerPassages, addPrecoolerRisers, fluidAt, lanePositions, layerY, riserSpan } from './precooler-flow.js';
 
-const paintedSteel = material(0xb9c3c6, .25, .58);
-const cladding = material(0x9cacb3, .62, .44);
-const fins = material(0x647682, .72, .42);
+const paintedSteel = material(0xc8cecb, .06, .57);
+const cladding = insulatedCladding;
+const fins = material(0x889198, .69, .51);
 const motorPaint = material(0x334c65, .34, .48);
-const finBlue = material(0x4f829d, .63, .38);
-const finMint = material(0x438f78, .56, .41);
+const finBlue = material(0x577c8d, .52, .50);
+const finMint = material(0x568071, .52, .50);
 const serviceYellow = material(0xd3a249, .21, .56);
 
 function instrument(g, x, y, z, scale = 1) {
@@ -59,7 +60,7 @@ export function tank(parent, x, z, radius, height, accent, tag) {
   cyl(g, 0, rimY, 0, radius + .031, .068, steel);
   cyl(g, 0, .37, 0, radius + .013, .078, trim);
   cyl(g, 0, .67, 0, radius + .019, .12, accent);
-  for (const share of [.32, .63, .85]) cyl(g, 0, wallBase + height * share, 0, radius + .009, .023, cladding);
+  for (const share of [.27, .51, .74, .91]) cyl(g, 0, wallBase + height * share, 0, radius + .009, .019, cladding);
   for (let i = 0; i < 12; i++) {
     const a = i * Math.PI / 6;
     const seam = box(g, Math.cos(a) * (radius + .007), wallBase + height * .53, Math.sin(a) * (radius + .007), .027, height * .71, .013, cladding);
@@ -159,14 +160,20 @@ export function exchanger(g) {
   }
   box(k, 0, .86, 0, 7.04, .20, 3.92, trim);
   const casing = group(k), core = group(k), stack = [];
-  bevelBox(casing, 0, 1.96, 0, 6.85, 2.04, 3.51, .077, paintedSteel);
+  bevelBox(casing, 0, 1.96, 0, 6.85, 2.04, 3.51, .077, paintedEnclosure);
   box(casing, 0, 3.014, 0, 6.99, .123, 3.63, cladding);
   const roofRibs = [];
   for (let i = 0; i < 12; i++) roofRibs.push([(i - 5.5) * .56, 3.104, 0, .067, .091, 3.49]);
   boxes(casing, steel, roofRibs);
   for (const z of [-1.767, 1.767]) {
-    for (let i = 0; i < 6; i++) box(casing, (i - 2.5) * 1.115, 1.95, z, 1.052, 1.82, .046, cladding);
-    for (const y of [1.03, 2.87]) box(casing, 0, y, z + .03 * Math.sign(z), 6.81, .105, .077, steel);
+    for (let i = 0; i < 6; i++) {
+      const x = (i - 2.5) * 1.115;
+      box(casing, x, 1.95, z, 1.074, 1.82, .046, cladding);
+      for (const dx of [-.49,.49]) for (const y of [1.14,1.94,2.76]) {
+        cyl(casing, x + dx, y, z + .025 * Math.sign(z), .018, .014, machinedStainless, 'z', true);
+      }
+    }
+    for (const y of [1.03, 2.87]) box(casing, 0, y, z + .03 * Math.sign(z), 6.81, .105, .077, brushedAluminium);
   }
   bevelBox(casing, -.86, 1.63, 1.808, 1.06, 1.30, .065, .025, paintedSteel);
   for (const y of [1.30, 1.92]) box(casing, -.47, y, 1.851, .087, .133, .057, trim);
@@ -178,7 +185,7 @@ export function exchanger(g) {
     const fluid = fluidAt(index);
     const passageFinish = fluid === 'h2' ? finBlue : finMint;
     const { portZ } = riserSpan(fluid);
-    bevelBox(layer, 0, .014, 0, 6.47, .087, 3.03, .021, steel);
+    bevelBox(layer, 0, .014, 0, 6.47, .087, 3.03, .021, brushedAluminium);
     for (const edge of [-1, 1]) box(layer, 0, .14, edge * 1.46, 6.41, .193, .106, cladding);
     boxes(layer, fins, lanePositions.map(z => [0,.131,z+.049,4.93,.135,.027]));
     boxes(channel, passageFinish, lanePositions.map(z => [0,.075,z,4.93,.027,.064]));
@@ -187,8 +194,10 @@ export function exchanger(g) {
       box(layer, x, .079, 0, .44, .056, 2.79, cladding);
       box(layer, x + side * .22, .144, 0, .046, .16, 2.79, steel);
       box(channel, x, .112, 0, .36, .023, 2.70, passageFinish);
+      boxes(layer, brushedAluminium, lanePositions.map(z =>
+        [x - side * .118, .148, z + .049, .22, .061, .020]));
       box(layer, side * (layout.headerX + layout.riserX) / 2, layout.flowY, portZ,
-        layout.riserX - layout.headerX, .098, .19, steel);
+        layout.riserX - layout.headerX, .098, .19, machinedStainless);
     }
     stack.push({ layer, channel, base, fluid, flow, animate: addPrecoolerPassages(flow, fluid) });
   }
@@ -203,24 +212,31 @@ export function exchanger(g) {
     for (const fluid of ['h2', 'lng']) {
       const { portZ, top, bottom } = riserSpan(fluid);
       bevelBox(headers, side * layout.riserX, (top + bottom) / 2, portZ,
-        .20, top - bottom + .14, .27, .018, steel);
+        .23, top - bottom + .14, .33, .05, brushedAluminium);
     }
     bevelBox(headers, x, 1.93, 0, .25, 2.00, 3.58, .035, cladding);
     for (const z of [-1.02, 1.02]) {
-      sphere(headers, x + side * .025, 1.58, z, .36, .52, .51, steel);
-      cyl(headers, x + side * .255, 1.38, z, .28, .36, steel, 'x');
-      flange(headers, side * 3.86, 1.38, z, .41, 'x', steel, 10);
+      sphere(headers, x + side * .045, layout.nozzleY + .09, z, .36, .44, .47, brushedAluminium);
+      cyl(headers, side * 3.64, layout.nozzleY, z, .25, .42, machinedStainless, 'x');
+      cyl(headers, side * 3.77, layout.nozzleY, z, .316, .048, brushedAluminium, 'x');
+      flange(headers, side * 3.82, layout.nozzleY, z, .41, 'x', machinedStainless, 10);
+      cyl(headers, side * 3.884, layout.nozzleY, z, .365, .020, dark, 'x');
+      cyl(headers, side * 3.903, layout.nozzleY, z, .367, .022, machinedStainless, 'x');
     }
   }
   return { casing, core, stack, headers, risers };
 }
 
 export function loadingArm(g, points) {
-  box(g, 0, .15, 0, 1.10, .29, 1.08, trim);
+  const armPaint = material(0x52636e, .10, .55);
+  bevelBox(g, 0, .15, 0, 1.10, .29, 1.08, .035, trim);
+  for (const x of [-.42,.42]) for (const z of [-.40,.40]) {
+    cyl(g,x,.313,z,.058,.044,machinedStainless,'y',true);
+  }
   cyl(g, 0, .34, 0, .31, .37, steel);
   flange(g, 0, .45, 0, .35, 'y', steel, 10);
   for (let index = 1; index < points.length; index++) {
-    segment(g, points[index - 1], points[index], .091, steel);
+    segment(g, points[index - 1], points[index], .091, machinedStainless);
   }
   for (const p of points.slice(1, -1)) {
     cyl(g, p.x, p.y, p.z, .193, .26, gold, 'x');
@@ -229,6 +245,10 @@ export function loadingArm(g, points) {
   const p = points[1], crown = points[2];
   segment(g, v(.27, 1.67, 0), v(.27, crown.y - .36, crown.z - .12), .055, steel);
   segment(g, v(.27, p.y, p.z), v(.27, crown.y, -.64), .071, trim);
-  bevelBox(g, .27, crown.y - .03, -.62, .32, .34, .45, .042, trim);
+  bevelBox(g, .27, crown.y - .03, -.62, .32, .34, .45, .042, armPaint);
+  box(g, .32, 1.24, -.33, .36, .46, .27, armPaint);
+  segment(g, v(-.19,.60,-.14),v(-.19,2.61,-.14),.026,dark);
+  segment(g, v(-.19,2.61,-.14),v(-.15,3.22,.02),.026,dark);
+  for (const y of [.92,1.35,1.78,2.22,2.63]) box(g,-.105,y,-.075,.18,.049,.22,trim);
   nozzle(g, 0, points.at(-1).y, points.at(-1).z, .158, .21, 'z', mint);
 }

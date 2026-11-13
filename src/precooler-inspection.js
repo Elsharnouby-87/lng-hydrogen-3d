@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { group, steel } from './plant-geometry.js';
+import { group } from './plant-geometry.js';
+import { brushedAluminium, insulatedCladding, machinedStainless } from './plant-finishes.js';
 import layout from './precooler-layout.json';
 import { addPrecoolerPassages, addPrecoolerRisers, fluidAt, layerY } from './precooler-flow.js';
 
@@ -69,7 +70,14 @@ export function createPrecoolerInspection(parent, fallback, invalidate) {
         model.traverse(node => {
           if (!node.isMesh) return;
           node.material = clip(node.material.clone());
-          if (/aluminium|stainless/i.test(node.material.name)) node.material.roughnessMap = steel.roughnessMap;
+          const finish = /stainless/i.test(node.material.name) ? machinedStainless :
+            /aluminium/i.test(node.material.name) ? brushedAluminium :
+            /cladding/i.test(node.material.name) ? insulatedCladding : null;
+          if (finish && node.geometry.hasAttribute('uv')) {
+            node.material.normalMap = finish.normalMap;
+            node.material.normalScale.copy(finish.normalScale);
+            node.material.roughnessMap = finish.roughnessMap;
+          }
           node.receiveShadow = true;
         });
         assembly.add(model);

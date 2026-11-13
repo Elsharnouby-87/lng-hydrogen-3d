@@ -19,10 +19,10 @@ def material(name, color, metal, roughness):
     shader.inputs["Roughness"].default_value = roughness
     return mat
 
-aluminium = material("Brushed aluminium", (.55, .62, .67), .83, .29)
-steel = material("Machined stainless", (.40, .45, .49), .91, .23)
-housing = material("Insulated cladding", (.33, .41, .46), .51, .43)
-frame = material("Coated steel", (.045, .075, .095), .50, .48)
+aluminium = material("Brushed aluminium", (.52, .55, .56), .77, .38)
+steel = material("Machined stainless", (.58, .60, .61), .89, .34)
+housing = material("Insulated cladding", (.39, .44, .46), .28, .47)
+frame = material("Coated steel", (.065, .092, .111), .16, .54)
 seal = material("Gasket", (.029, .039, .045), .1, .76)
 blue = material("Hydrogen identification", (.024, .29, .53), .45, .34)
 green = material("LNG identification", (.019, .35, .24), .45, .38)
@@ -55,6 +55,27 @@ def cylinder(group, mat, x, y, z, radius, length, sides=24, bevel=0):
     )
     finish(bpy.context.object, group, mat, bevel, smooth=sides > 8)
 
+def annulus(group, mat, x, y, z, outer, inner, thickness):
+    sides = 48
+    vertices = []
+    for dx, radius in [(-thickness/2, outer), (thickness/2, outer),
+                       (-thickness/2, inner), (thickness/2, inner)]:
+        for i in range(sides):
+            a = i * math.tau / sides
+            vertices.append((x+dx, -z+math.cos(a)*radius, y+math.sin(a)*radius))
+    faces = []
+    for a, b in [(0, 1), (1, 3), (3, 2), (2, 0)]:
+        for i in range(sides):
+            j = (i+1) % sides
+            faces.append((a*sides+i, a*sides+j, b*sides+j, b*sides+i))
+    mesh = bpy.data.meshes.new("Bored flange")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new("Bored flange", mesh)
+    bpy.context.collection.objects.link(obj)
+    finish(obj, group, mat)
+
+
 # Cladding and access covers are a separate assembly so sectioning can expose the core.
 for side in [-1, 1]:
     for i in range(6):
@@ -62,6 +83,9 @@ for side in [-1, 1]:
         box("Shell", housing, x, 1.96, side * 1.75, 1.107, 1.93, .14, .018)
         for y in [1.08, 2.82]:
             box("Shell", steel, x, y, side * 1.829, 1.097, .039, .024, .006)
+        for dx in [-.48, .48]:
+            for y in [1.16, 1.95, 2.72]:
+                box("Shell", steel, x+dx, y, side*1.828, .029, .029, .019, .004)
     box("Shell", frame, 0, 2.975, side * 1.75, 6.82, .077, .16, .013)
 for i in range(6):
     x = (i - 2.5) * 1.12
@@ -75,16 +99,18 @@ for y in [1.31, 2.04]:
 for side in [-1, 1]:
     box("Headers", aluminium, side*3.30, 1.95, 0, .24, 1.99, 3.47, .056)
     for z in [-1.02, 1.02]:
-        cylinder("Headers", aluminium, side*3.50, 1.38, z, .30, .42, 32, .024)
-        cylinder("Headers", steel, side*3.76, 1.38, z, .405, .105, 36, .012)
-        cylinder("Headers", seal, side*3.818, 1.38, z, .352, .019, 32)
-        cylinder("Headers", steel, side*3.854, 1.38, z, .395, .060, 36, .007)
-        cylinder("Headers", blue if z < 0 else green, side*3.625, 1.38, z, .302, .043, 24)
+        annulus("Headers", aluminium, side*3.51, 1.38, z, .30, .178, .42)
+        annulus("Headers", steel, side*3.76, 1.38, z, .405, .181, .105)
+        annulus("Headers", seal, side*3.818, 1.38, z, .352, .181, .019)
+        annulus("Headers", steel, side*3.854, 1.38, z, .395, .181, .060)
+        annulus("Headers", aluminium, side*3.889, 1.38, z, .264, .181, .024)
         for i in range(10):
             a = i * math.tau / 10
             by, bz = 1.38 + math.sin(a)*.322, z + math.cos(a)*.322
-            cylinder("Headers", frame, side*3.899, by, bz, .032, .036, 6)
-            cylinder("Headers", steel, side*3.691, by, bz, .032, .036, 6)
+            cylinder("Headers", frame, side*3.798, by, bz, .016, .222, 12)
+            cylinder("Headers", steel, side*3.901, by, bz, .047, .015, 12)
+            cylinder("Headers", steel, side*3.920, by, bz, .034, .028, 6)
+            cylinder("Headers", steel, side*3.690, by, bz, .034, .036, 6)
 
 # Each circuit has separate end risers and rectangular distribution chambers.
 for side in [-1, 1]:
@@ -93,7 +119,7 @@ for side in [-1, 1]:
         last = max(i for i in range(layout["layers"]) if i % 2 == parity)
         high = layout["firstLayerY"] + last * layout["layerPitch"] + layout["flowY"]
         box("Headers", steel, side * layout["riserX"], (low+high)/2, port_z,
-            .20, high-low+.14, .27, .018)
+            .23, high-low+.14, .33, .050)
 
 # Representative alternating passages. The pitch is enlarged for inspection.
 for i in range(layout["layers"]):
@@ -113,6 +139,9 @@ for i in range(layout["layers"]):
         box("Core", aluminium, header, y+.077, 0, .44, .054, 2.79)
         box(group, fluid, header, y+.109, 0, .36, .023, 2.70)
         box("Core", aluminium, header+side*.22, y+.143, 0, .046, .150, 2.79)
+        for lane in range(layout["lanes"]):
+            z = (lane - (layout["lanes"] - 1)/2) * layout["lanePitch"]
+            box("Core", aluminium, header-side*.118, y+.148, z+.049, .22, .061, .020)
         box("Core", steel, side*(layout["headerX"]+layout["riserX"])/2,
             y+layout["flowY"], port_z, layout["riserX"]-layout["headerX"], .098, .19)
 
@@ -124,7 +153,15 @@ for (group, _), objects in parts.items():
     bpy.ops.object.join()
     obj = bpy.context.object
     obj.name = group
+    if group in {"Shell", "Core", "Headers"}:
+        uv = obj.data.uv_layers.active or obj.data.uv_layers.new(name="UVMap")
+        for polygon in obj.data.polygons:
+            axis = max(range(3), key=lambda i: abs(polygon.normal[i]))
+            u, v = [i for i in range(3) if i != axis]
+            for loop in polygon.loop_indices:
+                vertex = obj.matrix_world @ obj.data.vertices[obj.data.loops[loop].vertex_index].co
+                uv.data[loop].uv = (vertex[u], vertex[v])
     obj["assembly"] = group
 
 out = Path(sys.argv[sys.argv.index("--")+1]).resolve()
-bpy.ops.export_scene.gltf(filepath=str(out), export_format="GLB", export_extras=True, export_texcoords=False)
+bpy.ops.export_scene.gltf(filepath=str(out), export_format="GLB", export_extras=True, export_texcoords=True)

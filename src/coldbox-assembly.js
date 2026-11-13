@@ -1,3 +1,4 @@
+import { insulatedCladding, machinedStainless, paintedEnclosure } from './plant-finishes.js';
 import { addR101InteriorDetail } from './ultimate-detail.js';
 import * as T from 'three';
 import {
@@ -28,7 +29,6 @@ const h2Metal = material(0x7bacc5, .72, .34);
 const heMetal = material(0x7c8fae, .73, .35);
 const heAccent = material(0xa990ed, .36, .37);
 const h2Accent = material(0x45c5fd, .31, .35);
-const shellPaint = material(0x9eafb9, .56, .43);
 const coreRib = material(0x758b9d, .78, .35);
 const stiffener = material(0xc0cbd0, .78, .30);
 const catalyst = material(0xc6a064, .46, .44);
@@ -107,7 +107,7 @@ function exchanger(parent, x, code, serial) {
     box(root, x, level, z, w + .11, .11, d + .13, stiffener);
   }
   for (const side of [-1, 1]) {
-    box(root, x + side * .55, 1.79, z, .062, 1.61, d + .11, shellPaint);
+    box(root, x + side * .55, 1.79, z, .062, 1.61, d + .11, paintedEnclosure);
     for (const face of [-1, 1]) {
       box(root, x + side * .58, 1.75, z + face * .57, .095, 1.68, .075, steel);
     }
@@ -146,7 +146,7 @@ function expander(parent, x, name) {
   // Bolted compact turbine casing, split volute and accessible rotor.
   box(root, x, .57, z, .88, .18, .78, frameMetal);
   for (const s of [-1, 1]) box(root, x + s * .35, .76, z, .10, .28, .69, stiffener);
-  cyl(root, x, cy, z, .355, .83, shellPaint, 'x');
+  cyl(root, x, cy, z, .355, .83, paintedEnclosure, 'x');
   cyl(root, x + .435, cy, z, .315, .12, heMetal, 'x');
   cyl(root, x - .435, cy, z, .30, .12, heMetal, 'x');
   flange(root, x - .48, cy, z, .30, 'x', steel, 8);
@@ -190,16 +190,27 @@ function catalystBed(parent) {
 function exterior(parent) {
   const shell = group(parent);
   shell.name='R-101 insulated casing';
-  bevelBox(shell, 0, 1.85, 0, 5.92, 2.70, 3.46, .064, shellPaint);
+  bevelBox(shell, 0, 1.85, 0, 5.92, 2.70, 3.46, .064, paintedEnclosure);
   box(shell,0,3.25,0,6.06,.13,3.60,trim);
   const ribs=[];
-  for(let i=0;i<15;i++) ribs.push([-2.74+i*.39,1.83,1.762,.049,2.33,.075]);
+  for (const z of [-1.755,1.755]) {
+    for (let i = 0; i < 8; i++) {
+      const x = -2.52 + i * .72;
+      box(shell, x, 1.91, z, .696, 2.39, .06, insulatedCladding);
+      ribs.push([x-.35,1.90,z,.043,2.38,.075]);
+    }
+  }
   boxes(shell,stiffener,ribs);
+  for (const z of [-1.79,1.79]) {
+    box(shell, 0, .70, z, 5.87, .13, .12, frameMetal);
+    box(shell, 0, 3.08, z, 5.87, .11, .12, frameMetal);
+  }
   for(const s of [-1,1]) {
     box(shell,s*2.93,1.85,1.74,.13,2.72,.13,steel);
     box(shell,s*2.93,1.85,-1.74,.13,2.72,.13,steel);
     box(shell,s*2.97,.75,0,.11,.38,3.49,trim);
-    flange(shell,s*3.11,1.38,0,.285,'x',steel,10);
+    flange(shell,s*3.11,1.38,0,.285,'x',machinedStainless,10);
+    cyl(shell,s*3.157,1.38,0,.243,.024,dark,'x');
     cyl(shell,s*3.18,1.38,0,.145,.26,h2Metal,'x');
   }
   // Two dedicated helium ports (supply and return), separate from H2.
@@ -212,6 +223,11 @@ function exterior(parent) {
     box(shell,xx,3.26,1.746,.28,.08,.12,stiffener);
   }
   bevelBox(shell,-1.86,1.60,1.79,.94,1.30,.06,.02,coreRib);
+  for (const x of [-2.65,2.65]) {
+    bevelBox(shell, x, 3.35, 1.26, .28, .14, .32, .029, stiffener);
+    cyl(shell, x, 3.43, 1.26, .093, .055, frameMetal, 'z', true);
+  }
+  for (const y of [1.24,1.96]) box(shell, -1.45, y, 1.835, .115, .046, .036, machinedStainless);
   nameplate(shell,'R-101 / CRYOGENIC COLD BOX', .67,2.43,1.785,2.76,.27,'#bbdfff');
   return shell;
 }

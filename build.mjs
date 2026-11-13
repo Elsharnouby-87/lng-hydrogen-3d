@@ -6,6 +6,13 @@ const path = (relative) => new URL(relative, import.meta.url);
 const read = (relative) => readFile(path(relative), 'utf8');
 
 const inspectionAsset = await readFile(path('src/assets/e101-inspection.glb.gz'));
+const finishFiles = [
+  'harbor-daylight.hdr', 'concrete-color.webp', 'concrete-normal.webp', 'concrete-roughness.webp',
+  'asphalt-color.webp', 'asphalt-normal.webp', 'asphalt-roughness.webp', 'metal-normal.webp', 'metal-roughness.webp',
+];
+const finishes = Object.fromEntries(await Promise.all(finishFiles.map(async (file) => [
+  file, (await readFile(path('src/assets/' + file))).toString('base64'),
+])));
 
 const [template, sceneStyle, mobileStyle, creditStyle, screeningStyle, screeningView, license, signatureFont, signatureLicense, bundle] = await Promise.all([
   read('src/template.html'),
@@ -26,7 +33,7 @@ const [template, sceneStyle, mobileStyle, creditStyle, screeningStyle, screening
     minify: true,
     write: false,
     legalComments: 'none',
-    define: { E101_ASSET: JSON.stringify(inspectionAsset.toString('base64')) },
+    define: { E101_ASSET: JSON.stringify(inspectionAsset.toString('base64')), PLANT_FINISHES: JSON.stringify(finishes) },
   }),
 ]);
 const { code: css } = await transform(`${sceneStyle}\n${mobileStyle}\n${creditStyle}\n${screeningStyle}`, { loader: 'css', minify: true });

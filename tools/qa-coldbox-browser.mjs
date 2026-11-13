@@ -106,6 +106,8 @@ try {
     const image = await send('Page.captureScreenshot', {format:'png',captureBeyondViewport:false});
     await writeFile(new URL('../docs/stage5-harbor-' + name + '.png', import.meta.url), Buffer.from(image.data,'base64'));
   }
+  assert.equal(await evalJS("document.querySelector('#model').dataset.renderer"),'webgl',
+    'Daylight and physical materials need to pass the WebGL renderer');
   await captureHarbor('overview');
   const location = "JSON.stringify(['lng','exchange'].map(id=>{const {left,top}=document.querySelector('[data-equipment='+id+']').style;return [left,top]}))";
   const initialLocation = await evalJS(location);
@@ -119,6 +121,18 @@ try {
   assert.equal(await evalJS("document.querySelector('#view-name').textContent"),'E-101 CUTAWAY');
   assert.equal(await evalJS("document.querySelector('[data-stream=both]').getAttribute('aria-pressed')"),'true');
   await captureHarbor('precooler');
+  await evalJS("document.querySelector('#e101-tour').click(); document.querySelector('#walk-next').click()");
+  for (let i = 0; i < 30; i++) {
+    if (await evalJS("document.querySelector('#model').dataset.inspectionModel === 'glb'")) break;
+    await sleep(200);
+  }
+  assert.equal(await evalJS("document.querySelector('#model').dataset.inspectionModel"),'glb');
+  await sleep(1000);
+  await captureHarbor('flange');
+  await evalJS("document.querySelector('#walk-next').click()");
+  await sleep(1000);
+  await captureHarbor('section');
+  await evalJS("document.querySelector('#walk-close').click()");
   await evalJS("document.querySelector('#open-show').click()");
   await sleep(2000);
   assert.equal(await evalJS("document.querySelector('#opener').hidden"),false);

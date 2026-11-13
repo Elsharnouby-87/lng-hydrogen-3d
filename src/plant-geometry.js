@@ -8,19 +8,19 @@ export const v = (x, y, z) => new T.Vector3(x, y, z);
 export const material = (color, metalness = .29, roughness = .54) =>
   new T.MeshStandardMaterial({ color, metalness, roughness });
 
-export const steel = material(0xabb9c2, .83, .32);
-export const ice = material(0xd6e0e3, .46, .43);
-export const trim = material(0x354756, .61, .53);
+export const steel = material(0xc3c7ca, .87, .39);
+export const ice = material(0xd3d9d9, .13, .50);
+export const trim = material(0x394653, .18, .52);
 export const dark = material(0x26333e, .36, .67);
-export const seaWall = material(0x596368, .04, .90);
-export const road = material(0x616d72, .02, .96);
-export const slab = material(0x8d9496, .04, .93);
+export const seaWall = material(0x7c7b70, .02, .93);
+export const road = material(0x7d8589, 0, .96);
+export const slab = material(0xa8a295, 0, .95);
 export const white = material(0xe6ddc7, .08, .70);
 export const blue = material(0x407b9b, .48, .42);
 export const mint = material(0x347e70, .43, .46);
 export const gold = material(0xc88d41, .38, .51);
-export const pipeBlue = material(0x608da5, .70, .39);
-export const pipeMint = material(0x518778, .67, .42);
+export const pipeBlue = material(0x6b8b9d, .36, .49);
+export const pipeMint = material(0x648b80, .36, .51);
 export const mutedPipe = material(0x52616c, .49, .56);
 
 const unitBox = new T.BoxGeometry(1, 1, 1);
@@ -220,49 +220,4 @@ export function nameplate(g, text, x, y, z, width, height, accent = '#adcbd8') {
   const face = mesh(g, new T.PlaneGeometry(width - .015, height - .012), plates.get(cacheKey), x, y, z + .014);
   face.receiveShadow = false;
   return frame;
-}
-
-function grain(directional) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  const image = ctx.createImageData(128, 128);
-  let seed = 248927;
-  const random = () => {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed / 4294967296;
-  };
-  for (let y = 0; y < 128; y++) {
-    const streak = directional ? (random() - .5) * 75 : 0;
-    for (let x = 0; x < 128; x++) {
-      const tone = 191 + streak + (random() - .5) * 24;
-      const i = (y * 128 + x) * 4;
-      image.data[i] = image.data[i + 1] = image.data[i + 2] = tone;
-      image.data[i + 3] = 255;
-    }
-  }
-  ctx.putImageData(image, 0, 0);
-  const texture = new T.CanvasTexture(canvas);
-  texture.wrapS = texture.wrapT = T.RepeatWrapping;
-  texture.anisotropy = 4;
-  return texture;
-}
-
-export function applySurfaceFinishes() {
-  if (steel.roughnessMap) return;
-  const brushed = grain(true), aggregate = grain(false);
-  if (brushed) {
-    for (const mat of [steel, ice, pipeBlue, pipeMint]) {
-      mat.roughnessMap = brushed;
-      mat.needsUpdate = true;
-    }
-  }
-  if (aggregate) {
-    aggregate.colorSpace = T.SRGBColorSpace;
-    aggregate.repeat.set(16, 8);
-    road.map = aggregate;
-    road.color.setHex(0x697479);
-    road.needsUpdate = true;
-  }
 }
