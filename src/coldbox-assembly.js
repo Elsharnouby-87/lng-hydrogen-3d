@@ -39,6 +39,7 @@ const ghost = new T.MeshBasicMaterial({
 const H2_COLOR = BLUE;
 const HE_COLOR = 0xc39aff;
 const yAxis = v(0, 1, 0);
+export const R101_H2_OUTLET = Object.freeze([3.12, 1.38, 0]);
 
 const toVectors = (points) => points.map((p) => v(...p));
 const debugRoutes = [];
@@ -299,7 +300,7 @@ export function createAdvancedColdBox(parent,x,z) {
     [.62,.94,1.02],[1.38,.94,1.02],[1.42,1.43,1.02],
     [1.42,1.80,1.02],[1.42,1.80,-.60],[2.44,1.80,-.60],
     [2.55,1.80,-.60],[2.55,1.38,-.60],
-    [2.86,1.38,-.60],[2.86,1.38,0],[3.12,1.38,0],
+    [2.86,1.38,-.60],[2.86,1.38,0],R101_H2_OUTLET,
   ],.078,'h2'));
   // Closed He refrigeration is a process illustration, not complete cycle
   // closure. Compressor / aftercooler are beyond the cold-box boundary.

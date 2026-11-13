@@ -4,8 +4,10 @@ import {
   industrialCompressor, industrialLNGPump, industrialVaporizer,
   industrialLH2Tank, STAGE3_PORTS,
 } from '../src/industrial-equipment.js';
-import { createAdvancedColdBox } from '../src/coldbox-assembly.js';
+import { createAdvancedColdBox, R101_H2_OUTLET } from '../src/coldbox-assembly.js';
 import { addLNGTankDetail, DETAILING_REFERENCE } from '../src/ultimate-detail.js';
+import { addExportPiping } from '../src/export-piping.js';
+import { BLUE, MINT, pipePath, v } from '../src/plant-geometry.js';
 
 // Three.js mesh assembly runs headlessly without relying on a real canvas.
 globalThis.document = {
@@ -61,6 +63,32 @@ for(const name of ['HX-201 / endplate, fins and cold rails',
 r.setView('cutaway');r.setStream('he');assert.ok(!r.paths.h2.visible&&r.paths.he.visible);
 r.setView('exploded');assert.ok(!r.plumbing.visible,'Process piping must hide when internally disconnected');
 r.setView('shell');assert.ok(r.shell.visible&&!r.inside.visible,'R101 display modes regressed');
+const exportsRoot = new T.Group();
+const [separatorFeed, liquidDelivery, gasSendOut] = addExportPiping(
+  exportsRoot,
+  (_parent, points, _material, color) => ({
+    curve: pipePath(points.map(point => v(...point)), .2884), points, color,
+  }),
+  { refrigeration: r, lh2: LH, vaporizer: models['E-202'] },
+);
+const port = (model, name) => model.position.clone()
+  .add(v(...model.userData.processPorts.find(p => p.name === name).point));
+const separator = exportsRoot.getObjectByName('Phase separator');
+const metering = exportsRoot.getObjectByName('Gas send-out metering run');
+assert.ok(separatorFeed.curve.getPoint(0).distanceTo(r.root.position.clone().add(v(...R101_H2_OUTLET))) < 1e-6);
+assert.ok(liquidDelivery.curve.getPoint(1).distanceTo(port(LH, 'LH2 liquid inlet')) < 1e-6);
+assert.ok(gasSendOut.curve.getPoint(0).distanceTo(port(models['E-202'], 'Gas send-out')) < 1e-6);
+assert.ok(separatorFeed.curve.getPoint(1).distanceTo(separator.position.clone().add(v(-.43, 1.38, 0))) < 1e-6);
+assert.ok(liquidDelivery.curve.getPoint(0).distanceTo(separator.position.clone().add(v(.43, .75, 0))) < 1e-6);
+assert.ok(gasSendOut.curve.getPoint(1).distanceTo(metering.position.clone().add(v(-.88, .13, 0))) < 1e-6);
+assert.deepEqual([separatorFeed.color, liquidDelivery.color, gasSendOut.color], [BLUE, BLUE, MINT]);
+for (const { points } of [separatorFeed, liquidDelivery, gasSendOut]) {
+  for (let i = 1; i < points.length; i++) {
+    assert.equal(points[i].filter((value, axis) => Math.abs(value - points[i - 1][axis]) > 1e-6).length, 1,
+      'Export piping must use axis-aligned straight runs joined by elbows');
+  }
+}
+console.log('PASS: E-202 to metered gas export and R-101 to TK-301 through the separator');
 const lngRoot=new T.Group();
 const tank=addLNGTankDetail(lngRoot,{radius:2.45,height:3.28,deckY:4.13});
 assert.equal(tank.name,'TK-201 / penetrations, roof access, level and boil-off services');
