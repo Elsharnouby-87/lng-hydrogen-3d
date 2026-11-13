@@ -13,6 +13,8 @@ const ventDark = material(0x596367, .14, .77);
 const roofSeam = material(0x728185, .24, .68);
 const vehiclePaint = material(0x9aaba5, .12, .58);
 const vehicleRubber = material(0x2e3539, 0, .91);
+const galvanised = material(0x919e9e, .39, .66);
+const paintedStructural = material(0x495d65, .21, .68);
 
 function serviceBuilding(parent, x, z, width, depth) {
   const building = group(parent, x, 0, z);
@@ -112,6 +114,22 @@ export function detailProcessYard(plant) {
   for (const [x, z] of [[-19.3, 8.88], [-12.8, 8.88], [-6.6, 8.88], [1.9, 8.88], [8.6, 8.88]]) {
     box(plant, x, -.035, z, .56, .013, .25, channel);
     for (let i = 0; i < 6; i++) box(plant, x + (i - 2.5) * .079, -.025, z, .024, .010, .217, serviceMetal);
+  }
+  const supports = [-6.7, -3.1, .6, 4.3, 7.3, 13.2];
+  for (const x of supports) {
+    for (const z of [-3.45, 3.65]) {
+      box(plant, x, .175, z, .25, .052, .29, galvanised);
+      for (const bolt of [-.094, .094]) {
+        cyl(plant, x + bolt, .215, z + .089, .026, .045, trim, 'y', true);
+      }
+      box(plant, x, .755, z, .17, .070, .19, paintedStructural);
+      box(plant, x, .898, z, .23, .078, .24, galvanised);
+    }
+    for (const side of [-1, 1]) {
+      const z = side < 0 ? -3.45 : 3.65;
+      segment(plant, v(x, .56, z), v(x, .885, z - side * .49), .036, paintedStructural);
+      box(plant, x, .975, z - side * .34, .23, .064, .14, galvanised);
+    }
   }
   const cabinets = [[-18.8, -7.87], [-6.6, -7.74], [2.4, -7.53], [6.16, 7.45], [18.58, -8.14]];
   for (const [x, z] of cabinets) {
