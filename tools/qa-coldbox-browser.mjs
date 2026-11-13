@@ -115,9 +115,13 @@ try {
     'Daylight and physical materials need to pass the WebGL renderer');
   await captureHarbor('overview');
   await evalJS("document.querySelector('[data-chapter=\"1\"]').click()");
-  await sleep(1250);
-  assert.equal(await evalJS("document.querySelector('[data-equipment=dock]').hidden"),false,
-    'The LNG chapter needs a visible berth hotspot');
+  let berthVisible = false;
+  for (let i = 0; i < 30; i++) {
+    berthVisible = await evalJS("!document.querySelector('[data-equipment=dock]').hidden");
+    if (berthVisible) break;
+    await sleep(250);
+  }
+  assert.ok(berthVisible, 'The LNG chapter needs a visible berth hotspot');
   await captureHarbor('receiving');
   await evalJS("document.querySelector('[data-equipment=dock]').click()");
   await sleep(1150);
