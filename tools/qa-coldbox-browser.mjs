@@ -114,6 +114,11 @@ try {
   assert.equal(await evalJS("document.querySelector('#model').dataset.renderer"),'webgl',
     'Daylight and physical materials need to pass the WebGL renderer');
   await captureHarbor('overview');
+  await evalJS("document.querySelector('[data-chapter=\"1\"]').click()");
+  await sleep(1250);
+  assert.equal(await evalJS("document.querySelector('[data-equipment=dock]').hidden"),false,
+    'The LNG chapter needs a visible berth hotspot');
+  await captureHarbor('receiving');
   await evalJS("document.querySelector('[data-equipment=dock]').click()");
   await sleep(1150);
   assert.equal(shaderErrors.length, 0, shaderErrors.join('\n'));
@@ -189,9 +194,18 @@ try {
   await captureHarbor('section');
   await evalJS("document.querySelector('#walk-close').click()");
   await evalJS("document.querySelector('#open-show').click()");
-  await sleep(2000);
-  assert.equal(await evalJS("document.querySelector('#opener').hidden"),false);
-  await captureHarbor('intro');
+  for (const [tag, name] of [['01 / THE COLD SOURCE', 'intro-berth'], ['02 / THE THERMAL LINK', 'intro']]) {
+    let ready = false;
+    for (let i = 0; i < 40; i++) {
+      ready = await evalJS("document.querySelector('#opener-tag').textContent === " + JSON.stringify(tag));
+      if (ready) break;
+      await sleep(220);
+    }
+    assert.ok(ready, 'Cinematic Intro did not reach ' + tag);
+    await sleep(1350);
+    assert.equal(await evalJS("document.querySelector('#opener').hidden"),false);
+    await captureHarbor(name);
+  }
   await evalJS("document.querySelector('#skip-opening').click()");
   await evalJS("if(document.fullscreenElement) document.exitFullscreen()");
   console.log('PASS: daylight plant, fixed-camera mode comparison, E-101 cutaway, and cinematic intro');
@@ -451,6 +465,7 @@ try {
     console.log('PASS: R-101 legend and LH2 vacuum cutaway on '+width+'px mobile');
 
   }
+  assert.deepEqual(shaderErrors, [], 'WebGL shader errors during camera or mobile tests');
   if(runtimeErrors.length)console.warn('Runtime warnings:',runtimeErrors.slice(0,5));
   console.log('PASS: headless Chrome / '+renderer+'; screenshots '+fileNames.join(', '));
 }finally {
