@@ -61,9 +61,14 @@ try {
   let id=0;
   const pending=new Map();
   const runtimeErrors=[];
+  const shaderErrors=[];
   ws.addEventListener('message',ev=>{
     const m=JSON.parse(ev.data);
     if(m.method==='Runtime.exceptionThrown')runtimeErrors.push(m.params.exceptionDetails?.text);
+    if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') {
+      const message = m.params.args.map(arg => arg.value ?? arg.description ?? '').join(' ');
+      if (/WebGLProgram|Shader Error/i.test(message)) shaderErrors.push(message);
+    }
     if(!m.id)return;
     const work=pending.get(m.id);pending.delete(m.id);
     if(!work)return;
@@ -111,6 +116,7 @@ try {
   await captureHarbor('overview');
   await evalJS("document.querySelector('[data-equipment=dock]').click()");
   await sleep(1150);
+  assert.equal(shaderErrors.length, 0, shaderErrors.join('\n'));
   await captureHarbor('calm-berth');
   await evalJS("document.querySelector('#chapters button').click()");
   await sleep(1100);

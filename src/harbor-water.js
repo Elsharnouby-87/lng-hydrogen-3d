@@ -57,7 +57,7 @@ const fragmentShader = `
       -(swell.z + ripples.z) * (.55 + sheltered * .45)));
     vec3 eye = normalize(vec3(viewMatrix[0].z, viewMatrix[1].z, viewMatrix[2].z));
     float grazing = pow(1.0 - clamp(dot(normal, eye), 0.0, 1.0), 3.0);
-    float skyGlint = pow(max(dot(normal, normalize(eye + vec3(-.38, .80, -.30))), 13.0);
+    float skyGlint = pow(max(dot(normal, normalize(eye + vec3(-.38, .80, -.30))), 0.0), 13.0);
 
     float depth = smoothstep(.0, 6.0, min(quay, shore));
     vec3 color = mix(vec3(.108, .207, .218), vec3(.064, .146, .185), depth);
@@ -136,7 +136,9 @@ export function addHarborWater(scene) {
       camera.lookAt(look.copy(camera.position).add(direction));
       camera.updateMatrixWorld();
       camera.projectionMatrix.copy(source.projectionMatrix);
-      camera.projectionMatrixInverse.copy(source.projectionMatrixInverse);
+      // A mirrored view reverses the horizontal offset used by Present mode.
+      camera.projectionMatrix.elements[12] *= -1;
+      camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
       projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
 
       const previousTarget = renderer.getRenderTarget();
