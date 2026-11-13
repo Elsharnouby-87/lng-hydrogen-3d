@@ -105,6 +105,25 @@ export function addHarbor(scene) {
     [-30.7, -24.9], [-29.1, -25.4], [-26.9, -29.2], [-25.7, -32.9],
     [24.6, -33.2], [26.1, -33.5], [28.9, -31.7], [28.4, -27.0],
   ];
+  for (const [x, z, width, depth] of [[-14.1, -36.3, 11.7, 5.2], [13.7, -35.2, 9.8, 5.0]]) {
+    surface(shore, [
+      [x - width / 2, z - depth / 2], [x + width / 2, z - depth / 2],
+      [x + width * .43, z + depth / 2], [x - width * .48, z + depth / 2],
+    ], -.221, compactedSand);
+    const stones = new T.InstancedMesh(rock, stoneFinishes[1], 23);
+    stones.receiveShadow = true;
+    for (let i = 0; i < stones.count; i++) {
+      const t = i / (stones.count - 1);
+      const side = i % 2 === 0 ? -1 : 1;
+      transform.position.set(x + width * (t - .5), -.225,
+        z + side * depth * .52 + Math.sin(i * 2.26) * .21);
+      transform.rotation.set(.1, i * 2.6, -.17);
+      transform.scale.set(.15 + .09 * Math.sin(i * 1.5) ** 2, .13, .17);
+      transform.updateMatrix();
+      stones.setMatrixAt(i, transform.matrix);
+    }
+    shore.add(stones);
+  }
   const scrub = new T.InstancedMesh(rock, material(0x73775b, 0, 1), verge.length * 3);
   for (const [index, [x, z]] of verge.entries()) {
     for (let clump = 0; clump < 3; clump++) {
