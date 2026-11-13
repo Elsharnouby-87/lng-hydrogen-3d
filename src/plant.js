@@ -271,10 +271,12 @@ function stageRoutes(scene, storage){
 // the near plane outside the harbor even when inspecting an individual part.
 const orbitRadius = 560;
 const views={
-  overview:{look:[.15,.22,2.15],offset:[19,26,36],scale:1.13},
+  overview:{look:[.2,.24,1.7],offset:[22,31,38],scale:1.15},
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
-  lng:{look:[17.15,2.50,5.68],offset:[12.8,13.9,20.5],scale:2.48},
-  dock:{look:[12.2,1.22,12.55],offset:[17.8,9.8,24.2],scale:2.28},
+  lng:{look:[12.9,1.77,9.05],offset:[13,17.5,28],scale:2.27},
+  dock:{look:[11.55,1.22,12.05],offset:[12.1,13.3,26],scale:2.34},
+  openingDock:{look:[10.75,1.17,11.5],offset:[11.6,12.5,26.7],scale:2.12},
+  openingExchange:{look:[.15,1.76,.12],offset:[9.2,12,18.8],scale:3.75},
   mechanical:{look:[-.2,.82,-7.08],offset:[9.6,14,25],scale:2.44},
   bypass:{look:[-2.6,.82,6.55],offset:[14,15,25],scale:1.54},
   flange:{look:[-3.72,1.59,.93],offset:[-5.0,1.65,3.3],scale:7.5},
@@ -296,9 +298,9 @@ const anchor={
 const visibleLabels={
   overview:['exchange','lng','deep','liquid'],
   dispatch:['feed','lng','exchange','trim','deep','liquid'],
-  lng:['lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
+  lng:['dock','lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
   feed:['feed'],compressor:['compressor'],trim:['trim','grid'],pump:['pump'],liquid:['liquid'],
-  flange:[],section:[],dock:['dock','lng'],mechanical:['feed','deep'],bypass:['trim','pump'],
+  flange:[],section:[],dock:['dock','lng'],openingDock:[],openingExchange:[],mechanical:['feed','deep'],bypass:['trim','pump'],
 };
 
 function createRenderer(scene) {
@@ -312,7 +314,7 @@ function createRenderer(scene) {
       renderer = new T.WebGLRenderer({ canvas, context, antialias: true });
       renderer.outputColorSpace = T.SRGBColorSpace;
       renderer.toneMapping = T.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.04;
+      renderer.toneMappingExposure = 1.045;
       setDaylightEnvironment(scene, renderer);
       return { renderer, kind: 'webgl' };
     }
@@ -330,9 +332,9 @@ export function createPlant(target, labelLayer, choose, reduced){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
   renderer.domElement.setAttribute('aria-label','Interactive 3D plant. Drag to orbit and scroll or pinch to zoom.');
   target.appendChild(renderer.domElement);
-  const ambient=new T.HemisphereLight(0xe5eef8,0x867c6e,.88);scene.add(ambient);
-  const key=new T.DirectionalLight(0xffeedb,2.35);key.position.set(-26,31,15);scene.add(key);
-  const fill=new T.DirectionalLight(0xcbdff1,.50);fill.position.set(10,13,-26);scene.add(fill);
+  const ambient=new T.HemisphereLight(0xe4f0ff,0x968573,.82);scene.add(ambient);
+  const key=new T.DirectionalLight(0xffebd2,2.48);key.position.set(-33,35,20);scene.add(key);
+  const fill=new T.DirectionalLight(0xc2d9ed,.53);fill.position.set(12,14,-28);scene.add(fill);
   const shadows = kind === 'webgl' ? renderer.shadowMap : null;
   const water = shadows ? addHarborWater(scene) : null;
   if (shadows) {
@@ -482,7 +484,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       const focused=trace==='both'||trace===circuit.fluid;
       const shared=routes.c.includes(circuit)||circuit===dockFlow;
       const highlighted=focused&&(!comparing||!shared);
-      const unloading=circuit!==dockFlow||active==='dock';
+      const unloading=circuit!==dockFlow||active==='dock'||active==='openingDock';
       const starved=available<=0&&circuit.fluid==='lng'&&routes.a.includes(circuit);
       circuit.glow.visible=flow&&highlighted&&unloading&&!starved;
       circuit.arrows.visible=circuit.glow.visible;
@@ -494,6 +496,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   function focus(key, immediate=false, duration=900){
     active=views[key]?key:'overview';
     const view=views[active];
+    frameViewport();
     const exploded=active==='exchange'&&coreView==='exploded';
     const look=v(...view.look);
     if(exploded&&cameraView!=='plan')look.y=compact?3.29:3.09;
@@ -529,7 +532,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   function frameViewport(){
     redraw = true;
     const aspect=dimensions.width/dimensions.height;
-    const shift=projection&&dimensions.width>800?.18:0;
+    const shift=dimensions.width>800 ? (projection ? .18 : active.startsWith('opening') ? .12 : 0) : 0;
     camera.left=-19*aspect*(1+shift);camera.right=19*aspect*(1-shift);
     camera.updateProjectionMatrix();
   }
