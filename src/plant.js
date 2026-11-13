@@ -434,6 +434,7 @@ export function createPlant(target, labelLayer, choose, reduced){
   let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
+  const labelWidths = new Map();
   const ray=new T.Raycaster(), mouse=new T.Vector2();let down=null;
   let shadowState, isolated, steppedCut;
   function updateVisibility(){
@@ -543,6 +544,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     if(!width || !height || (width===dimensions.width && height===dimensions.height))return;
     const first=dimensions.width===1;
     dimensions={width,height};compact=width<620;
+    labelWidths.clear();
     frameViewport();renderer.setSize(width,height,false);
     water?.resize(width,height);
     if(first||!tween)focus(active,true);
@@ -577,19 +579,38 @@ export function createPlant(target, labelLayer, choose, reduced){
     }
     f.glow.instanceMatrix.needsUpdate=true;
   }
-  function placeLabels(){
-    const set=visibleLabels[active];const bounds=[];
-    const order=[...set,...Object.keys(anchor).filter(k=>!set.includes(k))];
-    for(const id of order){
-      const b=buttons.get(id), p=anchor[id];if(!b)continue;
-      const covered=(active==='deep'&&deepView==='shell'&&['cryo','catalyst','separator'].includes(id))||(active==='exchange'&&id==='exchange'&&coreView!=='shell'&&mode==='integrated');
-      const exploded=active==='exchange'&&coreView==='exploded'&&id==='exchange';
-      if(!labels||!set.includes(id)||covered||exploded||(compact&&active==='overview'&&!['exchange','lng','liquid'].includes(id))){b.hidden=true;continue;}
-      projected.copy(p).project(camera);
-      const x=(projected.x+1)*.5*dimensions.width, y=(1-projected.y)*.5*dimensions.height;
-      const width=compact?92:135;
-      if(x<width*.44||x>dimensions.width-width*.44||y<70||y>dimensions.height-46||bounds.some(q=>Math.abs(q.x-x)<width&&Math.abs(q.y-y)<24)){b.hidden=true;continue;}
-      bounds.push({x,y});b.hidden=false;b.style.left=x+'px';b.style.top=y+'px';
+  function placeLabels() {
+    const visible = new Set(visibleLabels[active]);
+    const bounds = [];
+    for (const [id, button] of buttons) {
+      if (!visible.has(id) || !labels) button.hidden = true;
+    }
+    for (const id of visible) {
+      const button = buttons.get(id);
+      if (!button || !labels ||
+        (active === 'deep' && deepView === 'shell' && ['cryo', 'catalyst', 'separator'].includes(id)) ||
+        (active === 'exchange' && coreView !== 'shell' && mode === 'integrated') ||
+        (compact && active === 'overview' && !['exchange', 'lng', 'liquid'].includes(id))) {
+        if (button) button.hidden = true;
+        continue;
+      }
+      projected.copy(anchor[id]).project(camera);
+      const x = (projected.x + 1) * .5 * dimensions.width;
+      const y = (1 - projected.y) * .5 * dimensions.height;
+      if (!labelWidths.has(id)) {
+        button.hidden = false;
+        labelWidths.set(id, button.offsetWidth / 2 + 5);
+      }
+      const half = labelWidths.get(id);
+      if (x < half || x > dimensions.width - half || y < 70 || y > dimensions.height - 46 ||
+        bounds.some(other => Math.abs(other.x - x) < other.half + half && Math.abs(other.y - y) < 25)) {
+        button.hidden = true;
+        continue;
+      }
+      bounds.push({ x, y, half });
+      button.hidden = false;
+      button.style.left = x + 'px';
+      button.style.top = y + 'px';
     }
   }
   function animate(now){

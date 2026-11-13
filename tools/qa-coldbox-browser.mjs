@@ -197,19 +197,23 @@ try {
   await sleep(1000);
   await captureHarbor('section');
   await evalJS("document.querySelector('#walk-close').click()");
-  await evalJS("document.querySelector('#open-show').click()");
-  for (const [tag, name] of [['01 / THE COLD SOURCE', 'intro-berth'], ['02 / THE THERMAL LINK', 'intro']]) {
-    let ready = false;
-    for (let i = 0; i < 40; i++) {
-      ready = await evalJS("document.querySelector('#opener-tag').textContent === " + JSON.stringify(tag));
-      if (ready) break;
-      await sleep(220);
-    }
-    assert.ok(ready, 'Cinematic Intro did not reach ' + tag);
-    await sleep(1350);
-    assert.equal(await evalJS("document.querySelector('#opener').hidden"),false);
-    await captureHarbor(name);
+  await evalJS(`(() => {
+    const heading = document.querySelector('#opener-tag');
+    window.testOpeningStops = [];
+    const record = () => window.testOpeningStops.push(heading.textContent);
+    new MutationObserver(record).observe(heading, { childList: true });
+    document.querySelector('#open-show').click();
+  })()`);
+  assert.equal(await evalJS("document.querySelector('#opener').hidden"),false);
+  await captureHarbor('intro-berth');
+  let stops = [];
+  for (let i = 0; i < 45; i++) {
+    stops = await evalJS('window.testOpeningStops.slice()');
+    if (stops.includes('02 / THE THERMAL LINK')) break;
+    await sleep(250);
   }
+  assert.deepEqual(stops.slice(0, 2), ['01 / THE COLD SOURCE', '02 / THE THERMAL LINK']);
+  if (await evalJS("!document.querySelector('#opener').hidden")) await captureHarbor('intro');
   await evalJS("document.querySelector('#skip-opening').click()");
   await evalJS("if(document.fullscreenElement) document.exitFullscreen()");
   console.log('PASS: daylight plant, fixed-camera mode comparison, E-101 cutaway, and cinematic intro');
@@ -295,6 +299,15 @@ try {
     }
     assert.ok(ready,'Mobile DOM did not initialize at '+width+'px');
     await sleep(500);
+    const mobileLabels = await evalJS(`(() => {
+      const stage = document.querySelector('#stage').getBoundingClientRect();
+      return Array.from(document.querySelectorAll('.hotspot:not([hidden])'), button => {
+        const label = button.getBoundingClientRect();
+        return { id: button.dataset.equipment, inside: label.left >= stage.left && label.right <= stage.right };
+      });
+    })()`);
+    assert.ok(mobileLabels.length > 0, 'No equipment labels on the mobile overview at ' + width + 'px');
+    assert.ok(mobileLabels.every(label => label.inside), 'Mobile label clipped: ' + JSON.stringify(mobileLabels));
     if (width === 390) {
       await captureHarbor('mobile');
       await evalJS("document.querySelector('[data-equipment=exchange]').click()");
