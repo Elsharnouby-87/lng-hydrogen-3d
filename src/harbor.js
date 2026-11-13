@@ -35,16 +35,19 @@ function addCoastalTerrain(parent) {
   const light = new T.Color(0xc4bba4);
   const low = new T.Color(0x999481);
   const tint = new T.Color();
-  for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i);
-    const z = near - depth * .5 - positions.getY(i);
+  const terrainHeight = (x, z) => {
     const inland = T.MathUtils.smoothstep(near - z, 0, 22);
     const edge = T.MathUtils.smoothstep(width / 2 - Math.abs(x), 0, 15);
     const far = T.MathUtils.smoothstep(z - (near - depth), 0, 28);
     const blend = inland * edge * far;
     const ridge = Math.sin(x * .14 + z * .22) * .54 + Math.cos(x * .25 - z * .11) * .32;
     const ripple = Math.sin(x * .51 + z * .42) * .06;
-    const height = -.27 + blend * (.48 + ridge * .41 + ripple);
+    return { blend, ridge, height: -.27 + blend * (.48 + ridge * .41 + ripple) };
+  };
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const z = near - depth * .5 - positions.getY(i);
+    const { blend, ridge, height } = terrainHeight(x, z);
     positions.setXYZ(i, x, height, z);
     uv.setXY(i, x, -z);
     tint.copy(base).lerp(ridge > 0 ? light : low, Math.abs(ridge) * .54 * blend);
@@ -57,6 +60,27 @@ function addCoastalTerrain(parent) {
   finish.vertexColors = true;
   const terrain = mesh(parent, geometry, finish, 0, 0, 0);
   terrain.castShadow = false;
+
+  const scrubGeometry = new T.DodecahedronGeometry(1, 0);
+  const scrubFinish = material(0x6e7358, 0, 1);
+  const scrub = new T.InstancedMesh(scrubGeometry, scrubFinish, 48);
+  const transform = new T.Object3D();
+  for (let i = 0; i < 24; i++) {
+    const x = -46 + (i * 17 % 92);
+    const z = -49 - (i * 23 % 67);
+    const { height } = terrainHeight(x, z);
+    for (let clump = 0; clump < 2; clump++) {
+      const index = i * 2 + clump;
+      transform.position.set(x + (clump ? .19 : -.14), height + .07,
+        z + Math.sin(i * 2.71 + clump) * .18);
+      transform.rotation.set(.12, i * 1.91 + clump, -.09);
+      transform.scale.set(.16 + (i % 4) * .025, .10 + clump * .035, .15 + (i % 3) * .024);
+      transform.updateMatrix();
+      scrub.setMatrixAt(index, transform.matrix);
+    }
+  }
+  scrub.receiveShadow = true;
+  parent.add(scrub);
 }
 
 export function addHarbor(scene, webgl) {
