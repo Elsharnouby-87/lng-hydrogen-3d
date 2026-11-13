@@ -4,6 +4,7 @@ import { material, road, seaWall, slab, steel } from './plant-geometry.js';
 
 export const quayConcrete = material(0xb6ac9b, 0, .95);
 export const quayCoping = material(0xc9bfad, 0, .93);
+export const coastalGround = material(0xaaa18d, 0, .98);
 export const yardAsphalt = material(0x858b8b, 0, .96);
 export const brushedAluminium = material(0xc4c9ca, .75, .40);
 export const machinedStainless = material(0xc8cbcc, .92, .36);
@@ -49,6 +50,7 @@ export function applySurfaceFinishes(renderer, invalidate) {
   }
 
   surface(quayConcrete, 'concrete', [.36, .36], .38);
+  surface(coastalGround, 'concrete', [.19, .19], .16);
   surface(quayCoping, 'concrete', [.42, .42], .27);
   surface(yardAsphalt, 'asphalt', [.48, .48], .27);
   surface(road, 'asphalt', [15, 8], .32);

@@ -1,7 +1,7 @@
 import * as T from 'three';
 import { bevelBox, box, boxes, cyl, group, material, mesh, rail } from './plant-geometry.js';
 
-import { quayConcrete, quayCoping, yardAsphalt } from './plant-finishes.js';
+import { coastalGround, quayConcrete, quayCoping, yardAsphalt } from './plant-finishes.js';
 import { detailServiceYard } from './yard-details.js';
 
 const bank = [
@@ -29,11 +29,11 @@ export function addHarbor(scene) {
   const paving = material(0x9aa6a7, 0, .93);
   const fenders = material(0x52666f, 0, .88);
   const gravel = material(0x93897a, 0, .99);
-  const compactedSand = material(0xb4aa94, 0, .99);
+  const compactedSand = material(0x9d957e, 0, .99);
 
   surface(shore, bank, -.73, embankment);
   surface(shore, bank.map(([x, z]) => [x, z - .8]), -.41, quayConcrete);
-  surface(shore, bank.map(([x, z]) => [x, z - 1.7]), -.24, quayConcrete);
+  surface(shore, bank.map(([x, z]) => [x, z - 1.7]), -.24, coastalGround);
   box(shore, 0, -.30, -12.9, 45.12, .45, 4.50, quayCoping).castShadow = false;
   surface(shore, [[-7.45,-10.68],[-2.35,-10.68],[-2.35,-41.2],[-7.45,-41.2]], -.02, yardAsphalt);
   surface(shore, [[-30.5,-19.1],[24.5,-19.1],[24.5,-23.7],[-30.5,-23.7]], -.033, yardAsphalt);
