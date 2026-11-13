@@ -371,7 +371,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     key.shadow.bias = -.00014;
     key.shadow.radius = 2;
   }
-  addHarbor(scene);
+  addHarbor(scene, kind === 'webgl');
   const {g,refrigeration,dockFlow,storage,lh2,carrier,arm}=terminal(scene, kind === 'webgl');
   const precooler=group(scene);
   const equipment=exchanger(precooler);

@@ -21,7 +21,45 @@ function surface(parent, outline, height, finish) {
   return surface;
 }
 
-export function addHarbor(scene) {
+
+function addCoastalTerrain(parent) {
+  // Blend the surrounding flats into the distant terrain beyond the service yard.
+  const width = 118;
+  const depth = 110;
+  const near = -43;
+  const geometry = new T.PlaneGeometry(width, depth, 60, 42);
+  const positions = geometry.attributes.position;
+  const uv = geometry.attributes.uv;
+  const colors = new Float32Array(positions.count * 3);
+  const base = coastalGround.color;
+  const light = new T.Color(0xc4bba4);
+  const low = new T.Color(0x999481);
+  const tint = new T.Color();
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const z = near - depth * .5 - positions.getY(i);
+    const inland = T.MathUtils.smoothstep(near - z, 0, 22);
+    const edge = T.MathUtils.smoothstep(width / 2 - Math.abs(x), 0, 15);
+    const far = T.MathUtils.smoothstep(z - (near - depth), 0, 28);
+    const blend = inland * edge * far;
+    const ridge = Math.sin(x * .14 + z * .22) * .54 + Math.cos(x * .25 - z * .11) * .32;
+    const ripple = Math.sin(x * .51 + z * .42) * .06;
+    const height = -.27 + blend * (.48 + ridge * .41 + ripple);
+    positions.setXYZ(i, x, height, z);
+    uv.setXY(i, x, -z);
+    tint.copy(base).lerp(ridge > 0 ? light : low, Math.abs(ridge) * .54 * blend);
+    tint.toArray(colors, i * 3);
+  }
+  geometry.setAttribute('color', new T.BufferAttribute(colors, 3));
+  geometry.computeVertexNormals();
+  const finish = coastalGround.clone();
+  finish.color.set(0xffffff);
+  finish.vertexColors = true;
+  const terrain = mesh(parent, geometry, finish, 0, 0, 0);
+  terrain.castShadow = false;
+}
+
+export function addHarbor(scene, webgl) {
   const shore = group(scene);
   const embankment = material(0x9fa5a0, 0, 1);
 
@@ -34,6 +72,7 @@ export function addHarbor(scene) {
   surface(shore, bank, -.73, embankment);
   surface(shore, bank.map(([x, z]) => [x, z - .8]), -.41, quayConcrete);
   surface(shore, bank.map(([x, z]) => [x, z - 1.7]), -.24, coastalGround);
+  if (webgl) addCoastalTerrain(shore);
   box(shore, 0, -.30, -12.9, 45.12, .45, 4.50, quayCoping).castShadow = false;
   surface(shore, [[-7.45,-10.68],[-2.35,-10.68],[-2.35,-41.2],[-7.45,-41.2]], -.02, yardAsphalt);
   surface(shore, [[-30.5,-19.1],[24.5,-19.1],[24.5,-23.7],[-30.5,-23.7]], -.033, yardAsphalt);
