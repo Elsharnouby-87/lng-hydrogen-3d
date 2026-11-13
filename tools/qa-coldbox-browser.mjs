@@ -217,7 +217,7 @@ try {
       await evalJS("document.querySelector('#equipment-info-toggle').click()");
       assert.equal(await evalJS("document.querySelector('#equipment-info-toggle').getAttribute('aria-expanded')"),'true');
       await captureHarbor('mobile-precooler');
-      await evalJS("document.querySelector('[data-chapter=0]').click()");
+      await evalJS("document.querySelector('#chapters button').click()");
     }
     const mobileLayout = await evalJS("(() => {" +
       "const stage=document.querySelector('#stage').getBoundingClientRect();" +
