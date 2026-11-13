@@ -366,7 +366,7 @@ export function createPlant(target, labelLayer, choose, reduced){
 
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=!reduced;controls.dampingFactor=.12;controls.minPolarAngle=.006;controls.maxPolarAngle=Math.PI*.47;
-  controls.minZoom=.49;controls.maxZoom=8;
+  controls.minZoom=.23;controls.maxZoom=8;
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null, redraw=true, compareUntil=0;
@@ -593,7 +593,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       // Mobile zoom controls complement pinch-to-zoom and OrbitControls.
       if(!Number.isFinite(multiplier)||multiplier<=0)return;
       tween=null;
-      camera.zoom=T.MathUtils.clamp(camera.zoom*multiplier,.35,18);
+      camera.zoom=T.MathUtils.clamp(camera.zoom*multiplier,controls.minZoom,controls.maxZoom);
       camera.updateProjectionMatrix();
       controls.update();
       redraw=true;
