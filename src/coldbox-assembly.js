@@ -228,6 +228,17 @@ function exterior(parent) {
     cyl(shell, x, 3.43, 1.26, .093, .055, frameMetal, 'z', true);
   }
   for (const y of [1.24,1.96]) box(shell, -1.45, y, 1.835, .115, .046, .036, machinedStainless);
+  box(shell, -1.86, .93, 1.85, 1.02, .071, .23, frameMetal);
+  for (const y of [1.37, 1.83]) {
+    cyl(shell, -2.33, y, 1.844, .046, .092, frameMetal, 'y', true);
+    box(shell, -2.30, y, 1.828, .116, .063, .041, frameMetal);
+  }
+  box(shell, 1.75, 1.60, 1.782, .71, .59, .13, frameMetal);
+  box(shell, 1.75, 1.60, 1.859, .63, .51, .052, insulatedCladding);
+  box(shell, 1.75, 1.68, 1.890, .34, .16, .026, trim);
+  box(shell, 1.92, 1.50, 1.892, .077, .035, .028, frameMetal);
+  for (const x of [1.57, 1.72]) cyl(shell, x, 1.50, 1.888, .026, .033, machinedStainless, 'z', true);
+  for (const x of [-2.48, -.84, .84, 2.48]) box(shell, x, 3.29, 0, .046, .046, 3.37, frameMetal);
   nameplate(shell,'R-101 / CRYOGENIC COLD BOX', .67,2.43,1.785,2.76,.27,'#bbdfff');
   return shell;
 }
