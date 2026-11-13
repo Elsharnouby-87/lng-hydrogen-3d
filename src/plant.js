@@ -445,6 +445,8 @@ export function createPlant(target, labelLayer, choose, reduced){
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
   const labelWidths = new Map();
+  const mobileTools = target.parentElement.querySelector('.mobile-side-tools');
+  let toolsBounds;
   const ray=new T.Raycaster(), mouse=new T.Vector2();let down=null;
   let shadowState, isolated, steppedCut;
   function updateVisibility(){
@@ -556,6 +558,12 @@ export function createPlant(target, labelLayer, choose, reduced){
     const first=dimensions.width===1;
     dimensions={width,height};compact=width<620;
     labelWidths.clear();
+    toolsBounds = null;
+    if (compact && mobileTools?.offsetWidth) {
+      const tools = mobileTools.getBoundingClientRect();
+      const stage = target.getBoundingClientRect();
+      toolsBounds = { left: tools.left - stage.left, top: tools.top - stage.top, bottom: tools.bottom - stage.top };
+    }
     frameViewport();renderer.setSize(width,height,false);
     water?.resize(width,height);
     if(first||!tween)focus(active,true);
@@ -613,7 +621,9 @@ export function createPlant(target, labelLayer, choose, reduced){
         labelWidths.set(id, button.offsetWidth / 2 + 5);
       }
       const half = labelWidths.get(id);
-      if (x < half || x > dimensions.width - half || y < 70 || y > dimensions.height - 46 ||
+      const behindTools = toolsBounds && x + half > toolsBounds.left && y > toolsBounds.top &&
+        y - 35 < toolsBounds.bottom;
+      if (behindTools || x < half || x > dimensions.width - half || y < 70 || y > dimensions.height - 46 ||
         bounds.some(other => Math.abs(other.x - x) < other.half + half && Math.abs(other.y - y) < 25)) {
         button.hidden = true;
         continue;
