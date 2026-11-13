@@ -570,8 +570,12 @@ export function createPlant(target, labelLayer, choose, reduced){
     toolsBounds = null;
     if (compact && mobileTools?.offsetWidth) {
       const tools = mobileTools.getBoundingClientRect();
-      const stage = target.getBoundingClientRect();
-      toolsBounds = { left: tools.left - stage.left, top: tools.top - stage.top, bottom: tools.bottom - stage.top };
+      const stage = labelLayer.getBoundingClientRect();
+      toolsBounds = {
+        left: tools.left - stage.left,
+        top: tools.top - stage.top,
+        bottom: tools.bottom - stage.top,
+      };
     }
     frameViewport();renderer.setSize(width,height,false);
     water?.resize(width,height);
@@ -608,10 +612,10 @@ export function createPlant(target, labelLayer, choose, reduced){
     f.glow.instanceMatrix.needsUpdate=true;
   }
   function placeLabels() {
-    const visible = new Set(visibleLabels[active]);
+    const visible = visibleLabels[active];
     const bounds = [];
     for (const [id, button] of buttons) {
-      if (!visible.has(id) || !labels) button.hidden = true;
+      if (!visible.includes(id) || !labels) button.hidden = true;
     }
     for (const id of visible) {
       const button = buttons.get(id);
