@@ -89,8 +89,17 @@ function ship(g, webgl){
     }
   }
   detailCarrier(k);
-  for(const x of [-8.28,7.05]){
-    segment(g,v(11.3+x,.62,13.78),v(11.3+x+(x<0?-1.04:1.12),.15,12.37),.023,dark)
+  const mooring = material(0x53615e, .01, .92);
+  const lines = [
+    [3.05, 3.3, -.13], [3.05, 6.8, .13], [18.26, 15.5, -.13], [18.26, 18.1, .13],
+  ];
+  for (const [fairlead, bollard, offset] of lines) {
+    const start = v(fairlead + offset, .62, 13.68);
+    const end = v(bollard, .23, 12.47);
+    const sag = start.clone().lerp(end, .53);
+    sag.y -= .18;
+    const line = new T.QuadraticBezierCurve3(start, sag, end);
+    mesh(g, new T.TubeGeometry(line, 12, .027, 6, false), mooring, 0, 0, 0)
       .layers.enable(reflectionLayer);
   }
   return k;
@@ -561,8 +570,12 @@ export function createPlant(target, labelLayer, choose, reduced){
     toolsBounds = null;
     if (compact && mobileTools?.offsetWidth) {
       const tools = mobileTools.getBoundingClientRect();
-      const stage = target.getBoundingClientRect();
-      toolsBounds = { left: tools.left - stage.left, top: tools.top - stage.top, bottom: tools.bottom - stage.top };
+      const stage = labelLayer.getBoundingClientRect();
+      toolsBounds = {
+        left: tools.left - stage.left,
+        top: tools.top - stage.top,
+        bottom: tools.bottom - stage.top,
+      };
     }
     frameViewport();renderer.setSize(width,height,false);
     water?.resize(width,height);
@@ -599,10 +612,10 @@ export function createPlant(target, labelLayer, choose, reduced){
     f.glow.instanceMatrix.needsUpdate=true;
   }
   function placeLabels() {
-    const visible = new Set(visibleLabels[active]);
+    const visible = visibleLabels[active];
     const bounds = [];
     for (const [id, button] of buttons) {
-      if (!visible.has(id) || !labels) button.hidden = true;
+      if (!visible.includes(id) || !labels) button.hidden = true;
     }
     for (const id of visible) {
       const button = buttons.get(id);
