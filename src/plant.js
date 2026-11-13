@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { applySurfaceFinishes, machinedStainless, setDaylightEnvironment } from './plant-finishes.js';
 import { softwareRenderer } from './software.js';
 import { addHarbor } from './harbor.js';
+import { detailBerth, detailCarrier } from './berth-details.js';
 import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
@@ -83,6 +84,7 @@ function ship(g){
       box(k,x,.845,z,.54,.016,.034,white);
     }
   }
+  detailCarrier(k);
   for(const x of [-8.28,7.05]){
     segment(g,v(11.3+x,.62,13.78),v(11.3+x+(x<0?-1.04:1.12),.15,12.37),.023,dark)
       .layers.enable(reflectionLayer);
@@ -134,6 +136,7 @@ function ground(scene){
     for (const z of [11.28,12.42]) cyl(g,x,-.86,z,.15,1.15,seaWall,'y',true);
     box(g,x,-.395,11.83,.37,.20,1.79,trim);
   }
+  detailBerth(g);
   rail(g,-21.2,-10.1,-7.5,-10.1,-.02);
   rail(g,-2.3,-10.1,21.2,-10.1,-.02);
   rail(g,-21.5,10,-5.8,10,-.02);
