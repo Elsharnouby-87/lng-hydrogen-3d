@@ -433,7 +433,8 @@ export function createPlant(target, labelLayer, choose, reduced){
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null, redraw=true, compareUntil=0;
-  let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
+  let last=performance.now(), lastPaint=-Infinity, travel=0, passageTravel=0;
+  let compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
   const labelWidths = new Map();
@@ -646,6 +647,11 @@ export function createPlant(target, labelLayer, choose, reduced){
     if (!redraw && (!flow || reduced) && !animateWater) return;
     if (animateWater) water.time.value += delta;
     if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;}
+    // On narrow viewports, ambient motion can refresh at about 30 fps while
+    // camera gestures and control changes still paint at the next frame.
+    if (compact && !redraw && now - lastPaint < 30) return;
+    lastPaint = now;
+    if (redraw) placeLabels();
     if(flow){
       inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
@@ -656,7 +662,6 @@ export function createPlant(target, labelLayer, choose, reduced){
       for(const f of routes.c)if(f.glow.visible)drawFlow(f,travel);
       for(const f of mode==='integrated'?routes.a:routes.s)if(f.glow.visible)drawFlow(f,travel);
     }
-    placeLabels();
     water?.updateReflection(renderer,camera,now);
     redraw = renderer.render(scene,camera) === false;
   }
