@@ -175,9 +175,29 @@ export function exchanger(g) {
     }
     for (const y of [1.03, 2.87]) box(casing, 0, y, z + .03 * Math.sign(z), 6.81, .105, .077, brushedAluminium);
   }
-  bevelBox(casing, -.86, 1.63, 1.808, 1.06, 1.30, .065, .025, paintedSteel);
-  for (const y of [1.30, 1.92]) box(casing, -.47, y, 1.851, .087, .133, .057, trim);
+  bevelBox(casing, -.86, 1.63, 1.797, 1.16, 1.42, .074, .029, trim);
+  bevelBox(casing, -.86, 1.63, 1.849, 1.05, 1.30, .069, .025, paintedSteel);
+  for (const y of [1.30, 1.92]) {
+    box(casing, -.47, y, 1.893, .087, .133, .057, trim);
+    cyl(casing, -.47, y, 1.925, .033, .025, machinedStainless, 'z', true);
+  }
+  segment(casing, v(-1.18, 1.49, 1.907), v(-1.18, 1.71, 1.907), .028, trim);
+  for (const y of [1.49, 1.71]) cyl(casing, -1.18, y, 1.886, .029, .061, steel, 'z', true);
+  box(casing, -.86, .968, 1.89, 1.19, .074, .19, steel);
+  for (const x of [-2.91, 2.91]) {
+    for (const z of [-1.43, 1.43]) {
+      box(casing, x, 3.108, z, .32, .068, .28, trim);
+      const lug = mesh(casing, new T.TorusGeometry(.074, .022, 7, 16), steel, x, 3.195, z);
+      lug.rotation.y = Math.PI / 2;
+    }
+  }
   nameplate(casing, 'E-101 / CRYOGENIC PRECOOLER', .94, 2.37, 1.804, 2.26, .27, '#a1e4db');
+  bevelBox(casing, 2.49, 1.46, 1.804, .64, .49, .15, .035, motorPaint);
+  box(casing, 2.48, 1.52, 1.888, .26, .15, .025, trim);
+  for (const [x, finish] of [[2.38, mint], [2.55, serviceYellow]]) {
+    cyl(casing, x, 1.35, 1.895, .033, .038, finish, 'z', true);
+  }
+  segment(casing, v(2.48, 1.22, 1.83), v(2.48, .98, 1.83), .031, trim);
 
   for (let index = 0; index < layout.layers; index++) {
     const base = layerY(index);

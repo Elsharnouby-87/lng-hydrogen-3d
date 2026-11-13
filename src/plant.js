@@ -279,6 +279,7 @@ const views={
   dispatch:{look:[0,-3.7,2.2],offset:[20,26,36],scale:.90},
   lng:{look:[12.9,1.77,9.05],offset:[13,17.5,28],scale:2.27},
   dock:{look:[12.55,1.21,12.03],offset:[12.1,13.3,26],scale:2.21},
+  openingApproach:{look:[8.9,1.05,10.1],offset:[15.3,18.2,28.0],scale:1.79},
   openingDock:{look:[10.75,1.17,11.5],offset:[11.6,12.5,26.7],scale:2.12},
   openingExchange:{look:[.15,1.76,.12],offset:[9.2,12,18.8],scale:3.75},
   mechanical:{look:[-.2,.82,-7.08],offset:[9.6,14,25],scale:2.44},
@@ -304,7 +305,7 @@ const visibleLabels={
   dispatch:['feed','lng','exchange','trim','deep','liquid'],
   lng:['dock','lng','pump','trim','grid'],exchange:['exchange'],deep:['deep','liquid','cryo','catalyst','separator'],
   feed:['feed'],compressor:['compressor'],trim:['trim','grid'],pump:['pump'],liquid:['liquid'],
-  flange:[],section:[],dock:['dock','lng'],openingDock:[],openingExchange:[],mechanical:['feed','deep'],bypass:['trim','pump'],
+  flange:[],section:[],dock:['dock','lng'],openingApproach:[],openingDock:[],openingExchange:[],mechanical:['feed','deep'],bypass:['trim','pump'],
 };
 
 function createRenderer(scene) {
@@ -433,7 +434,8 @@ export function createPlant(target, labelLayer, choose, reduced){
   let active='overview', tween=null, flow=true, labels=true, mode='integrated', available=1;
   let coreView='cutaway', stream='both', trace='both', deepView='cutaway', deepStream='both', lh2View='shell', cameraView='iso', projection=false, spread=0;
   let suspended=false, screeningDuty=null, redraw=true, compareUntil=0;
-  let last=performance.now(), travel=0, passageTravel=0, compact=false, dimensions={width:1,height:1};
+  let last=performance.now(), lastPaint=-Infinity, travel=0, passageTravel=0;
+  let compact=false, dimensions={width:1,height:1};
   const tmp=new T.Object3D(), projected=v(0,0,0);
   const buttons=new Map([...labelLayer.querySelectorAll('button')].map(b=>[b.dataset.equipment,b]));
   const labelWidths = new Map();
@@ -489,7 +491,7 @@ export function createPlant(target, labelLayer, choose, reduced){
       const focused=trace==='both'||trace===circuit.fluid;
       const shared=routes.c.includes(circuit)||circuit===dockFlow;
       const highlighted=focused&&(!comparing||!shared);
-      const unloading=circuit!==dockFlow||active==='dock'||active==='openingDock';
+      const unloading=circuit!==dockFlow||active==='dock'||active==='openingApproach'||active==='openingDock';
       const starved=available<=0&&circuit.fluid==='lng'&&routes.a.includes(circuit);
       circuit.glow.visible=flow&&highlighted&&unloading&&!starved;
       circuit.arrows.visible=circuit.glow.visible;
@@ -646,6 +648,14 @@ export function createPlant(target, labelLayer, choose, reduced){
     if (!redraw && (!flow || reduced) && !animateWater) return;
     if (animateWater) water.time.value += delta;
     if(flow&&!reduced){travel=(travel+delta*.143)%1;passageTravel=(passageTravel+delta*.143*pace)%1;}
+    // On narrow viewports, ambient motion can refresh at about 30 fps while
+    // camera gestures and control changes still paint at the next frame.
+    if (compact && !redraw && now - lastPaint < 30) return;
+    lastPaint = now;
+    if (redraw) {
+      camera.updateMatrixWorld();
+      placeLabels();
+    }
     if(flow){
       inspection?.animate(passageTravel);
       if(active==='exchange'&&core.visible&&mode==='integrated'&&available>0){
@@ -656,7 +666,6 @@ export function createPlant(target, labelLayer, choose, reduced){
       for(const f of routes.c)if(f.glow.visible)drawFlow(f,travel);
       for(const f of mode==='integrated'?routes.a:routes.s)if(f.glow.visible)drawFlow(f,travel);
     }
-    placeLabels();
     water?.updateReflection(renderer,camera,now);
     redraw = renderer.render(scene,camera) === false;
   }

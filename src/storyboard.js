@@ -26,7 +26,7 @@ export const bypass={
 };
 
 export const opening=[
-  {view:'openingDock',time:4400,tag:'01 / THE COLD SOURCE',title:'Cold arrives by sea.',text:'LNG enters the receiving terminal at about 111 K.'},
+  {view:'openingDock',time:5200,tag:'01 / THE COLD SOURCE',title:'Cold arrives by sea.',text:'LNG enters the receiving terminal at about 111 K.'},
   {view:'openingExchange',time:4300,tag:'02 / THE THERMAL LINK',title:'Two circuits exchange heat.',text:'The precooler transfers heat from hydrogen to LNG across separate passages.'},
   {view:'overview',time:5200,tag:'03 / OAPEC 2026 · KUWAIT',title:'LNG cold energy for hydrogen liquefaction',text:'A 3D walkthrough of the integrated process.'},
 ];
