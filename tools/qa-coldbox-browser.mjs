@@ -249,6 +249,11 @@ try {
         Buffer.from(image.data,'base64'));
     }
   }
+  await evalJS("document.querySelector('#plan').click()");
+  await sleep(1200);
+  assert.equal(await evalJS("document.querySelector('#plan').getAttribute('aria-pressed')"), 'true');
+  await captureHarbor('r101-product-line-plan');
+  await evalJS("document.querySelector('#plan').click()");
   // Stage 3 + Stage 5 engineering equipment close-up visual smoke tests.
   // These clicks exercise the actual navigation + original plant camera.
   for(const [id,tag,file] of [
@@ -274,6 +279,12 @@ try {
     const snap=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
     await writeFile(new URL('../docs/stage3-'+file+'-closeup.png',import.meta.url),Buffer.from(snap.data,'base64'));
     await writeFile(new URL('../docs/stage5-'+file+'-detail.png',import.meta.url),Buffer.from(snap.data,'base64'));
+    if(id==='trim'){
+      await evalJS("document.querySelector('#plan').click()");
+      await sleep(1200);
+      await captureHarbor('e202-send-out-plan');
+      await evalJS("document.querySelector('#plan').click()");
+    }
     if(id==='liquid'){
       assert.equal(await evalJS("document.querySelector('#lh2-modes').hidden"),false,
         'LH2 shell/cutaway control missing in storage close-up');

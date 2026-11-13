@@ -8,6 +8,7 @@ import { detailProcessYard } from './yard-details.js';
 import { addQuayWeathering } from './quay-weathering.js';
 import { finishCarrier } from './carrier-finish.js';
 import { addHarborWater, harborSky, reflectionLayer } from './harbor-water.js';
+import { addExportPiping, sendOutLocation, separatorLocation } from './export-piping.js';
 import { createPrecoolerInspection } from './precooler-inspection.js';
 
 import {
@@ -182,20 +183,13 @@ function terminal(scene, webgl){
   const storage = tank(g,17.35,5.76,2.45,3.28,mint,'TK-201 / LNG STORAGE');
   tank(g,20,2.92,1.18,2.48,mint);
   lngPump(g,10.7,5.78);
-  vaporizer(g,-11.55,5.78);
+  const trimVaporizer=vaporizer(g,-11.55,5.78);
   compressor(g,-11.7,-4.95);
   pad(g,-18.12,-4.95,4,3.16);
   horizontalVessel(g,-18.12,.98,-4.95,.60,2.23,blue,'H₂ FEED VESSEL');
-  const refrigeration=coldBox(g,9.25,-4.95,route);
+  const refrigeration=coldBox(g,9.25,-4.95);
   pad(g,17.6,-4.95,6,4.46);
   const lh2=lh2Tank(g,17.3,1.40,-4.95);
-  pad(g,-18.35,5.78,4.6,2.9);
-  for(let i=0;i<3;i++){
-    const z=5.1+i*.64;
-    cyl(g,-18.2,.86,z,.12,1.2,steel);
-    cyl(g,-18.2,1.49,z,.23,.11,mint,'y',true);
-    cyl(g,-18.15,.49,z,.14,2.4,steel,'x',true);
-  }
   for(const [x,z] of [[-4.4,-7.5],[3.9,-7.5],[3.9,7.6],[-5.4,7.6]]){
     box(g,x,.32,z,1.12,.55,1.03,trim);box(g,x,.61,z,1.21,.055,1.13,slab);
     box(g,x,.32,z+.53,.32,.38,.025,steel);
@@ -222,7 +216,7 @@ function terminal(scene, webgl){
   for(const x of [-.93,-.39,.21])box(utility,x,1.01,.834,.40,.29,.03,slab);
   box(utility,1.03,.61,.835,.49,.85,.035,steel);
   for(const x of [-1.1,1.02])cyl(utility,x,1.5,-.35,.115,.28,steel,'y',true);
-  return {g,refrigeration,dockFlow,storage,lh2,carrier,arm};
+  return {g,refrigeration,dockFlow,storage,lh2,carrier,arm,trimVaporizer};
 }
 const markerUp = v(0, 1, 0);
 const markerTransform = new T.Object3D();
@@ -258,7 +252,7 @@ function route(g, points, mat, color, count = 34, radius = .103, markerScale = 1
   }
   return { curve, glow, arrows, count, pipes, mat, radius, fluid: color === BLUE ? 'h2' : 'lng' };
 }
-function stageRoutes(scene, storage){
+function stageRoutes(scene, { storage, refrigeration, lh2, trimVaporizer }){
   const assisted=group(scene), standalone=group(scene), common=group(scene);
   const y=1.38,zH=-4.95,zL=5.78;
   const a=[
@@ -273,10 +267,8 @@ function stageRoutes(scene, storage){
   ];
   const c=[
     route(common,[[-16.75,.98,zH],[-16.45,.98,zH],[-16.45,y,zH],[-13.77,y,zH]],pipeBlue,BLUE,9),
-    route(common,[[12.2,y,zH],[12.5,y,zH],[12.5,y,zH+1.45]],pipeBlue,BLUE,6),
-    route(common,[[12.5,.73,zH+2.29],[14.33,.73,zH+2.29],[14.33,.73,zH],[14.33,y,zH],[15.28,y,zH]],pipeBlue,BLUE,11),
     route(common,[[16.47,storage.deckY+.27,5.62],[14.67,storage.deckY+.27,5.62],[14.67,.94,5.62],[12.70,.94,5.62],[12.70,.94,4.68],[10.7,.94,4.68],[10.7,.94,5.25]],pipeMint,MINT,24),
-    route(common,[[-14.51,y,zL],[-16.54,y,zL]],pipeMint,MINT,9),
+    ...addExportPiping(common,route,{refrigeration,lh2,vaporizer:trimVaporizer}),
   ];
   return {assisted,standalone,a,s,c};
 }
@@ -312,8 +304,9 @@ const portraitBerth = {
 const anchor={
   feed:v(-17.9,2.24,-4.95),compressor:v(-11.7,2.91,-4.95),lng:v(17.35,5.0,5.76),pump:v(10.7,3.24,5.76),
   exchange:v(0,3.2,0),trim:v(-11.55,3.33,5.78),deep:v(8.8,3.95,-4.95),
-  liquid:v(17.3,2.75,-4.95),grid:v(-18.35,2.01,5.78),
-  dock:v(14.4,4.45,11.66),cryo:v(7.28,2.62,-4.72),catalyst:v(9.22,1.77,-4.34),separator:v(12.5,1.66,-3.10),
+  liquid:v(17.3,2.75,-4.95),grid:v(...sendOutLocation).setY(1.38),
+  dock:v(14.4,4.45,11.66),cryo:v(7.28,2.62,-4.72),catalyst:v(9.22,1.77,-4.34),
+  separator:v(...separatorLocation).setY(1.90),
 };
 const visibleLabels={
   overview:['exchange','lng','deep','liquid'],
@@ -372,12 +365,12 @@ export function createPlant(target, labelLayer, choose, reduced){
     key.shadow.radius = 2;
   }
   addHarbor(scene, kind === 'webgl');
-  const {g,refrigeration,dockFlow,storage,lh2,carrier,arm}=terminal(scene, kind === 'webgl');
+  const {g,refrigeration,dockFlow,storage,lh2,carrier,arm,trimVaporizer}=terminal(scene, kind === 'webgl');
   const precooler=group(scene);
   const equipment=exchanger(precooler);
   const {casing,core,stack,headers,risers}=equipment;
   const inspection=shadows?createPrecoolerInspection(precooler,equipment,updateVisibility):null;
-  const routes=stageRoutes(scene,storage);
+  const routes=stageRoutes(scene,{storage,refrigeration,lh2,trimVaporizer});
   const mainRoutes=[...routes.c,...routes.a,...routes.s,dockFlow];
   const mechanical=group(scene);
   horizontalVessel(mechanical,-1.24,1.38,-7.08,.48,3.06,blue);
@@ -393,7 +386,8 @@ export function createPlant(target, labelLayer, choose, reduced){
     pick(g,'trim',-11.55,1.5,5.78,5.8,3.0,4.1),
     pick(g,'deep',9.25,1.52,-4.95,6.5,3.1,3.85),
     pick(g,'liquid',17.4,1.3,-4.95,6.2,2.8,4.25),
-    pick(g,'grid',-18.2,.8,5.78,4.1,1.6,2.8),
+    pick(g,'grid',sendOutLocation[0],.70,sendOutLocation[2],2.55,1.45,1.5),
+    pick(g,'separator',separatorLocation[0],.95,separatorLocation[2],.84,1.82,.85),
   ];
   batchStaticMeshes(scene);
   for (const object of [carrier, arm, ambient, key, fill]) {
@@ -620,7 +614,7 @@ export function createPlant(target, labelLayer, choose, reduced){
     for (const id of visible) {
       const button = buttons.get(id);
       if (!button || !labels ||
-        (active === 'deep' && deepView === 'shell' && ['cryo', 'catalyst', 'separator'].includes(id)) ||
+        (active === 'deep' && deepView === 'shell' && ['cryo', 'catalyst'].includes(id)) ||
         (active === 'exchange' && coreView !== 'shell' && mode === 'integrated') ||
         (compact && active === 'overview' && !['exchange', 'lng', 'liquid'].includes(id))) {
         if (button) button.hidden = true;
